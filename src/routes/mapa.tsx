@@ -220,13 +220,13 @@ function MapaPage() {
               {/* Mobile: card sliding in from the bottom (unchanged) */}
               <div className="pointer-events-none absolute inset-x-0 bottom-0 p-4 lg:hidden">
                 <div className="pointer-events-auto mx-auto max-w-md">
-                  <SelectedCard place={selected} stat={selRating} />
+                  <SelectedCard place={selected} stat={selRating} dist={distanceFor(selected)} />
                 </div>
               </div>
               {/* Desktop: floating panel next to the map */}
               <div className="pointer-events-none absolute right-4 top-4 hidden w-80 lg:block">
                 <div className="pointer-events-auto">
-                  <SelectedCard place={selected} stat={selRating} />
+                  <SelectedCard place={selected} stat={selRating} dist={distanceFor(selected)} />
                 </div>
               </div>
             </>
@@ -237,7 +237,7 @@ function MapaPage() {
   );
 }
 
-function SelectedCard({ place, stat }: { place: Place; stat?: { avg: number; count: number } }) {
+function SelectedCard({ place, stat, dist }: { place: Place; stat?: { avg: number; count: number }; dist?: number | null }) {
   return (
     <Link
       to="/k/$id"
@@ -264,6 +264,7 @@ function SelectedCard({ place, stat }: { place: Place; stat?: { avg: number; cou
           ) : (
             <span className="font-normal text-muted-foreground">Brak ocen</span>
           )}
+          {dist != null && <span className="font-normal text-muted-foreground">· {formatDistancePl(dist)}</span>}
         </p>
       </div>
       <ChevronRight size={18} className="shrink-0 text-muted-foreground" />
