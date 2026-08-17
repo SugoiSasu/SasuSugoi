@@ -1,0 +1,2 @@
+ALTER TABLE public.places ALTER COLUMN slug SET DEFAULT '';
+
