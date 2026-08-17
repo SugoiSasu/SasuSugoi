@@ -1,4 +1,4 @@
-import { sendLovableEmail } from '@lovable.dev/email-js'
+import { Resend } from 'resend'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { createFileRoute } from '@tanstack/react-router'
 
@@ -7,31 +7,28 @@ const DEFAULT_BATCH_SIZE = 10
 const DEFAULT_SEND_DELAY_MS = 200
 const DEFAULT_AUTH_TTL_MINUTES = 15
 const DEFAULT_TRANSACTIONAL_TTL_MINUTES = 60
+const ROOT_DOMAIN = 'pozeramy.live'
 
-// Check if an error is a rate-limit (429) response.
-// Uses EmailAPIError.status when available (email-js >=0.x with structured errors),
-// falls back to parsing the error message for older versions.
+// Resend's Node SDK returns { data, error } instead of throwing — the error
+// object mirrors their REST API error shape: { name, message, statusCode }.
+// See https://resend.com/docs/api-reference/errors
 function isRateLimited(error: unknown): boolean {
-  if (error && typeof error === 'object' && 'status' in error) {
-    return (error as { status: number }).status === 429
+  if (error && typeof error === 'object' && 'statusCode' in error) {
+    return (error as { statusCode: number }).statusCode === 429
   }
-  return error instanceof Error && error.message.includes('429')
+  return false
 }
 
-// Check if an error is a forbidden (403) response. Retrying won't help.
-// Move straight to DLQ.
+// 403s (invalid API key, unverified domain) are permanent — retrying won't help.
 function isForbidden(error: unknown): boolean {
-  if (error && typeof error === 'object' && 'status' in error) {
-    return (error as { status: number }).status === 403
+  if (error && typeof error === 'object' && 'statusCode' in error) {
+    return (error as { statusCode: number }).statusCode === 403
   }
-  return error instanceof Error && error.message.includes('403')
+  return false
 }
 
-// Extract Retry-After seconds from a structured EmailAPIError, or default to 60s.
-function getRetryAfterSeconds(error: unknown): number {
-  if (error && typeof error === 'object' && 'retryAfterSeconds' in error) {
-    return (error as { retryAfterSeconds: number | null }).retryAfterSeconds ?? 60
-  }
+// Resend doesn't return a machine-readable Retry-After value, so back off a fixed window.
+function getRetryAfterSeconds(_error: unknown): number {
   return 60
 }
 
@@ -64,7 +61,7 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env.LOVABLE_API_KEY
+        const apiKey = process.env.RESEND_API_KEY
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
         const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -75,6 +72,8 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
             { status: 500 }
           )
         }
+
+        const resend = new Resend(apiKey)
 
         // Verify the caller is authorized with the service role key.
         // In the TanStack stack, the pg_cron job sends the service role key as a Bearer token.
@@ -264,23 +263,26 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
 
 
             try {
-              await sendLovableEmail(
+              const headers: Record<string, string> = {}
+              if (payload.unsubscribe_token) {
+                const unsubscribeUrl = `https://${ROOT_DOMAIN}/email/unsubscribe?token=${payload.unsubscribe_token}`
+                headers['List-Unsubscribe'] = `<${unsubscribeUrl}>`
+                headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click'
+              }
+
+              const { error: sendError } = await resend.emails.send(
                 {
-                  run_id: payload.run_id,
                   to: payload.to,
                   from: payload.from,
-                  sender_domain: payload.sender_domain,
                   subject: payload.subject,
                   html: payload.html,
                   text: payload.text,
-                  purpose: payload.purpose,
-                  label: payload.label,
-                  idempotency_key: payload.idempotency_key,
-                  unsubscribe_token: payload.unsubscribe_token,
-                  message_id: payload.message_id,
+                  headers: Object.keys(headers).length > 0 ? headers : undefined,
+                  tags: [{ name: 'label', value: (payload.label as string) || 'unknown' }],
                 },
-                { apiKey, sendUrl: process.env.LOVABLE_SEND_URL }
+                { idempotencyKey: payload.idempotency_key as string | undefined }
               )
+              if (sendError) throw sendError
 
               // Log success
               await supabase.from('email_send_log').insert({
@@ -300,7 +302,12 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
               }
               totalProcessed++
             } catch (error) {
-              const errorMsg = error instanceof Error ? error.message : String(error)
+              const errorMsg =
+                error instanceof Error
+                  ? error.message
+                  : error && typeof error === 'object' && 'message' in error
+                    ? String((error as { message: unknown }).message)
+                    : String(error)
               console.error('Email send failed', {
                 queue,
                 msg_id: msg.msg_id,

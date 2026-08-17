@@ -3,8 +3,6 @@
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
-
-
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -47,6 +45,14 @@
   --font-brand: "Bricolage Grotesque", "Manrope", "Inter", system-ui, sans-serif;
   --font-body: "Manrope", "Inter", system-ui, sans-serif;
   --font-persona: "Persona", "Bricolage Grotesque", "Manrope", system-ui, sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
 }
 
 @font-face {
@@ -60,7 +66,6 @@
 }
 /* MIGRATION NOTE: above @font-face points to Lovable-hosted URLs
    (/__l5e/assets-v1/...) — after migration replace with local font file. */
-
 
 :root {
   --radius: 1rem;
@@ -91,6 +96,14 @@
   --border: oklch(0.88 0.02 80);
   --input: oklch(0.92 0.02 80);
   --ring: var(--cobalt);
+  --sidebar: hsl(0 0% 98%);
+  --sidebar-foreground: hsl(240 5.3% 26.1%);
+  --sidebar-primary: hsl(240 5.9% 10%);
+  --sidebar-primary-foreground: hsl(0 0% 98%);
+  --sidebar-accent: hsl(240 4.8% 95.9%);
+  --sidebar-accent-foreground: hsl(240 5.9% 10%);
+  --sidebar-border: hsl(220 13% 91%);
+  --sidebar-ring: hsl(217.2 91.2% 59.8%);
 }
 
 @layer base {
@@ -427,4 +440,15 @@
 
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(pz-route), ::view-transition-new(pz-route) { animation: none; }
+}
+
+.dark {
+  --sidebar: hsl(240 5.9% 10%);
+  --sidebar-foreground: hsl(240 4.8% 95.9%);
+  --sidebar-primary: hsl(224.3 76.3% 48%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsl(240 3.7% 15.9%);
+  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
+  --sidebar-border: hsl(240 3.7% 15.9%);
+  --sidebar-ring: hsl(217.2 91.2% 59.8%);
 }

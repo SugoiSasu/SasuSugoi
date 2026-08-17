@@ -2,7 +2,6 @@ import { BackButton } from "@/components/BackButton";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { Loader2, Mail, ArrowLeft, Apple, Eye, EyeOff } from "lucide-react";
 
@@ -60,11 +59,13 @@ function AuthPage() {
   async function handleOAuth(provider: "google" | "apple") {
     setLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: window.location.origin + "/profile",
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: window.location.origin + "/profile" },
       });
-      if (result.error) throw result.error;
-      if (!result.redirected) navigate({ to: "/profile" });
+      if (error) throw error;
+      // Supabase redirects the browser to the provider on success, so
+      // execution normally doesn't continue past this point.
     } catch (err) {
       const msg = err instanceof Error ? err.message : `Błąd logowania ${provider}`;
       toast.error(msg);
