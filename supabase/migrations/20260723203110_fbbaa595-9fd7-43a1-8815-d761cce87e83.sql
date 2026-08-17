@@ -66,9 +66,13 @@ BEGIN
       'public.reviews_reverse_on_delete()',
       'public.set_updated_at()',
       'public.user_achievements_notify()',
-      'public.user_blocks_cleanup()',
-      'public.email_queue_dispatch()',
-      'public.email_queue_wake()'
+      'public.user_blocks_cleanup()'
+      -- MIGRATION NOTE: 'public.email_queue_dispatch()' and 'public.email_queue_wake()'
+      -- were dropped from this list — they're never CREATEd anywhere in the exported
+      -- migration history, meaning they were pg_cron scheduled functions set up
+      -- directly via the Supabase Dashboard Cron UI rather than tracked migrations.
+      -- Recreate + re-add the REVOKE here once queue dispatch is wired up on the
+      -- new project (Vercel Cron is the likely replacement, see PROJECT_BRIEF.md).
     ])
   LOOP
     EXECUTE format('REVOKE EXECUTE ON FUNCTION %s FROM PUBLIC, anon, authenticated', fn);

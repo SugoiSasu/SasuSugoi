@@ -20,6 +20,12 @@ src/routeTree.gen.ts
 .wrangler/
 .dev.vars
 
+.env
+.env.*
+!.env.example
+
+supabase/.temp
+
 .vscode/*
 !.vscode/extensions.json
 .idea

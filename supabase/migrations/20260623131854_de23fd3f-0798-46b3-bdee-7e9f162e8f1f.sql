@@ -56,13 +56,15 @@ CREATE POLICY "user_ranks super_admin delete" ON public.user_ranks FOR DELETE TO
 
 CREATE INDEX user_ranks_user_id_idx ON public.user_ranks(user_id);
 
--- Seed system rank "pożeramy" and assign to Head Admin (Mateusz)
+-- Seed system rank "pożeramy" (self-contained, no FK on a specific user).
 INSERT INTO public.ranks (slug, name, color, icon, description, sort_order, is_system)
 VALUES ('pozeramy', 'pożeramy', '#e35d2e', '🍕', 'Head Admin i właściciel platformy', 0, true)
 ON CONFLICT (slug) DO NOTHING;
 
-INSERT INTO public.user_ranks (user_id, rank_id, granted_by)
-SELECT '89e4e471-4931-43b9-8622-f0bfa5718c73'::uuid, r.id, '89e4e471-4931-43b9-8622-f0bfa5718c73'::uuid
-FROM public.ranks r WHERE r.slug = 'pozeramy'
-ON CONFLICT DO NOTHING;
+-- MIGRATION NOTE: the original migration also granted this rank to a specific
+-- user (auth.users.id '89e4e471-...', Mateusz's account on the old Lovable
+-- Cloud project). That row can't exist yet on a fresh project — auth.users is
+-- empty until data_export.sql is imported, and that file inserts the
+-- equivalent user_ranks row with a valid FK (topologically ordered, real
+-- users first). Dropped here to keep this migration schema-only and rerunnable.
 
