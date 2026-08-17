@@ -17,14 +17,17 @@ interface VisitStatusButtonProps {
   className?: string;
 }
 
-const META: Record<VisitStatus, { icon: typeof Bookmark; on: string; off: string; toastOn: string; toastOff: string; activeClass: string }> = {
+const META: Record<VisitStatus, { icon: typeof Bookmark; on: string; off: string; toastOn: string; toastOff: string; activeClass: string; fillIconOnActive: boolean }> = {
   want: {
     icon: Bookmark,
     on: "Chcę odwiedzić",
     off: "Chcę odwiedzić",
     toastOn: "Dodano do „Chcę odwiedzić”",
     toastOff: "Usunięto z „Chcę odwiedzić”",
-    activeClass: "bg-amber-500 text-cream hover:bg-amber-500/90",
+    // Stays an outline (never a solid fill) even when active, per the KV mockup —
+    // only "Byłem tutaj" and "Ulubione" get a filled active state.
+    activeClass: "border-2 border-navy bg-navy/10 text-navy hover:bg-navy/15",
+    fillIconOnActive: false,
   },
   visited: {
     icon: CheckCircle2,
@@ -32,7 +35,8 @@ const META: Record<VisitStatus, { icon: typeof Bookmark; on: string; off: string
     off: "Byłem tutaj",
     toastOn: "Oznaczono jako odwiedzone",
     toastOff: "Cofnięto oznaczenie",
-    activeClass: "bg-emerald-600 text-cream hover:bg-emerald-600/90",
+    activeClass: "bg-navy text-cream hover:bg-navy/90",
+    fillIconOnActive: true,
   },
 };
 
@@ -72,7 +76,7 @@ export function VisitStatusButton({ placeId, status, variant = "pill", className
           active ? m.activeClass : "bg-cream/90 text-navy hover:bg-cream"
         } ${className}`}
       >
-        <Icon size={14} className={active ? "fill-cream" : ""} />
+        <Icon size={14} className={active && m.fillIconOnActive ? "fill-cream" : ""} />
       </button>
     );
   }
@@ -87,7 +91,7 @@ export function VisitStatusButton({ placeId, status, variant = "pill", className
         active ? m.activeClass : "border-2 border-navy text-navy hover:bg-navy hover:text-cream"
       } ${className}`}
     >
-      {toggle.isPending ? <Loader2 size={16} className="animate-spin" /> : <Icon size={16} className={active ? "fill-cream" : ""} />}
+      {toggle.isPending ? <Loader2 size={16} className="animate-spin" /> : <Icon size={16} className={active && m.fillIconOnActive ? "fill-cream" : ""} />}
       {active ? m.on : m.off}
     </button>
   );
