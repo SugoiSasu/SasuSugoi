@@ -57,15 +57,13 @@
 
 @font-face {
   font-family: "Persona";
-  src: url("/__l5e/assets-v1/281348af-1285-4254-9b5f-7e65ba49f9c7/Persona.otf") format("opentype"),
-       url("/__l5e/assets-v1/c237ffce-87bf-4926-92a9-667b5451db6f/Persona.ttf") format("truetype");
+  src: url("./assets/fonts/Persona.otf") format("opentype"),
+       url("./assets/fonts/Persona.ttf") format("truetype");
   font-weight: 400 900;
   font-style: normal;
   font-display: swap;
   unicode-range: U+0020-007F, U+00A0-00FF;
 }
-/* MIGRATION NOTE: above @font-face points to Lovable-hosted URLs
-   (/__l5e/assets-v1/...) — after migration replace with local font file. */
 
 :root {
   --radius: 1rem;
