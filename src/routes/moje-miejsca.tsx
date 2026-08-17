@@ -98,14 +98,14 @@ function MyPlacesPage() {
       <h1 className="font-display text-2xl font-extrabold sm:text-3xl">Moje miejsca</h1>
       <p className="mt-1 text-sm text-muted-foreground">Wszystko, co zapisałeś w jednym miejscu.</p>
 
-      <div className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-none">
+      <div className="-mx-4 mt-4 flex gap-6 overflow-x-auto border-b border-border px-4 scrollbar-none">
         {tabs.map((t) => (
           <button
             key={t.key}
             type="button"
             onClick={() => setTab(t.key)}
-            className={`min-h-11 shrink-0 rounded-full border px-4 py-2 text-xs font-semibold transition ${
-              tab === t.key ? "border-navy bg-navy text-cream" : "border-border bg-card hover:border-tomato"
+            className={`-mb-px min-h-11 shrink-0 border-b-2 px-1 py-2.5 text-sm font-semibold transition ${
+              tab === t.key ? "border-tomato text-tomato" : "border-transparent text-muted-foreground hover:text-navy"
             }`}
           >
             {t.label} <span className="opacity-70">{t.count}</span>
