@@ -89,7 +89,7 @@ export function DiscoverHeader({ query, onQueryChange, cuisine, onCuisineChange 
                 className="flex w-16 shrink-0 flex-col items-center gap-1.5 text-[11px] font-semibold sm:w-auto"
               >
                 <span
-                  className={`grid h-14 w-14 place-items-center rounded-2xl border-2 bg-card shadow-sm transition active:scale-95 ${
+                  className={`grid h-14 w-14 place-items-center rounded-xl border-2 bg-card shadow-sm transition active:scale-95 ${
                     cuisine ? "border-transparent" : "border-navy"
                   }`}
                 >
@@ -111,7 +111,7 @@ export function DiscoverHeader({ query, onQueryChange, cuisine, onCuisineChange 
                     className="flex w-16 shrink-0 flex-col items-center gap-1.5 text-[11px] font-semibold sm:w-auto"
                   >
                     <span
-                      className={`grid h-14 w-14 place-items-center rounded-2xl border-2 text-2xl shadow-sm transition active:scale-95 ${
+                      className={`grid h-14 w-14 place-items-center rounded-xl border-2 text-2xl shadow-sm transition active:scale-95 ${
                         active ? "border-navy" : "border-transparent"
                       }`}
                       style={{ backgroundColor: color }}

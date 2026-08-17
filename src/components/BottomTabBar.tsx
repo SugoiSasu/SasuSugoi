@@ -4,10 +4,11 @@ import { Compass, Map, Bookmark, User as UserIcon, Plus, Star, Store, Camera, X 
 import { useMyProfile } from "@/lib/profile-api";
 import { toast } from "sonner";
 
-const tabs = [
+// Only these two go left of the center FAB — "Moje miejsca" and "Profil"
+// are rendered explicitly on the right since "Profil" needs conditional auth logic.
+const leftTabs = [
   { to: "/", label: "Odkrywaj", icon: Compass, exact: true },
   { to: "/mapa", label: "Mapa", icon: Map, exact: false },
-  { to: "/moje-miejsca", label: "Moje miejsca", icon: Bookmark, exact: false },
 ] as const;
 
 /** Mobile bottom tab bar with a central coral FAB. */
@@ -106,7 +107,7 @@ export function BottomTabBar() {
         className="pz-safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur-md lg:hidden"
       >
         <div className="mx-auto flex max-w-md items-stretch">
-          {tabs.slice(0, 2).map(({ to, label, icon: Icon, exact }) => (
+          {leftTabs.map(({ to, label, icon: Icon, exact }) => (
             <Link key={to} to={to} className={itemCls(isActive(to, exact))}>
               <Icon size={20} />
               <span className="truncate">{label}</span>
