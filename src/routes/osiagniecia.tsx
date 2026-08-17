@@ -6,6 +6,7 @@ import { useMyProfile } from "@/lib/profile-api";
 import { useAchievements, useUserAchievements } from "@/lib/achievements-api";
 import { useFriendLeaderboard } from "@/lib/friends-api";
 import { UserAvatar } from "@/components/UserAvatar";
+import { LevelProgressCard } from "@/components/LevelProgress";
 
 export const Route = createFileRoute("/osiagniecia")({
   head: () => ({
@@ -19,7 +20,6 @@ export const Route = createFileRoute("/osiagniecia")({
   component: AchievementsPage,
 });
 
-const LEVEL_STEP = 150;
 type Filter = "all" | "unlocked" | "locked";
 
 const BADGE_COLORS = ["bg-tomato", "bg-navy", "bg-sage", "bg-mustard", "bg-cobalt", "bg-blush"] as const;
@@ -39,9 +39,6 @@ function AchievementsPage() {
   const [filter, setFilter] = useState<Filter>("all");
 
   const points = profile?.points_total ?? 0;
-  const level = Math.floor(points / LEVEL_STEP) + 1;
-  const inLevel = points % LEVEL_STEP;
-  const pct = Math.round((inLevel / LEVEL_STEP) * 100);
   const unlocked = useMemo(() => new Set((mine ?? []).map((m) => m.achievement_id)), [mine]);
 
   const enabled = useMemo(() => (all ?? []).filter((a) => a.enabled !== false), [all]);
@@ -62,22 +59,12 @@ function AchievementsPage() {
 
       <div className="lg:grid lg:grid-cols-[1.5fr_1fr] lg:items-start lg:gap-8">
       <div>
-      <section className="mt-4 overflow-hidden rounded-3xl bg-navy p-5 text-cream">
-
-        <p className="text-xs font-semibold uppercase tracking-wide text-cream/60">Twój postęp</p>
-        <div className="mt-1 flex items-end justify-between gap-3">
-          <p className="font-display text-3xl font-extrabold">Poziom {level}</p>
-          <p className="text-sm font-semibold text-cream/70">
-            {points} / {level * LEVEL_STEP} XP
-          </p>
-        </div>
-        <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-cream/15">
-          <div className="h-full rounded-full bg-tomato transition-all duration-500" style={{ width: `${pct}%` }} />
-        </div>
-        <p className="mt-3 text-xs text-cream/70">
-          Zdobyto {unlocked.size} z {enabled.length} odznak · brakuje {Math.max(0, LEVEL_STEP - inLevel)} XP do kolejnego poziomu
-        </p>
-      </section>
+      <LevelProgressCard
+        points={points}
+        unlockedCount={unlocked.size}
+        totalBadges={enabled.length}
+        className="mt-4"
+      />
 
       <section className="mt-8">
         <div className="flex flex-wrap items-center justify-between gap-3">

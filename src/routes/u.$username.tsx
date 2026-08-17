@@ -23,6 +23,7 @@ import { PlaceListGrid } from "@/components/VisitStatus";
 import { CollapsiblePlaceList } from "@/components/CollapsiblePlaceList";
 import { runWithToast } from "@/components/AsyncState";
 import { RankBadge } from "@/components/RankBadge";
+import { LevelProgressCard } from "@/components/LevelProgress";
 
 function relativeTimePl(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -168,6 +169,13 @@ function PublicProfile() {
 
       {/* Stats grid */}
       <div className="relative z-10 -mt-8 sm:-mt-10 mx-auto max-w-3xl px-4 sm:px-6 pb-10 sm:pb-12 animate-in fade-in duration-500">
+
+        <LevelProgressCard
+          points={profile.points_total ?? 0}
+          unlockedCount={(unlocked ?? []).length}
+          totalBadges={(achievements ?? []).filter((a) => a.enabled).length}
+          className="mb-4"
+        />
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <StatCard label="Punkty PoŻarcia" value={profile.points_total} accent="text-tomato" />
