@@ -39,6 +39,7 @@ export const Route = createFileRoute("/k/$id")({
       .from("places")
       .select("name,description,cover_image_url,address,rating,cuisine,slug,id");
     const { data } = await (isUuid ? q.eq("id", params.id) : q.eq("slug", params.id)).maybeSingle();
+    if (!data) throw notFound();
     return { place: data };
   },
   head: ({ params, loaderData }) => {
@@ -318,7 +319,7 @@ function PlaceProfile() {
 
   return (
     <div className="bg-cream min-h-dvh">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 pb-40 lg:pb-24">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 pb-40 lg:max-w-6xl lg:pb-24">
         <div className="mb-5">
           <BackButton to="/" hash="mapa" label="Wróć do mapy" ariaLabel="Wróć do mapy lokali" />
         </div>
@@ -329,6 +330,8 @@ function PlaceProfile() {
           </div>
         )}
 
+      <div className="lg:grid lg:grid-cols-[1.6fr_1fr] lg:items-start lg:gap-8">
+      <div className="lg:col-start-1 lg:row-start-1">
         {/* HERO cover */}
         <div className="mb-5 relative rounded-3xl overflow-hidden border-2 border-navy/10 shadow-lg h-[180px] sm:h-[280px]">
           {place.cover_image_url ? (
@@ -478,7 +481,9 @@ function PlaceProfile() {
             {place.wheelchair_accessible && <QuickChip icon={<Accessibility size={14} />} label="Bez schodów" />}
           </div>
         </div>
+      </div>
 
+      <div className="lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-6">
         {place.opening_hours && (
           <Collapsible
             title="Godziny otwarcia"
@@ -534,7 +539,9 @@ function PlaceProfile() {
             </ul>
           )}
         </Collapsible>
+      </div>
 
+      <div className="lg:col-start-1 lg:row-start-2">
         <FriendsFavoritedNotice placeId={place.id} placeName={place.name} />
 
         {/* MENU — collapsible */}
@@ -570,6 +577,8 @@ function PlaceProfile() {
         <PlaceReviewsSection placeId={place.id} />
 
         <OwnerFooter placeId={place.id} placeName={place.name} />
+      </div>
+      </div>
       </div>
 
       {/* Sticky mobile action bar */}
