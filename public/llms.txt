@@ -1,0 +1,15 @@
+# poŻeramy
+
+> Foodie z Poznania. Mapa, recenzje i rolki najlepszych miejscówek — od neapolitańskiej pizzy po nocny kebab.
+
+poŻeramy to społeczność testująca lokale gastronomiczne w Poznaniu. Publikujemy rolki z Instagrama, recenzje użytkowników oraz interaktywną mapę miejscówek z kategoriami kuchni.
+
+## Pages
+
+- [Strona główna](/): Hero, mapa Poznania, polecane miejscówki i blog.
+- [Blog](/blog): Recenzje lokali, przewodniki kulinarne i listy najlepszych miejscówek.
+- [Polityka prywatności](/polityka-prywatnosci): Zasady przetwarzania danych osobowych.
+
+## Optional
+
+- [Logowanie](/auth): Logowanie i rejestracja użytkowników (Google, email).
