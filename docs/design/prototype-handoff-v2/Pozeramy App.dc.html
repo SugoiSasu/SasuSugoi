@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body{margin:0}
+  a{color:#E2572A}
+  a:hover{color:#c8461f}
+  ::-webkit-scrollbar{display:none}
+</style>
+</helmet>
+<div style="min-height:100%;background:#EFE7D3;display:flex;flex-direction:column;align-items:center;padding:48px 20px;font-family:'Manrope',sans-serif;box-sizing:border-box">
+  <div style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:14px;letter-spacing:.06em;color:#23255E;text-transform:uppercase;margin-bottom:22px;opacity:.75">Pożeramy — prototyp mobilny</div>
+  <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ heroDark }}" hint-size="402px,874px">
+    <div style="position:relative;height:100%;width:100%;background:#F7F1E3;overflow:hidden">
+
+      <sc-if value="{{ isDiscover }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="Odkrywaj" style="display:flex;flex-direction:column;height:100%">
+        <div style="position:relative;background:#23255E;padding:54px 20px 18px;overflow:hidden;flex-shrink:0">
+          <div style="position:absolute;z-index:0;width:90px;height:90px;border-radius:58% 42% 45% 55%/50% 45% 55% 50%;background:#E8807E;opacity:.85;top:-56px;right:-42px"></div>
+          <div style="position:absolute;z-index:0;width:36px;height:36px;border-radius:50%;background:#E2572A;opacity:.8;top:66px;right:76px"></div>
+          <div style="position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:22px;color:#F7F1E3;letter-spacing:.01em">POŻERAMY</div>
+            <div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;position:relative">
+              <div style="width:13px;height:11px;border-radius:7px 7px 3px 3px;border:2px solid #F7F1E3;box-sizing:border-box;border-bottom:none"></div>
+              <div style="position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:#E2572A;border:1.5px solid #23255E"></div>
+            </div>
+          </div>
+          <div style="position:relative;display:flex;align-items:center;gap:8px;background:#FFFDF8;border-radius:16px;padding:12px 14px">
+            <div style="width:15px;height:15px;border:2px solid rgba(35,37,94,.5);border-radius:50%;box-sizing:border-box;position:relative;flex-shrink:0">
+              <div style="position:absolute;width:6px;height:2px;background:rgba(35,37,94,.5);transform:rotate(45deg);top:13px;left:11px"></div>
+            </div>
+            <span style="font-family:'Manrope',sans-serif;font-size:13px;color:rgba(35,37,94,.5)">Szukaj restauracji, kuchni, miejsc...</span>
+          </div>
+        </div>
+
+        <div style="flex:1;overflow:auto;padding:18px 20px 20px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+            <span style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:16px;color:#23255E">Kategorie</span>
+          </div>
+          <div style="display:flex;gap:16px;overflow-x:auto;padding-bottom:4px;margin-bottom:22px">
+            <sc-for list="{{ categories }}" as="cat" hint-placeholder-count="6">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;width:52px">
+                <div style="{{ cat.circleStyle }}">{{ cat.mono }}</div>
+                <span style="font-family:'Manrope',sans-serif;font-size:11px;color:#23255E;font-weight:600">{{ cat.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+            <span style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:16px;color:#23255E">Polecane dla Ciebie</span>
+            <span style="font-family:'Manrope',sans-serif;font-size:11px;color:#E2572A;font-weight:700">Zobacz wszystkie</span>
+          </div>
+          <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;margin-bottom:24px">
+            <sc-for list="{{ recommended }}" as="r" hint-placeholder-count="3">
+              <div onClick="{{ r.open }}" style="width:148px;flex-shrink:0;background:#FFFDF8;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(35,37,94,.08);cursor:pointer">
+                <div style="position:relative;height:96px">
+                  <div style="width:100%;height:100%;background:repeating-linear-gradient(45deg,#E7DEC7 0px,#E7DEC7 9px,#F1EADA 9px,#F1EADA 18px);display:flex;align-items:center;justify-content:center;font-family:'Manrope',sans-serif;font-size:8px;letter-spacing:.04em;color:#B7AA85;text-transform:uppercase;text-align:center;padding:6px;box-sizing:border-box">zdjęcie<br/>dania</div>
+                  <div onClick="{{ r.toggleFav }}" style="position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:50%;background:rgba(255,253,248,.9);display:flex;align-items:center;justify-content:center">
+                    <div style="position:relative;width:13px;height:12px">
+                      <div style="{{ r.heartCircleLStyle }}"></div>
+                      <div style="{{ r.heartCircleRStyle }}"></div>
+                      <div style="{{ r.heartSquareStyle }}"></div>
+                    </div>
+                  </div>
+                </div>
+                <div style="padding:9px 10px 12px">
+                  <div style="font-family:'Manrope',sans-serif;font-weight:700;font-size:12.5px;color:#23255E;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div>
+                  <div style="font-family:'Manrope',sans-serif;font-size:10.5px;color:rgba(35,37,94,.55);margin-bottom:4px">{{ r.cat }} • {{ r.price }}</div>
+                  <div style="font-family:'Manrope',sans-serif;font-size:10.5px;color:#23255E;font-weight:700">★ {{ r.rating }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+            <span style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:16px;color:#23255E">Nowo otwarte</span>
+            <span style="font-family:'Manrope',sans-serif;font-size:11px;color:#E2572A;font-weight:700">Zobacz wszystkie</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{ newlyOpened }}" as="r" hint-placeholder-count="2">
+              <div onClick="{{ r.open }}" style="display:flex;align-items:center;gap:12px;background:#FFFDF8;border-radius:14px;padding:10px;cursor:pointer">
+                <div style="width:56px;height:56px;border-radius:12px;flex-shrink:0;background:repeating-linear-gradient(45deg,#E7DEC7 0px,#E7DEC7 8px,#F1EADA 8px,#F1EADA 16px)"></div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-family:'Manrope',sans-serif;font-weight:700;font-size:13px;color:#23255E">{{ r.name }}</div>
+                  <div style="font-family:'Manrope',sans-serif;font-size:11px;color:rgba(35,37,94,.55);margin-bottom:3px">{{ r.cat }} • {{ r.price }}</div>
+                  <div style="font-family:'Manrope',sans-serif;font-size:10.5px;color:#23255E;font-weight:700">★ {{ r.rating }} · {{ r.dist }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <dc-import name="PozeramyTabBar" active-tab="discover" on-discover="{{ goDiscover }}" on-map="{{ goMap }}" on-places="{{ goPlaces }}" on-profile="{{ goProfile }}" on-add="{{ toggleAddSheet }}" hint-size="100%,64px" style="flex-shrink:0"></dc-import>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isMap }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Mapa" style="display:flex;flex-direction:column;height:100%">
+        <div style="padding:54px 20px 12px;flex-shrink:0;background:#FFFDF8">
+          <div style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:20px;color:#23255E;margin-bottom:12px">Mapa</div>
+          <div style="display:flex;gap:8px;overflow-x:auto">
+            <div style="flex-shrink:0;padding:7px 13px;border-radius:20px;background:#23255E;color:#F7F1E3;font-family:'Manrope',sans-serif;font-size:11.5px;font-weight:700">Filtry</div>
+            <div style="flex-shrink:0;padding:7px 13px;border-radius:20px;background:#EFE7D3;color:#23255E;font-family:'Manrope',sans-serif;font-size:11.5px;font-weight:600">Kuchnia</div>
+            <div style="flex-shrink:0;padding:7px 13px;border-radius:20px;background:#EFE7D3;color:#23255E;font-family:'Manrope',sans-serif;font-size:11.5px;font-weight:600">Ocena</div>
+            <div style="flex-shrink:0;padding:7px 13px;border-radius:20px;background:#EFE7D3;color:#23255E;font-family:'Manrope',sans-serif;font-size:11.5px;font-weight:600">Otwarte teraz</div>
+          </div>
+        </div>
+        <div style="position:relative;flex:1;background:#DCE3E8;overflow:hidden">
+          <div style="position:absolute;inset:0;background:repeating-linear-gradient(0deg,#D3DCE1 0px,#D3DCE1 1px,#DCE3E8 1px,#DCE3E8 34px),repeating-linear-gradient(90deg,#D3DCE1 0px,#D3DCE1 1px,#DCE3E8 1px,#DCE3E8 34px)"></div>
+          <div style="position:absolute;top:44%;left:38%;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:14px;color:rgba(35,37,94,.35);letter-spacing:.08em">POZNAŃ</div>
+          <sc-for list="{{ mapPins }}" as="pin" hint-placeholder-count="5">
+            <div style="{{ pin.pinStyle }}"></div>
+          </sc-for>
+          <div style="position:absolute;bottom:16px;right:16px;width:40px;height:40px;border-radius:50%;background:#FFFDF8;box-shadow:0 3px 10px rgba(35,37,94,.18);display:flex;align-items:center;justify-content:center">
+            <div style="width:12px;height:12px;border:2px solid #E2572A;border-radius:50%;box-sizing:border-box"></div>
+          </div>
+        </div>
+        <div style="flex-shrink:0;padding:12px 16px;background:#FFFDF8">
+          <div onClick="{{ mapPreview.open }}" style="display:flex;align-items:center;gap:12px;background:#F7F1E3;border-radius:14px;padding:10px;cursor:pointer">
+            <div style="width:52px;height:52px;border-radius:12px;flex-shrink:0;background:repeating-linear-gradient(45deg,#E7DEC7 0px,#E7DEC7 8px,#F1EADA 8px,#F1EADA 16px)"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-family:'Manrope',sans-serif;font-weight:700;font-size:13px;color:#23255E">{{ mapPreview.name }}</div>
+              <div style="font-family:'Manrope',sans-serif;font-size:11px;color:rgba(35,37,94,.55)">{{ mapPreview.cat }} • {{ mapPreview.price }}</div>
+              <div style="font-family:'Manrope',sans-serif;font-size:10.5px;color:#23255E;font-weight:700;margin-top:2px">★ {{ mapPreview.rating }} · {{ mapPreview.dist }}</div>
+            </div>
+          </div>
+        </div>
+        <dc-import name="PozeramyTabBar" active-tab="map" on-discover="{{ goDiscover }}" on-map="{{ goMap }}" on-places="{{ goPlaces }}" on-profile="{{ goProfile }}" on-add="{{ toggleAddSheet }}" hint-size="100%,64px" style="flex-shrink:0"></dc-import>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isPlaces }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Moje miejsca" style="display:flex;flex-direction:column;height:100%">
+        <div style="padding:54px 20px 14px;flex-shrink:0;background:#FFFDF8">
+          <div style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:20px;color:#23255E;margin-bottom:14px">Moje miejsca</div>
+          <div style="display:flex;gap:6px;overflow-x:auto">
+            <sc-for list="{{ placesTabs }}" as="t" hint-placeholder-count="4">
+              <div onClick="{{ t.select }}" style="{{ t.style }}">{{ t.label }}</div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="flex:1;overflow:auto;padding:16px 20px 20px">
+          <sc-if value="{{ isFriendsFilter }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ friendsRank }}" as="f" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:14px;background:#FFFDF8;border-radius:14px;padding:12px">
+                  <div style="position:relative;width:40px;height:40px;flex-shrink:0">
+                    <div style="{{ f.avatarStyle }}">{{ f.initials }}</div>
+                    <div style="{{ f.badgeStyle }}">{{ f.rank }}</div>
+                  </div>
+                  <div style="flex:1">
+                    <div style="font-family:'Manrope',sans-serif;font-weight:700;font-size:13px;color:#23255E">{{ f.name }}</div>
+                    <div style="font-family:'Manrope',sans-serif;font-size:11px;color:rgba(35,37,94,.55)">{{ f.count }} zapisanych miejsc</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isFriendsFilter }}" hint-placeholder-val="{{ false }}" data-invert="1">
+          </sc-if>
+          <sc-if value="{{ showPlacesList }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ filteredPlaces }}" as="r" hint-placeholder-count="4">
+                <div onClick="{{ r.open }}" style="display:flex;align-items:center;gap:12px;background:#FFFDF8;border-radius:14px;padding:10px;cursor:pointer">
+                  <div style="width:56px;height:56px;border-radius:12px;flex-shrink:0;background:repeating-linear-gradient(45deg,#E7DEC7 0px,#E7DEC7 8px,#F1EADA 8px,#F1EADA 16px)"></div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-family:'Manrope',sans-serif;font-weight:700;font-size:13px;color:#23255E">{{ r.name }}</div>
+                    <div style="font-family:'Manrope',sans-serif;font-size:11px;color:rgba(35,37,94,.55);margin-bottom:3px">{{ r.cat }} • {{ r.price }}</div>
+                    <div style="font-family:'Manrope',sans-serif;font-size:10.5px;color:#23255E;font-weight:700">{{ r.dist }}</div>
+                  </div>
+                </div>
+              </sc-for>
+              <sc-if value="{{ placesEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="text-align:center;padding:40px 10px;font-family:'Manrope',sans-serif;font-size:12.5px;color:rgba(35,37,94,.45)">Brak miejsc w tej kategorii</div>
+              </sc-if>
+            </div>
+          </sc-if>
+        </div>
+        <dc-import name="PozeramyTabBar" active-tab="places" on-discover="{{ goDiscover }}" on-map="{{ goMap }}" on-places="{{ goPlaces }}" on-profile="{{ goProfile }}" on-add="{{ toggleAddSheet }}" hint-size="100%,64px" style="flex-shrink:0"></dc-import>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Profil użytkownika" style="display:flex;flex-direction:column;height:100%">
+        <div style="flex:1;overflow:auto">
+          <div style="position:relative;background:#F0B6B4;padding:54px 20px 46px;overflow:hidden">
+            <div style="position:absolute;width:100px;height:100px;border-radius:55% 45% 40% 60%/50% 55% 45% 50%;background:#FFFDF8;opacity:.4;top:-30px;left:-20px"></div>
+            <div style="position:relative;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+              <div style="width:32px;height:32px;border-radius:50%;border:2px solid rgba(35,37,94,.5);position:relative">
+                <div style="position:absolute;width:14px;height:14px;border:1.6px solid rgba(35,37,94,.5);border-radius:50%;top:9px;left:9px"></div>
+              </div>
+              <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;position:relative">
+                <div style="width:12px;height:10px;border-radius:6px 6px 2px 2px;border:2px solid #23255E;box-sizing:border-box;border-bottom:none"></div>
+              </div>
+            </div>
+            <div style="position:relative;display:flex;flex-direction:column;align-items:center;text-align:center">
+              <div style="width:76px;height:76px;border-radius:50%;background:#23255E;display:flex;align-items:center;justify-content:center;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:24px;color:#F7F1E3;border:3px solid #FFFDF8;margin-bottom:10px">JK</div>
+              <div style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:18px;color:#23255E">Julia Kowalska</div>
+              <div style="font-family:'Manrope',sans-serif;font-size:11.5px;color:rgba(35,37,94,.6);margin-bottom:8px">@pozeramy_julia</div>
+              <div style="display:flex;align-items:center;gap:8px;background:#FFFDF8;border-radius:20px;padding:5px 12px 5px 6px;margin-bottom:8px">
+                <div style="padding:2px 8px;border-radius:12px;background:#E2572A;color:#FFFDF8;font-family:'Manrope',sans-serif;font-size:10.5px;font-weight:800">Poziom 24</div>
+                <span style="font-family:'Manrope',sans-serif;font-size:11px;color:#23255E;font-weight:700">2630 / 3500 XP</span>
+              </div>
+              <div style="width:160px;height:6px;background:rgba(35,37,94,.15);border-radius:4px;overflow:hidden">
+                <div style="width:75%;height:100%;background:#E2572A;border-radius:4px"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:0 20px;margin-top:-24px;position:relative">
+            <div style="display:flex;background:#FFFDF8;border-radius:16px;box-shadow:0 4px 14px rgba(35,37,94,.1);padding:16px 8px">
+              <div style="flex:1;text-align:center;border-right:1px solid rgba(35,37,94,.08)">
+                <div style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:18px;color:#23255E">128</div>
+                <div style="font-family:'Manrope',sans-serif;font-size:10.5px;color:rgba(35,37,94,.55)">Odwiedzone</div>
+              </div>
+              <div style="flex:1;text-align:center;border-right:1px solid rgba(35,37,94,.08)">
+                <div style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:18px;color:#23255E">54</div>
+                <div style="font-family:'Manrope',sans-serif;font-size:10.5px;color:rgba(35,37,94,.55)">Do odwiedzenia</div>
+              </div>
+              <div style="flex:1;text-align:center">
+                <div style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:18px;color:#23255E">32</div>
+                <div style="font-family:'Manrope',sans-serif;font-size:10.5px;color:rgba(35,37,94,.55)">Ulubione</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:22px 20px 0">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+              <span style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;color:#23255E">Odznaki</span>
+              <span onClick="{{ openAchievements }}" style="font-family:'Manrope',sans-serif;font-size:11px;color:#E2572A;font-weight:700;cursor:pointer">Zobacz wszystkie</span>
+            </div>
+            <div style="display:flex;gap:14px;margin-bottom:24px">
+              <sc-for list="{{ badgePreview }}" as="b" hint-placeholder-count="4">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:5px;width:56px">
+                  <div style="{{ b.hexStyleSm }}">
+                    <div style="{{ b.sparkleStyleSm }}"></div>
+                    <span style="{{ b.monoTextStyleSm }}">{{ b.mono }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;color:#23255E;margin-bottom:12px">Ostatnia aktywność</div>
+            <div style="display:flex;flex-direction:column;gap:12px;padding-bottom:20px">
+              <sc-for list="{{ activity }}" as="a" hint-placeholder-count="3">
+                <div style="display:flex;align-items:flex-start;gap:10px">
+                  <div style="width:32px;height:32px;border-radius:50%;background:#F0B6B4;flex-shrink:0"></div>
+                  <div>
+                    <div style="font-family:'Manrope',sans-serif;font-size:12.5px;color:#23255E;font-weight:600">{{ a.text }}</div>
+                    <div style="font-family:'Manrope',sans-serif;font-size:10.5px;color:rgba(35,37,94,.5)">{{ a.time }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <dc-import name="PozeramyTabBar" active-tab="profile" on-discover="{{ goDiscover }}" on-map="{{ goMap }}" on-places="{{ goPlaces }}" on-profile="{{ goProfile }}" on-add="{{ toggleAddSheet }}" hint-size="100%,64px" style="flex-shrink:0"></dc-import>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ showDetail }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Profil restauracji" style="position:absolute;inset:0;background:#F7F1E3;display:flex;flex-direction:column;z-index:30">
+        <div style="flex:1;overflow:auto">
+          <div style="position:relative;height:230px;background:repeating-linear-gradient(45deg,#3B3D7A 0px,#3B3D7A 10px,#2B2D63 10px,#2B2D63 20px)">
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Manrope',sans-serif;font-size:10px;letter-spacing:.06em;color:rgba(247,241,227,.5);text-transform:uppercase">zdjęcie restauracji</div>
+            <div style="position:absolute;top:54px;left:16px;right:16px;display:flex;justify-content:space-between">
+              <div onClick="{{ closeDetail }}" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;cursor:pointer">
+                <div style="width:8px;height:8px;border-left:2px solid #23255E;border-bottom:2px solid #23255E;transform:rotate(45deg);margin-left:2px"></div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.85)"></div>
+                <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;gap:2px">
+                  <div style="width:3px;height:3px;border-radius:50%;background:#23255E"></div><div style="width:3px;height:3px;border-radius:50%;background:#23255E"></div><div style="width:3px;height:3px;border-radius:50%;background:#23255E"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="background:#FFFDF8;border-radius:22px 22px 0 0;margin-top:-20px;position:relative;padding:20px 20px 8px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+              <div style="{{ detail.monoCircleStyle }}">{{ detail.mono }}</div>
+              <div style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:19px;color:#23255E">{{ detail.name }}</div>
+            </div>
+            <div style="font-family:'Manrope',sans-serif;font-size:12.5px;color:rgba(35,37,94,.6);margin-bottom:10px">{{ detail.cat }} • {{ detail.price }}</div>
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;font-family:'Manrope',sans-serif;font-size:12.5px;color:#23255E">
+              <span style="font-weight:700">★ {{ detail.rating }} ({{ detail.reviews }} opinii)</span>
+              <span style="color:rgba(35,37,94,.5)">{{ detail.dist }}</span>
+            </div>
+            <div style="font-family:'Manrope',sans-serif;font-size:12px;color:rgba(35,37,94,.6);margin-bottom:3px">{{ detail.address }}</div>
+            <div style="{{ detail.hoursStyle }}">{{ detail.hours }}</div>
+
+            <div style="display:flex;gap:8px;margin:16px 0 20px">
+              <div onClick="{{ detail.toggleWant }}" style="{{ detail.wantBtnStyle }}">Chcę odwiedzić</div>
+              <div onClick="{{ detail.toggleVisited }}" style="{{ detail.visitedBtnStyle }}">Byłem tutaj</div>
+              <div onClick="{{ detail.toggleFav }}" style="{{ detail.favBtnStyle }}">Ulubione</div>
+            </div>
+
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px">
+              <span style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:14px;color:#23255E">Zdjęcia</span>
+              <span style="font-family:'Manrope',sans-serif;font-size:11px;color:#E2572A;font-weight:700">Zobacz wszystkie</span>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:22px">
+              <div style="width:88px;height:70px;border-radius:10px;flex-shrink:0;background:repeating-linear-gradient(45deg,#E7DEC7 0px,#E7DEC7 8px,#F1EADA 8px,#F1EADA 16px)"></div>
+              <div style="width:88px;height:70px;border-radius:10px;flex-shrink:0;background:repeating-linear-gradient(45deg,#E7DEC7 0px,#E7DEC7 8px,#F1EADA 8px,#F1EADA 16px)"></div>
+              <div style="width:88px;height:70px;border-radius:10px;flex-shrink:0;background:repeating-linear-gradient(45deg,#E7DEC7 0px,#E7DEC7 8px,#F1EADA 8px,#F1EADA 16px)"></div>
+            </div>
+
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+              <span style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:14px;color:#23255E">Opinie</span>
+              <span style="font-family:'Manrope',sans-serif;font-size:11px;color:#E2572A;font-weight:700">Zobacz wszystkie</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:14px;padding-bottom:24px">
+              <sc-for list="{{ reviews }}" as="rv" hint-placeholder-count="2">
+                <div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+                    <div style="width:28px;height:28px;border-radius:50%;background:#F0B6B4;display:flex;align-items:center;justify-content:center;font-family:'Manrope',sans-serif;font-size:10px;font-weight:700;color:#23255E">{{ rv.initials }}</div>
+                    <span style="font-family:'Manrope',sans-serif;font-size:12px;font-weight:700;color:#23255E">{{ rv.name }}</span>
+                    <span style="font-family:'Manrope',sans-serif;font-size:10.5px;color:rgba(35,37,94,.45)">{{ rv.time }}</span>
+                  </div>
+                  <div style="font-family:'Manrope',sans-serif;font-size:11.5px;color:#23255E;font-weight:700;margin-bottom:3px">{{ rv.starsText }}</div>
+                  <div style="font-family:'Manrope',sans-serif;font-size:12.5px;color:rgba(35,37,94,.75);line-height:1.4">{{ rv.text }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ showAchievements }}" hint-placeholder-val="{{ false }}">
+      <div data-screen-label="Osiągnięcia" style="position:absolute;inset:0;background:#F7F1E3;display:flex;flex-direction:column;z-index:30">
+        <div style="flex:1;overflow:auto">
+          <div style="position:relative;background:#F0B6B4;padding:54px 20px 24px;overflow:hidden">
+            <div style="position:absolute;width:90px;height:90px;border-radius:50% 50% 40% 60%/55% 45% 55% 45%;background:#FFFDF8;opacity:.35;top:-25px;right:-15px"></div>
+            <div onClick="{{ closeAchievements }}" style="position:relative;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:14px">
+              <div style="width:8px;height:8px;border-left:2px solid #23255E;border-bottom:2px solid #23255E;transform:rotate(45deg);margin-left:2px"></div>
+            </div>
+            <div style="position:relative;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:22px;color:#23255E;margin-bottom:14px">Osiągnięcia</div>
+            <div style="position:relative;background:#FFFDF8;border-radius:16px;padding:16px;display:flex;align-items:center;gap:14px">
+              <div style="width:52px;height:52px;border-radius:50%;background:#E2572A;flex-shrink:0"></div>
+              <div style="flex:1">
+                <div style="font-family:'Manrope',sans-serif;font-size:11px;color:rgba(35,37,94,.55);margin-bottom:2px">Twój postęp</div>
+                <div style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;color:#23255E;margin-bottom:6px">Poziom 24 · 2630 / 3500 XP</div>
+                <div style="width:100%;height:6px;background:rgba(35,37,94,.12);border-radius:4px;overflow:hidden">
+                  <div style="width:75%;height:100%;background:#E2572A;border-radius:4px"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:20px 20px 0">
+            <div style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;color:#23255E;margin-bottom:14px">Odznaki</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px 8px;margin-bottom:26px">
+              <sc-for list="{{ badges }}" as="b" hint-placeholder-count="6">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+                  <div style="{{ b.hexStyleLg }}">
+                    <sc-if value="{{ b.unlocked }}" hint-placeholder-val="{{ true }}">
+                      <div style="{{ b.sparkleStyleLg }}"></div>
+                      <span style="{{ b.monoTextStyleLg }}">{{ b.mono }}</span>
+                    </sc-if>
+                    <sc-if value="{{ b.locked }}" hint-placeholder-val="{{ false }}">
+                      <div style="display:flex;flex-direction:column;align-items:center">
+                        <div style="{{ b.lockArcStyleLg }}"></div>
+                        <div style="{{ b.lockBodyStyleLg }}"></div>
+                      </div>
+                    </sc-if>
+                  </div>
+                  <span style="{{ b.labelStyle }}">{{ b.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+              <span style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:15px;color:#23255E">Ranking znajomych</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;padding-bottom:24px">
+              <sc-for list="{{ friendsRank }}" as="f" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:14px;background:#FFFDF8;border-radius:14px;padding:12px">
+                  <div style="position:relative;width:40px;height:40px;flex-shrink:0">
+                    <div style="{{ f.avatarStyle }}">{{ f.initials }}</div>
+                    <div style="{{ f.badgeStyle }}">{{ f.rank }}</div>
+                  </div>
+                  <div style="flex:1">
+                    <div style="font-family:'Manrope',sans-serif;font-weight:700;font-size:13px;color:#23255E">{{ f.name }}</div>
+                    <div style="font-family:'Manrope',sans-serif;font-size:11px;color:rgba(35,37,94,.55)">{{ f.count }} odwiedzonych</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ showAddSheet }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;z-index:40">
+        <div onClick="{{ closeAddSheet }}" style="position:absolute;inset:0;background:rgba(35,37,94,.4)"></div>
+        <div style="position:absolute;left:0;right:0;bottom:0;background:#FFFDF8;border-radius:22px 22px 0 0;padding:20px 20px 34px">
+          <div style="width:36px;height:4px;background:rgba(35,37,94,.2);border-radius:3px;margin:0 auto 18px"></div>
+          <div style="font-family:'Baloo 2',sans-serif;font-weight:700;font-size:16px;color:#23255E;margin-bottom:16px">Dodaj</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;align-items:center;gap:14px;padding:12px 4px;cursor:pointer">
+              <div style="width:40px;height:40px;border-radius:12px;background:#F0B6B4;flex-shrink:0"></div>
+              <span style="font-family:'Manrope',sans-serif;font-size:13.5px;font-weight:600;color:#23255E">Dodaj opinię</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;padding:12px 4px;cursor:pointer">
+              <div style="width:40px;height:40px;border-radius:12px;background:#E2572A;flex-shrink:0"></div>
+              <span style="font-family:'Manrope',sans-serif;font-size:13.5px;font-weight:600;color:#23255E">Dodaj miejsce</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;padding:12px 4px;cursor:pointer">
+              <div style="width:40px;height:40px;border-radius:12px;background:#3B3D7A;flex-shrink:0"></div>
+              <span style="font-family:'Manrope',sans-serif;font-size:13.5px;font-weight:600;color:#23255E">Zrób zdjęcie</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+    </div>
+  </x-import>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const NAVY = '#23255E';
+const PINK_DEEP = '#E8807E';
+const ORANGE = '#E2572A';
+const GOLD = 'oklch(78% 0.1 85)';
+const TEAL = 'oklch(66% 0.09 190)';
+const VIOLET = 'oklch(66% 0.1 300)';
+const MUTED = 'rgba(35,37,94,0.28)';
+
+class Component extends DCLogic {
+  state = { tab: 'discover', detailId: null, showAchievements: false, showAddSheet: false, placesFilter: 'todo', overrides: {} };
+
+  restaurants = [
+    { id: 1, name: 'Ognisty Talerz', cat: 'Kuchnia gruzińska', price: '$$', rating: 4.8, reviews: 212, dist: '0.8 km', mono: 'OT', color: PINK_DEEP, address: 'ul. Wesoła 12, Poznań', hours: 'Otwarte • do 22:00', open: true, want: true, visited: false, favorite: true },
+    { id: 2, name: 'Ramen Kanto', cat: 'Kuchnia japońska', price: '$$', rating: 4.7, reviews: 184, dist: '1.1 km', mono: 'RK', color: ORANGE, address: 'ul. Św. Marcin 9, Poznań', hours: 'Otwarte • do 21:30', open: true, want: false, visited: true, favorite: false },
+    { id: 3, name: 'Trattoria Rosa', cat: 'Kuchnia włoska', price: '$$$', rating: 4.9, reviews: 301, dist: '1.4 km', mono: 'TR', color: GOLD, address: 'ul. Zielona 4, Poznań', hours: 'Otwarte • do 23:00', open: true, want: true, visited: false, favorite: true },
+    { id: 4, name: 'Pierogarnia Wisła', cat: 'Kuchnia polska', price: '$', rating: 4.6, reviews: 150, dist: '0.5 km', mono: 'PW', color: TEAL, address: 'ul. Garbary 21, Poznań', hours: 'Otwarte • do 20:00', open: true, want: false, visited: true, favorite: true },
+    { id: 5, name: 'Café Lumen', cat: 'Kawa i wypieki', price: '$', rating: 4.8, reviews: 98, dist: '0.3 km', mono: 'CL', color: VIOLET, address: 'ul. Kwiatowa 3, Poznań', hours: 'Zamknięte • od 8:00', open: false, want: true, visited: false, favorite: false },
+    { id: 6, name: 'Sushi Kaze', cat: 'Kuchnia japońska', price: '$$', rating: 4.7, reviews: 176, dist: '2.0 km', mono: 'SK', color: PINK_DEEP, address: 'ul. Dąbrowskiego 55, Poznań', hours: 'Otwarte • do 22:00', open: true, want: false, visited: false, favorite: false },
+  ];
+  categoryDefs = [
+    { label: 'Pizza', mono: 'PZ', color: ORANGE }, { label: 'Burgery', mono: 'BU', color: PINK_DEEP },
+    { label: 'Sushi', mono: 'SU', color: TEAL }, { label: 'Kawa', mono: 'KA', color: GOLD },
+    { label: 'Polska', mono: 'PL', color: VIOLET }, { label: 'Wege', mono: 'WG', color: ORANGE },
+  ];
+  badgeDefs = [
+    { id: 1, label: 'Pizza Lover', mono: 'PZ', unlocked: true, color: PINK_DEEP },
+    { id: 2, label: 'Mistrz Burgera', mono: 'MB', unlocked: true, color: ORANGE },
+    { id: 3, label: 'Łowca Sushi', mono: 'ŁS', unlocked: true, color: TEAL },
+    { id: 4, label: 'Odkrywca Kawy', mono: 'OK', unlocked: true, color: GOLD },
+    { id: 5, label: 'Odkrywca Miejsc', mono: 'OM', unlocked: false, color: MUTED },
+    { id: 6, label: 'Łasuch', mono: 'ŁA', unlocked: false, color: MUTED },
+  ];
+  friendsRankDefs = [
+    { rank: 1, name: 'Kasia', count: 157, color: GOLD }, { rank: 2, name: 'Bartek', count: 132, color: 'rgba(35,37,94,.35)' },
+    { rank: 3, name: 'Ty', count: 128, color: ORANGE, isMe: true },
+  ];
+  activity = [
+    { text: 'Odwiedziłeś Ramen Kanto', time: '2 dni temu' },
+    { text: 'Dodałeś do ulubionych Trattoria Rosa', time: '3 dni temu' },
+    { text: 'Napisałeś opinię w Pierogarnia Wisła', time: '5 dni temu' },
+  ];
+  reviewDefs = [
+    { name: 'Kasia', initials: 'KM', stars: 5, text: 'Świetne miejsce, wracam tu zawsze!', time: '2 dni temu' },
+    { name: 'Bartek', initials: 'BN', stars: 4, text: 'Dobre jedzenie, trochę głośno wieczorem.', time: '1 tydzień temu' },
+  ];
+  placesTabDefs = [
+    { key: 'todo', label: 'Do odwiedzenia' }, { key: 'visited', label: 'Odwiedzone' },
+    { key: 'favorite', label: 'Ulubione' }, { key: 'friends', label: 'Znajomi' },
+  ];
+
+  setTab = (tab) => this.setState({ tab });
+  openDetail = (id) => this.setState({ detailId: id });
+  closeDetail = () => this.setState({ detailId: null });
+  openAchievements = () => this.setState({ showAchievements: true });
+  closeAchievements = () => this.setState({ showAchievements: false });
+  toggleAddSheet = () => this.setState((s) => ({ showAddSheet: !s.showAddSheet }));
+  closeAddSheet = () => this.setState({ showAddSheet: false });
+  setPlacesFilter = (key) => this.setState({ placesFilter: key });
+
+  getFlag(r, key) {
+    const o = this.state.overrides[r.id];
+    return o && o[key] !== undefined ? o[key] : r[key];
+  }
+  toggleFlag = (id, key) => {
+    this.setState((s) => {
+      const cur = s.overrides[id] || {};
+      const base = this.restaurants.find((r) => r.id === id);
+      const curVal = cur[key] !== undefined ? cur[key] : base[key];
+      return { overrides: { ...s.overrides, [id]: { ...cur, [key]: !curVal } } };
+    });
+  };
+
+  renderVals() {
+    const btnStyle = (active, color) => `flex:1;text-align:center;padding:10px 4px;border-radius:12px;font-family:'Manrope',sans-serif;font-size:11.5px;font-weight:700;cursor:pointer;background:${active ? color : '#F1EADA'};color:${active ? '#FFFDF8' : NAVY}`;
+
+    const decorated = this.restaurants.map((r) => {
+      const favorite = this.getFlag(r, 'favorite');
+      const visited = this.getFlag(r, 'visited');
+      const want = this.getFlag(r, 'want');
+      return {
+        ...r, favorite, visited, want,
+        open: () => this.openDetail(r.id),
+        toggleFav: (e) => { e.stopPropagation(); this.toggleFlag(r.id, 'favorite'); },
+        toggleVisited: (e) => { e.stopPropagation(); this.toggleFlag(r.id, 'visited'); },
+        toggleWant: (e) => { e.stopPropagation(); this.toggleFlag(r.id, 'want'); },
+        heartCircleLStyle: `position:absolute;width:6.5px;height:6.5px;border-radius:50%;left:0;top:0;background:${favorite ? ORANGE : 'transparent'};border:1.5px solid ${favorite ? ORANGE : 'rgba(35,37,94,.4)'}`,
+        heartCircleRStyle: `position:absolute;width:6.5px;height:6.5px;border-radius:50%;left:6px;top:0;background:${favorite ? ORANGE : 'transparent'};border:1.5px solid ${favorite ? ORANGE : 'rgba(35,37,94,.4)'}`,
+        heartSquareStyle: `position:absolute;width:6.3px;height:6.3px;left:3.3px;top:3px;transform:rotate(45deg);background:${favorite ? ORANGE : 'transparent'};border:1.5px solid ${favorite ? ORANGE : 'rgba(35,37,94,.4)'}`,
+        monoCircleStyle: `width:44px;height:44px;border-radius:50%;background:${r.color};display:flex;align-items:center;justify-content:center;font-family:'Manrope',sans-serif;font-weight:700;font-size:14px;color:#FFFDF8;flex-shrink:0;border:3px solid #FFFDF8`,
+        hoursStyle: `font-family:'Manrope',sans-serif;font-size:12px;font-weight:700;margin-bottom:0;color:${r.open ? '#3C8A5A' : '#B23A3A'}`,
+        wantBtnStyle: btnStyle(want, NAVY),
+        visitedBtnStyle: btnStyle(visited, '#3B3D7A'),
+        favBtnStyle: btnStyle(favorite, ORANGE),
+      };
+    });
+
+    const detailId = this.state.detailId;
+    const detail = detailId ? decorated.find((r) => r.id === detailId) : null;
+    const filterKeyMap = { todo: 'want', visited: 'visited', favorite: 'favorite' };
+    const isFriendsFilter = this.state.placesFilter === 'friends';
+    const filteredPlaces = isFriendsFilter ? [] : decorated.filter((r) => r[filterKeyMap[this.state.placesFilter]]);
+
+    const categories = this.categoryDefs.map((c) => ({ ...c, circleStyle: `width:48px;height:48px;border-radius:50%;background:${c.color};display:flex;align-items:center;justify-content:center;font-family:'Manrope',sans-serif;font-weight:700;font-size:12px;color:#FFFDF8` }));
+
+    const hexClip = 'polygon(25% 0%,75% 0%,100% 50%,75% 100%,25% 100%,0% 50%)';
+    const badges = this.badgeDefs.map((b) => ({
+      ...b,
+      locked: !b.unlocked,
+      hexStyleLg: `width:64px;height:58px;clip-path:${hexClip};background:${b.unlocked ? b.color : '#E7DFC9'};display:flex;align-items:center;justify-content:center;position:relative;box-shadow:${b.unlocked ? '0 0 0 3px #FFFDF8, 0 5px 12px rgba(35,37,94,.2)' : '0 0 0 3px #FFFDF8'}`,
+      monoTextStyleLg: `font-family:'Manrope',sans-serif;font-weight:800;font-size:15px;color:#FFFDF8`,
+      lockArcStyleLg: `width:11px;height:8px;border:2px solid rgba(35,37,94,.35);border-bottom:none;border-radius:8px 8px 0 0;margin-bottom:-1px`,
+      lockBodyStyleLg: `width:15px;height:11px;background:rgba(35,37,94,.35);border-radius:2px`,
+      sparkleStyleLg: `position:absolute;top:-3px;right:5px;width:9px;height:9px;background:${GOLD};transform:rotate(45deg);border:1.5px solid #FFFDF8`,
+      labelStyle: `font-family:'Manrope',sans-serif;font-size:10px;font-weight:700;text-align:center;color:${b.unlocked ? NAVY : 'rgba(35,37,94,.4)'}`,
+    }));
+    const badgePreview = badges.filter((b) => b.unlocked).slice(0, 4).map((b) => ({
+      ...b,
+      hexStyleSm: `width:52px;height:47px;clip-path:${hexClip};background:${b.color};display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 0 0 3px #FFFDF8, 0 4px 10px rgba(35,37,94,.18)`,
+      monoTextStyleSm: `font-family:'Manrope',sans-serif;font-weight:800;font-size:13px;color:#FFFDF8`,
+      sparkleStyleSm: `position:absolute;top:-3px;right:4px;width:8px;height:8px;background:${GOLD};transform:rotate(45deg);border:1.3px solid #FFFDF8`,
+    }));
+
+    const avatarColors = [PINK_DEEP, TEAL, VIOLET];
+    const friendsRank = this.friendsRankDefs.map((f, i) => ({
+      ...f,
+      initials: f.name.slice(0, 2).toUpperCase(),
+      avatarStyle: `width:40px;height:40px;border-radius:50%;background:${avatarColors[i % avatarColors.length]};display:flex;align-items:center;justify-content:center;font-family:'Manrope',sans-serif;font-weight:800;font-size:13px;color:#FFFDF8`,
+      badgeStyle: `position:absolute;bottom:-2px;right:-2px;width:20px;height:20px;border-radius:50%;background:${f.color};border:2px solid #FFFDF8;display:flex;align-items:center;justify-content:center;font-family:'Manrope',sans-serif;font-weight:800;font-size:10px;color:#FFFDF8`,
+    }));
+
+    const reviews = this.reviewDefs.map((rv) => ({ ...rv, starsText: '★'.repeat(rv.stars) + '☆'.repeat(5 - rv.stars) }));
+
+    const placesTabs = this.placesTabDefs.map((t) => {
+      const active = t.key === this.state.placesFilter;
+      return { ...t, select: () => this.setPlacesFilter(t.key), style: `flex-shrink:0;padding:7px 14px;border-radius:20px;font-family:'Manrope',sans-serif;font-size:11.5px;font-weight:700;cursor:pointer;background:${active ? NAVY : '#EFE7D3'};color:${active ? '#F7F1E3' : NAVY}` };
+    });
+
+    const mapPositions = [{ left: '20%', top: '22%' }, { left: '62%', top: '16%' }, { left: '74%', top: '52%' }, { left: '32%', top: '64%' }, { left: '52%', top: '38%' }, { left: '15%', top: '48%' }];
+    const mapPins = decorated.map((r, i) => ({ pinStyle: `position:absolute;left:${mapPositions[i % mapPositions.length].left};top:${mapPositions[i % mapPositions.length].top};width:16px;height:16px;background:${r.color};border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 4px rgba(35,37,94,.3)` }));
+
+    return {
+      tab: this.state.tab,
+      isDiscover: this.state.tab === 'discover', isMap: this.state.tab === 'map',
+      isPlaces: this.state.tab === 'places', isProfile: this.state.tab === 'profile',
+      heroDark: false,
+      recommended: decorated.slice(0, 3), newlyOpened: decorated.slice(3, 5),
+      categories, mapPins, mapPreview: decorated[0],
+      showDetail: !!detail, detail: detail || {},
+      showAchievements: this.state.showAchievements, showAddSheet: this.state.showAddSheet,
+      placesTabs, filteredPlaces, isFriendsFilter, showPlacesList: !isFriendsFilter,
+      placesEmpty: !isFriendsFilter && filteredPlaces.length === 0,
+      friendsRank, badges, badgePreview, activity: this.activity, reviews,
+      goDiscover: this.setTab.bind(this, 'discover'), goMap: this.setTab.bind(this, 'map'),
+      goPlaces: this.setTab.bind(this, 'places'), goProfile: this.setTab.bind(this, 'profile'),
+      closeDetail: this.closeDetail, openAchievements: this.openAchievements, closeAchievements: this.closeAchievements,
+      toggleAddSheet: this.toggleAddSheet, closeAddSheet: this.closeAddSheet,
+    };
+  }
+}
+</script>
+</body>
+</html>

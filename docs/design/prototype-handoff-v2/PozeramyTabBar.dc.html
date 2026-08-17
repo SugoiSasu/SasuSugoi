@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<div style="display:flex;align-items:center;justify-content:space-around;padding:10px 6px 8px;background:#FFFDF8;border-top:1px solid rgba(35,37,94,0.08);position:relative;z-index:5">
+  <div onClick="{{ onDiscover }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px 6px">
+    <div style="width:22px;height:22px;position:relative">
+      <div style="{{ discoverGlassStyle }}"></div>
+      <div style="{{ discoverLineStyle }}"></div>
+    </div>
+    <span style="{{ discoverTextStyle }}">Odkrywaj</span>
+  </div>
+  <div onClick="{{ onMap }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px 6px">
+    <div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center">
+      <div style="{{ mapPinStyle }}"></div>
+    </div>
+    <span style="{{ mapTextStyle }}">Mapa</span>
+  </div>
+  <div onClick="{{ onAdd }}" style="display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:#E2572A;box-shadow:0 6px 14px rgba(226,87,42,0.4);cursor:pointer;margin-top:-22px;position:relative">
+    <div style="width:16px;height:2.5px;background:#FFFDF8;position:absolute;border-radius:2px"></div>
+    <div style="width:2.5px;height:16px;background:#FFFDF8;position:absolute;border-radius:2px"></div>
+  </div>
+  <div onClick="{{ onPlaces }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px 6px">
+    <div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center">
+      <div style="{{ placesBookmarkStyle }}"></div>
+    </div>
+    <span style="{{ placesTextStyle }}">Moje miejsca</span>
+  </div>
+  <div onClick="{{ onProfile }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px 6px">
+    <div style="width:22px;height:22px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;overflow:hidden">
+      <div style="{{ profileHeadStyle }}"></div>
+      <div style="{{ profileBodyStyle }}"></div>
+    </div>
+    <span style="{{ profileTextStyle }}">Profil</span>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;activeTab&quot;:{&quot;editor&quot;:null,&quot;default&quot;:&quot;discover&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;onDiscover&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onMap&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onPlaces&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onProfile&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onAdd&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const active = this.props.activeTab;
+    const on = '#E2572A';
+    const off = 'rgba(35,37,94,0.45)';
+    const c = (key) => active === key ? on : off;
+    const textStyle = (key) => `font-family:'Manrope',sans-serif;font-size:10px;font-weight:600;color:${c(key)}`;
+    return {
+      onDiscover: this.props.onDiscover, onMap: this.props.onMap,
+      onPlaces: this.props.onPlaces, onProfile: this.props.onProfile, onAdd: this.props.onAdd,
+      discoverGlassStyle: `position:absolute;left:2px;top:2px;width:13px;height:13px;border-radius:50%;border:2.2px solid ${c('discover')};box-sizing:border-box`,
+      discoverLineStyle: `position:absolute;left:13px;top:13px;width:7px;height:2.2px;background:${c('discover')};border-radius:2px;transform:rotate(45deg)`,
+      mapPinStyle: `width:14px;height:14px;background:${c('map')};border-radius:50% 50% 50% 0;transform:rotate(-45deg)`,
+      placesBookmarkStyle: `width:15px;height:19px;background:${c('places')};clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%)`,
+      profileHeadStyle: `width:9px;height:9px;border-radius:50%;background:${c('profile')};margin-bottom:1px`,
+      profileBodyStyle: `width:18px;height:9px;border-radius:9px 9px 0 0;background:${c('profile')}`,
+      discoverTextStyle: textStyle('discover'), mapTextStyle: textStyle('map'),
+      placesTextStyle: textStyle('places'), profileTextStyle: textStyle('profile'),
+    };
+  }
+}
+</script>
+</body>
+</html>
