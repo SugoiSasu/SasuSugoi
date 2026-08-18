@@ -25,10 +25,18 @@ function AuthPage() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
+  // Optional ?redirect=/some/path — e.g. an invite link sends the visitor
+  // here to log in first, then wants them back on /zaproszenie/$token.
+  const redirectTo = (() => {
+    const raw = new URLSearchParams(window.location.search).get("redirect");
+    return raw && raw.startsWith("/") ? raw : "/profile";
+  })();
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/profile" });
+      if (data.session) navigate({ to: redirectTo });
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   async function handleEmail(e: React.FormEvent) {
@@ -39,14 +47,14 @@ function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin + "/profile" },
+          options: { emailRedirectTo: window.location.origin + redirectTo },
         });
         if (error) throw error;
         toast.success("Konto utworzone! Sprawdź email aby potwierdzić.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: "/profile" });
+        navigate({ to: redirectTo });
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Coś poszło nie tak";
@@ -61,7 +69,7 @@ function AuthPage() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: window.location.origin + "/profile" },
+        options: { redirectTo: window.location.origin + redirectTo },
       });
       if (error) throw error;
       // Supabase redirects the browser to the provider on success, so

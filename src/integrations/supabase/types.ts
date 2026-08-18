@@ -1322,11 +1322,14 @@ export type Database = {
           instagram_url: string | null
           is_beta_tester: boolean
           is_public: boolean
+          is_vip: boolean
           points_total: number
           returned_after_break_at: string | null
           tiktok_url: string | null
           updated_at: string
           username: string | null
+          vip_nick_color: string | null
+          vip_until: string | null
           x_url: string | null
           youtube_url: string | null
         }
@@ -1343,11 +1346,14 @@ export type Database = {
           instagram_url?: string | null
           is_beta_tester?: boolean
           is_public?: boolean
+          is_vip?: boolean
           points_total?: number
           returned_after_break_at?: string | null
           tiktok_url?: string | null
           updated_at?: string
           username?: string | null
+          vip_nick_color?: string | null
+          vip_until?: string | null
           x_url?: string | null
           youtube_url?: string | null
         }
@@ -1364,11 +1370,14 @@ export type Database = {
           instagram_url?: string | null
           is_beta_tester?: boolean
           is_public?: boolean
+          is_vip?: boolean
           points_total?: number
           returned_after_break_at?: string | null
           tiktok_url?: string | null
           updated_at?: string
           username?: string | null
+          vip_nick_color?: string | null
+          vip_until?: string | null
           x_url?: string | null
           youtube_url?: string | null
         }
@@ -1904,6 +1913,16 @@ export type Database = {
         }[]
       }
       get_friends_count: { Args: { _user_id: string }; Returns: number }
+      get_invite_preview: {
+        Args: { _token: string }
+        Returns: {
+          expired: boolean
+          inviter_avatar_url: string
+          inviter_display_name: string
+          inviter_username: string
+          status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

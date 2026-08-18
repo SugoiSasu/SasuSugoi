@@ -16,11 +16,12 @@ import { PlaceReviewsSection } from "@/components/PlaceReviewsSection";
 import { usePlaceReviewStats } from "@/lib/reviews-api";
 import { SmartText } from "@/components/SmartText";
 import { UserAvatar } from "@/components/UserAvatar";
-import { useUser } from "@/lib/use-auth";
+import { useUser, useIsAdmin } from "@/lib/use-auth";
 import { useIsFavorite, useToggleFavorite, useFriendsWhoFavorited, useFavoriteCount } from "@/lib/favorites-api";
 import { useIsFollowing, useToggleFollow, useFollowCount } from "@/lib/follows-api";
 import { usePlaceOwner, useIsOwnerOf } from "@/lib/owners-api";
 import { OwnerRequestModal } from "@/components/OwnerRequestModal";
+import { EditableImageButton } from "@/components/EditableImageButton";
 import { Bell, BellOff, ShieldCheck } from "lucide-react";
 import { VisitStatusButton } from "@/components/VisitStatus";
 import sadPizza from "@/assets/brand/sad-pizza-404.png";
@@ -287,6 +288,9 @@ function PlaceProfile() {
   const { data: place, isLoading } = usePlace(id);
   const { data: verifiedOwner } = usePlaceOwner((place as Place | undefined)?.id ?? "");
   const reviewStats = usePlaceReviewStats((place as Place | undefined)?.id);
+  const { data: isOwnerOfPlace } = useIsOwnerOf((place as Place | undefined)?.id ?? "");
+  const { data: isAdmin } = useIsAdmin();
+  const canEditImages = !!isOwnerOfPlace || !!isAdmin;
 
   if (isLoading) {
     return <PlaceProfileSkeleton />;
@@ -355,6 +359,14 @@ function PlaceProfile() {
               </span>
             )}
           </div>
+          {canEditImages && (
+            <EditableImageButton
+              placeId={place.id}
+              kind="cover"
+              label="Zmień okładkę"
+              className="absolute right-3 top-3 h-9 w-9"
+            />
+          )}
         </div>
 
 
@@ -364,7 +376,17 @@ function PlaceProfile() {
         <header className="mb-5">
           <div className="flex items-start justify-between gap-3 flex-wrap">
             <div className="min-w-0 flex-1 flex items-start gap-3">
-              <PlaceAvatar name={place.name} cover={place.avatar_url ?? place.cover_image_url} color={meta.color} />
+              <div className="relative shrink-0">
+                <PlaceAvatar name={place.name} cover={place.avatar_url ?? place.cover_image_url} color={meta.color} />
+                {canEditImages && (
+                  <EditableImageButton
+                    placeId={place.id}
+                    kind="avatar"
+                    label="Zmień logo"
+                    className="absolute -right-1 -bottom-1 h-7 w-7"
+                  />
+                )}
+              </div>
               <div className="min-w-0 flex-1">
                 <SmartText as="h1" className="font-persona text-3xl sm:text-5xl text-balance leading-tight mb-2">{place.name}</SmartText>
                 <div className="flex flex-wrap gap-2 items-center mb-2">

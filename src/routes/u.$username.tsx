@@ -24,6 +24,7 @@ import { CollapsiblePlaceList } from "@/components/CollapsiblePlaceList";
 import { runWithToast } from "@/components/AsyncState";
 import { RankBadge } from "@/components/RankBadge";
 import { LevelProgressCard } from "@/components/LevelProgress";
+import { VipBadge, isVipActive } from "@/components/VipBadge";
 
 function relativeTimePl(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -131,8 +132,9 @@ function PublicProfile() {
             className="border-4 border-cream/20 shadow-xl transition-transform duration-500 hover:scale-[1.03]"
           />
           <div className="flex-1 min-w-0">
-            <h1 className="font-display text-3xl sm:text-4xl leading-tight tracking-tight">
+            <h1 className="font-display text-3xl sm:text-4xl leading-tight tracking-tight flex flex-wrap items-center gap-2.5">
               {profile.display_name || `@${profile.username}`}
+              {isVipActive(profile) && <VipBadge size="md" />}
             </h1>
             <p className="text-cream/70 text-sm mt-1.5">@{profile.username}</p>
             {(ranks ?? []).length > 0 && (

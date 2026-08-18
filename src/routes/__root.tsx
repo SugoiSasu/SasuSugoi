@@ -218,7 +218,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = pathname.startsWith("/admin");
-  const isAuth = pathname.startsWith("/auth");
+  const isAuth = pathname.startsWith("/auth") || pathname.startsWith("/zaproszenie");
   const showShell = !isAdmin && !isAuth;
 
   return (
