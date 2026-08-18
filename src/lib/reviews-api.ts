@@ -16,6 +16,9 @@ export interface Review {
     display_name: string | null;
     avatar_url: string | null;
     avatar_source: "google" | "upload" | "initials";
+    is_vip: boolean;
+    vip_until: string | null;
+    vip_nick_color: string | null;
   } | null;
 }
 
@@ -42,7 +45,9 @@ export function usePlaceReviews(placeId: string | undefined) {
       if (userIds.length === 0) return reviews;
       const { data: authors } = await supabase
         .from("profiles")
-        .select("id, username, display_name, avatar_url, avatar_source")
+        .select(
+          "id, username, display_name, avatar_url, avatar_source, is_vip, vip_until, vip_nick_color",
+        )
         .in("id", userIds);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const byId = new Map<string, any>((authors ?? []).map((a) => [a.id, a]));
@@ -51,7 +56,10 @@ export function usePlaceReviews(placeId: string | undefined) {
   });
 }
 
-export function useMyReviewForPlace(placeId: string | undefined, userId: string | undefined | null) {
+export function useMyReviewForPlace(
+  placeId: string | undefined,
+  userId: string | undefined | null,
+) {
   return useQuery({
     queryKey: ["my-review", placeId ?? null, userId ?? null],
     enabled: !!placeId && !!userId,
@@ -72,7 +80,9 @@ export function useUserReviews(userId: string | undefined | null) {
   return useQuery({
     queryKey: ["user-reviews", userId ?? null],
     enabled: !!userId,
-    queryFn: async (): Promise<(Review & { place: { id: string; slug: string; name: string; cuisine: string } | null })[]> => {
+    queryFn: async (): Promise<
+      (Review & { place: { id: string; slug: string; name: string; cuisine: string } | null })[]
+    > => {
       const { data, error } = await supabase
         .from("reviews")
         .select("*, place:places(id, slug, name, cuisine)")
@@ -96,9 +106,7 @@ export function useSaveReview() {
         const { error } = await supabase.from("reviews").update(values).eq("id", id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from("reviews")
-          .insert({ ...values, user_id: me.user.id });
+        const { error } = await supabase.from("reviews").insert({ ...values, user_id: me.user.id });
         if (error) throw error;
       }
     },

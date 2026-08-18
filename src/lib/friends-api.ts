@@ -18,6 +18,9 @@ export interface FriendProfile {
   display_name: string | null;
   avatar_url: string | null;
   avatar_source: "google" | "upload" | "initials";
+  is_vip: boolean;
+  vip_until: string | null;
+  vip_nick_color: string | null;
 }
 
 export function useFriendsCount(userId: string | null | undefined) {
@@ -62,7 +65,9 @@ export function useFriendProfiles(myId: string | null | undefined) {
       if (ids.length === 0) return [];
       const { data: profiles, error: pErr } = await supabase
         .from("profiles")
-        .select("id, username, display_name, avatar_url, avatar_source")
+        .select(
+          "id, username, display_name, avatar_url, avatar_source, is_vip, vip_until, vip_nick_color",
+        )
         .in("id", ids);
       if (pErr) throw pErr;
       return (profiles ?? []) as FriendProfile[];
@@ -81,7 +86,9 @@ export function useUserFriendProfiles(userId: string | null | undefined) {
       if (ids.length === 0) return [];
       const { data: profiles, error: pErr } = await supabase
         .from("profiles")
-        .select("id, username, display_name, avatar_url, avatar_source")
+        .select(
+          "id, username, display_name, avatar_url, avatar_source, is_vip, vip_until, vip_nick_color",
+        )
         .in("id", ids);
       if (pErr) throw pErr;
       return (profiles ?? []) as FriendProfile[];
@@ -272,7 +279,15 @@ export function useDeleteFriendList() {
 export function useToggleListMember() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ listId, friendId, on }: { listId: string; friendId: string; on: boolean }) => {
+    mutationFn: async ({
+      listId,
+      friendId,
+      on,
+    }: {
+      listId: string;
+      friendId: string;
+      on: boolean;
+    }) => {
       if (on) {
         const { error } = await supabase
           .from("friend_list_members")
@@ -345,7 +360,9 @@ export function useBlockedUsers() {
       if (ids.length === 0) return [];
       const { data, error: pErr } = await supabase
         .from("profiles")
-        .select("id, username, display_name, avatar_url, avatar_source")
+        .select(
+          "id, username, display_name, avatar_url, avatar_source, is_vip, vip_until, vip_nick_color",
+        )
         .in("id", ids);
       if (pErr) throw pErr;
       return (data ?? []) as FriendProfile[];
@@ -550,7 +567,15 @@ export function useReviewReactions(reviewId: string) {
 export function useToggleReaction() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ reviewId, type = "like", on }: { reviewId: string; type?: string; on: boolean }) => {
+    mutationFn: async ({
+      reviewId,
+      type = "like",
+      on,
+    }: {
+      reviewId: string;
+      type?: string;
+      on: boolean;
+    }) => {
       const { data: me } = await supabase.auth.getUser();
       if (!me.user) throw new Error("Nie zalogowano");
       if (on) {
@@ -592,7 +617,6 @@ export function useToggleReaction() {
   });
 }
 
-
 export interface ReviewComment {
   id: string;
   review_id: string;
@@ -605,6 +629,9 @@ export interface ReviewComment {
     display_name: string | null;
     avatar_url: string | null;
     avatar_source: "google" | "upload" | "initials";
+    is_vip: boolean;
+    vip_until: string | null;
+    vip_nick_color: string | null;
   } | null;
 }
 
@@ -623,7 +650,9 @@ export function useReviewComments(reviewId: string) {
       if (ids.length === 0) return rows;
       const { data: authors } = await supabase
         .from("profiles")
-        .select("id, username, display_name, avatar_url, avatar_source")
+        .select(
+          "id, username, display_name, avatar_url, avatar_source, is_vip, vip_until, vip_nick_color",
+        )
         .in("id", ids);
       const byId = new Map((authors ?? []).map((a) => [a.id, a as ReviewComment["author"]]));
       return rows.map((r) => ({ ...r, author: byId.get(r.user_id) ?? null }));
@@ -631,11 +660,18 @@ export function useReviewComments(reviewId: string) {
   });
 }
 
-
 export function useAddComment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ reviewId, body, _tempId: _t }: { reviewId: string; body: string; _tempId?: string }) => {
+    mutationFn: async ({
+      reviewId,
+      body,
+      _tempId: _t,
+    }: {
+      reviewId: string;
+      body: string;
+      _tempId?: string;
+    }) => {
       const { data: me } = await supabase.auth.getUser();
       if (!me.user) throw new Error("Nie zalogowano");
       const { error } = await supabase
@@ -680,7 +716,10 @@ export function useDeleteComment() {
       const key = ["review-comments", reviewId];
       await qc.cancelQueries({ queryKey: key });
       const previous = qc.getQueryData<ReviewComment[]>(key);
-      qc.setQueryData<ReviewComment[]>(key, (previous ?? []).filter((c) => c.id !== id));
+      qc.setQueryData<ReviewComment[]>(
+        key,
+        (previous ?? []).filter((c) => c.id !== id),
+      );
       return { previous, key };
     },
     onError: (_err, _vars, ctx) => {
@@ -689,7 +728,6 @@ export function useDeleteComment() {
     onSettled: (_d, _e, v) => qc.invalidateQueries({ queryKey: ["review-comments", v.reviewId] }),
   });
 }
-
 
 /* ============================================================
  * Review tags ("byliśmy razem")
@@ -756,9 +794,7 @@ export function useFriendSuggestions() {
         knownIds.add(other);
         if (f.status === "accepted") friendIds.add(other);
       });
-      const { data: blocks } = await supabase
-        .from("user_blocks")
-        .select("blocker_id, blocked_id");
+      const { data: blocks } = await supabase.from("user_blocks").select("blocker_id, blocked_id");
       (blocks ?? []).forEach((b) => {
         knownIds.add(b.blocker_id === myId ? (b.blocked_id as string) : (b.blocker_id as string));
       });
@@ -807,7 +843,9 @@ export function useFriendSuggestions() {
 
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("id, username, display_name, avatar_url, avatar_source")
+        .select(
+          "id, username, display_name, avatar_url, avatar_source, is_vip, vip_until, vip_nick_color",
+        )
         .in("id", Array.from(candidateIds));
 
       const list: Suggestion[] = (profiles ?? []).map((p) => {
@@ -863,7 +901,8 @@ export function useFriendRecommendations() {
       const map = new Map<string, { sum: number; n: number; latest: string }>();
       (revs ?? []).forEach((r) => {
         const e = map.get(r.place_id) ?? { sum: 0, n: 0, latest: r.created_at };
-        e.sum += r.rating; e.n += 1;
+        e.sum += r.rating;
+        e.n += 1;
         if (r.created_at > e.latest) e.latest = r.created_at;
         map.set(r.place_id, e);
       });

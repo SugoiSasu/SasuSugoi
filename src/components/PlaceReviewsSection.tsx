@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Star, Loader2, Image as ImageIcon, Trash2, X, MessageCircleReply, ShieldCheck } from "lucide-react";
+import {
+  Star,
+  Loader2,
+  Image as ImageIcon,
+  Trash2,
+  X,
+  MessageCircleReply,
+  ShieldCheck,
+} from "lucide-react";
 import { useUser } from "@/lib/use-auth";
 import {
   usePlaceReviews,
@@ -15,6 +23,7 @@ import {
 } from "@/lib/reviews-api";
 import { usePlaceRatingBreakdown } from "@/lib/places-api";
 import { UserAvatar } from "@/components/UserAvatar";
+import { VipBadge, isVipActive, vipNameStyle } from "@/components/VipBadge";
 import { useIsOwnerOf } from "@/lib/owners-api";
 import {
   usePlaceReviewReplies,
@@ -42,9 +51,12 @@ export function PlaceReviewsSection({ placeId }: { placeId: string }) {
         <div className="text-sm text-muted-foreground">
           {count > 0 ? (
             <span className="flex items-center gap-1">
-              <Star size={14} className="fill-tomato text-tomato" /> {avg} · {count} {count === 1 ? "recenzja" : "recenzji"}
+              <Star size={14} className="fill-tomato text-tomato" /> {avg} · {count}{" "}
+              {count === 1 ? "recenzja" : "recenzji"}
             </span>
-          ) : "Bądź pierwszą osobą, która oceni to miejsce."}
+          ) : (
+            "Bądź pierwszą osobą, która oceni to miejsce."
+          )}
         </div>
       </div>
 
@@ -52,18 +64,25 @@ export function PlaceReviewsSection({ placeId }: { placeId: string }) {
         <div className="mb-6 rounded-2xl border border-border bg-card p-4 sm:p-5">
           <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-4 sm:gap-6 items-center">
             <div className="text-center sm:text-left sm:border-r sm:border-border sm:pr-6">
-              <div className="font-display text-5xl leading-none text-navy">{avg?.toFixed(1) ?? "—"}</div>
+              <div className="font-display text-5xl leading-none text-navy">
+                {avg?.toFixed(1) ?? "—"}
+              </div>
               <div className="inline-flex items-center gap-0.5 mt-1.5" aria-hidden>
                 {[1, 2, 3, 4, 5].map((i) => (
                   <Star
                     key={i}
                     size={14}
-                    className={avg != null && i <= Math.round(avg) ? "fill-tomato text-tomato" : "text-muted-foreground/40"}
+                    className={
+                      avg != null && i <= Math.round(avg)
+                        ? "fill-tomato text-tomato"
+                        : "text-muted-foreground/40"
+                    }
                   />
                 ))}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                {breakdownTotal} {breakdownTotal === 1 ? "opinia" : breakdownTotal < 5 ? "opinie" : "opinii"}
+                {breakdownTotal}{" "}
+                {breakdownTotal === 1 ? "opinia" : breakdownTotal < 5 ? "opinie" : "opinii"}
               </div>
             </div>
             <div className="space-y-1.5">
@@ -74,12 +93,18 @@ export function PlaceReviewsSection({ placeId }: { placeId: string }) {
                 return (
                   <div key={star} className="flex items-center gap-3 text-sm">
                     <span className="w-8 inline-flex items-center gap-0.5 font-semibold tabular-nums">
-                      {star}<Star size={11} className="fill-tomato text-tomato" />
+                      {star}
+                      <Star size={11} className="fill-tomato text-tomato" />
                     </span>
                     <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                      <div className="h-full bg-tomato transition-all duration-500" style={{ width: `${pct}%` }} />
+                      <div
+                        className="h-full bg-tomato transition-all duration-500"
+                        style={{ width: `${pct}%` }}
+                      />
                     </div>
-                    <span className="w-12 text-right text-xs text-muted-foreground tabular-nums">{cnt} · {pct}%</span>
+                    <span className="w-12 text-right text-xs text-muted-foreground tabular-nums">
+                      {cnt} · {pct}%
+                    </span>
                   </div>
                 );
               })}
@@ -88,17 +113,20 @@ export function PlaceReviewsSection({ placeId }: { placeId: string }) {
         </div>
       )}
 
-
       {user ? (
         myReview && !openForm ? (
           <div className="mb-6">
             <div className="bg-card border border-border rounded-2xl p-4 flex items-start gap-3">
               <div className="flex-1">
-                <div className="text-xs uppercase tracking-wider font-semibold text-muted-foreground mb-1">Twoja recenzja</div>
+                <div className="text-xs uppercase tracking-wider font-semibold text-muted-foreground mb-1">
+                  Twoja recenzja
+                </div>
                 <RatingStars rating={myReview.rating} />
                 {myReview.body && <p className="text-sm mt-2">{myReview.body}</p>}
               </div>
-              <button onClick={() => setOpenForm(true)} className="chip bg-tomato text-cream">Edytuj</button>
+              <button onClick={() => setOpenForm(true)} className="chip bg-tomato text-cream">
+                Edytuj
+              </button>
             </div>
             {replies?.[myReview.id] && <OwnerReplyView reply={replies[myReview.id]} />}
           </div>
@@ -111,25 +139,34 @@ export function PlaceReviewsSection({ placeId }: { placeId: string }) {
         )
       ) : (
         <div className="bg-card border border-dashed border-border rounded-2xl p-6 text-center text-sm text-muted-foreground mb-6">
-          <Link to="/auth" className="text-tomato font-semibold hover:underline">Zaloguj się</Link>, by dodać recenzję i zgarniać punkty PoŻarcia.
+          <Link to="/auth" className="text-tomato font-semibold hover:underline">
+            Zaloguj się
+          </Link>
+          , by dodać recenzję i zgarniać punkty PoŻarcia.
         </div>
       )}
 
       {isLoading ? (
-        <div className="grid place-items-center py-12"><Loader2 className="animate-spin" /></div>
+        <div className="grid place-items-center py-12">
+          <Loader2 className="animate-spin" />
+        </div>
       ) : (reviews ?? []).length === 0 ? (
-        <div className="bg-card border border-dashed border-border rounded-2xl p-8 text-center text-sm text-muted-foreground">Brak recenzji.</div>
+        <div className="bg-card border border-dashed border-border rounded-2xl p-8 text-center text-sm text-muted-foreground">
+          Brak recenzji.
+        </div>
       ) : (
         <ul className="space-y-3">
-          {(reviews ?? []).filter((r) => r.user_id !== user?.id).map((r) => (
-            <ReviewCard
-              key={r.id}
-              review={r}
-              placeId={placeId}
-              reply={replies?.[r.id] ?? null}
-              canReply={!!isOwner}
-            />
-          ))}
+          {(reviews ?? [])
+            .filter((r) => r.user_id !== user?.id)
+            .map((r) => (
+              <ReviewCard
+                key={r.id}
+                review={r}
+                placeId={placeId}
+                reply={replies?.[r.id] ?? null}
+                canReply={!!isOwner}
+              />
+            ))}
         </ul>
       )}
     </section>
@@ -158,8 +195,14 @@ function RatingStars({ rating, onChange }: { rating: number; onChange?: (n: numb
 }
 
 function ReviewForm({
-  placeId, existing, onDone,
-}: { placeId: string; existing: Review | null; onDone: () => void }) {
+  placeId,
+  existing,
+  onDone,
+}: {
+  placeId: string;
+  existing: Review | null;
+  onDone: () => void;
+}) {
   const { user } = useUser();
   const save = useSaveReview();
   const del = useDeleteReview();
@@ -180,14 +223,19 @@ function ReviewForm({
   async function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f || !user) return;
-    if (f.size > 8 * 1024 * 1024) { toast.error("Zdjęcie max 8 MB"); return; }
+    if (f.size > 8 * 1024 * 1024) {
+      toast.error("Zdjęcie max 8 MB");
+      return;
+    }
     setUploading(true);
     try {
       const path = await uploadReviewPhoto(user.id, f);
       setPhotoPath(path);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Błąd uploadu");
-    } finally { setUploading(false); }
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -207,12 +255,20 @@ function ReviewForm({
   async function handleDelete() {
     if (!existing) return;
     if (!confirm("Usunąć recenzję? Punkty zostaną cofnięte.")) return;
-    try { await del.mutateAsync(existing.id); toast.success("Usunięto"); onDone(); }
-    catch (err) { toast.error(err instanceof Error ? err.message : "Błąd"); }
+    try {
+      await del.mutateAsync(existing.id);
+      toast.success("Usunięto");
+      onDone();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Błąd");
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-card border border-border rounded-2xl p-5 mb-6 space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-card border border-border rounded-2xl p-5 mb-6 space-y-4"
+    >
       <div className="flex items-start justify-between">
         <div>
           <div className="text-xs uppercase tracking-wider font-semibold text-muted-foreground mb-1">
@@ -221,7 +277,13 @@ function ReviewForm({
           <RatingStars rating={rating} onChange={setRating} />
         </div>
         {existing && (
-          <button type="button" onClick={onDone} className="pz-hit w-8 h-8 rounded-full bg-muted grid place-items-center"><X size={14} /></button>
+          <button
+            type="button"
+            onClick={onDone}
+            className="pz-hit w-8 h-8 rounded-full bg-muted grid place-items-center"
+          >
+            <X size={14} />
+          </button>
         )}
       </div>
       <textarea
@@ -233,7 +295,13 @@ function ReviewForm({
         className="w-full rounded-xl border-2 border-border px-4 py-2.5 outline-none focus:border-tomato resize-none"
       />
       <div>
-        <input ref={fileRef} type="file" accept="image/*" onChange={handlePhoto} className="hidden" />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          onChange={handlePhoto}
+          className="hidden"
+        />
         {photoUrl ? (
           <div className="relative w-28 h-28">
             <img src={photoUrl} alt="" className="w-full h-full rounded-xl object-cover" />
@@ -241,7 +309,9 @@ function ReviewForm({
               type="button"
               onClick={() => setPhotoPath(null)}
               className="pz-hit absolute -top-2 -right-2 w-7 h-7 rounded-full bg-tomato text-cream grid place-items-center shadow"
-            ><X size={14} /></button>
+            >
+              <X size={14} />
+            </button>
           </div>
         ) : (
           <button
@@ -257,7 +327,8 @@ function ReviewForm({
       </div>
       <div className="flex flex-wrap gap-2 pt-1">
         <button
-          type="submit" disabled={save.isPending}
+          type="submit"
+          disabled={save.isPending}
           className="inline-flex items-center gap-2 rounded-full bg-tomato text-cream px-5 py-2 font-semibold hover:bg-tomato/90 disabled:opacity-50"
         >
           {save.isPending ? <Loader2 size={14} className="animate-spin" /> : null}
@@ -265,9 +336,12 @@ function ReviewForm({
         </button>
         {existing && (
           <button
-            type="button" onClick={handleDelete}
+            type="button"
+            onClick={handleDelete}
             className="inline-flex items-center gap-2 rounded-full bg-card border border-border px-4 py-2 text-sm font-semibold hover:border-destructive hover:text-destructive"
-          ><Trash2 size={13} /> Usuń</button>
+          >
+            <Trash2 size={13} /> Usuń
+          </button>
         )}
       </div>
     </form>
@@ -307,22 +381,32 @@ function ReviewCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             {review.author?.username ? (
-              <Link to="/u/$username" params={{ username: review.author.username }} className="font-semibold text-sm hover:text-tomato">
+              <Link
+                to="/u/$username"
+                params={{ username: review.author.username }}
+                className="font-semibold text-sm hover:text-tomato"
+                style={vipNameStyle(review.author)}
+              >
                 {review.author.display_name || `@${review.author.username}`}
               </Link>
-            ) : <span className="font-semibold text-sm">Anonim</span>}
+            ) : (
+              <span className="font-semibold text-sm">Anonim</span>
+            )}
+            {review.author && isVipActive(review.author) && <VipBadge />}
             <RatingStars rating={review.rating} />
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
               {new Date(review.created_at).toLocaleDateString("pl-PL")}
             </span>
-            {review.updated_at && new Date(review.updated_at).getTime() - new Date(review.created_at).getTime() > 60_000 && (
-              <span
-                className="text-[10px] uppercase tracking-wider text-muted-foreground italic"
-                title={`Edytowano ${new Date(review.updated_at).toLocaleString("pl-PL")}`}
-              >
-                · edytowano
-              </span>
-            )}
+            {review.updated_at &&
+              new Date(review.updated_at).getTime() - new Date(review.created_at).getTime() >
+                60_000 && (
+                <span
+                  className="text-[10px] uppercase tracking-wider text-muted-foreground italic"
+                  title={`Edytowano ${new Date(review.updated_at).toLocaleString("pl-PL")}`}
+                >
+                  · edytowano
+                </span>
+              )}
           </div>
           {review.body && <p className="text-sm mt-1.5 leading-relaxed">{review.body}</p>}
           {photoUrl && (
@@ -331,9 +415,7 @@ function ReviewCard({
         </div>
       </div>
       {reply && <OwnerReplyView reply={reply} canManage={canReply} placeId={placeId} />}
-      {canReply && !reply && (
-        <OwnerReplyForm placeId={placeId} reviewId={review.id} />
-      )}
+      {canReply && !reply && <OwnerReplyForm placeId={placeId} reviewId={review.id} />}
     </li>
   );
 }

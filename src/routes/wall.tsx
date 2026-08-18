@@ -1,18 +1,33 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { Loader2, Star, Heart, Trophy, Megaphone, UserPlus, LogIn, MessageCircle, Send } from "lucide-react";
+import {
+  Loader2,
+  Star,
+  Heart,
+  Trophy,
+  Megaphone,
+  UserPlus,
+  LogIn,
+  MessageCircle,
+  Send,
+} from "lucide-react";
 import { useWallFeed, type WallItem } from "@/lib/wall-api";
 import { UserAvatar } from "@/components/UserAvatar";
 import { SmartText } from "@/components/SmartText";
 import { ReviewSocial } from "@/components/ReviewSocial";
 import { useUser } from "@/lib/use-auth";
 import {
-  REACTION_TYPES, REACTION_EMOJI, type ReactionType,
-  usePostReactions, useToggleReaction,
-  usePostComments, useAddPostComment,
+  REACTION_TYPES,
+  REACTION_EMOJI,
+  type ReactionType,
+  usePostReactions,
+  useToggleReaction,
+  usePostComments,
+  useAddPostComment,
 } from "@/lib/post-social-api";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { vipNameStyle } from "@/components/VipBadge";
 
 export const Route = createFileRoute("/wall")({
   head: () => ({
@@ -212,7 +227,9 @@ function PostSocial({ postId }: { postId: string }) {
   const add = useAddPostComment(postId);
   const [text, setText] = useState("");
   const [showComments, setShowComments] = useState(false);
-  const myReaction = user ? (reactions ?? []).find((r) => r.user_id === user.id)?.reaction_type : undefined;
+  const myReaction = user
+    ? (reactions ?? []).find((r) => r.user_id === user.id)?.reaction_type
+    : undefined;
 
   const counts: Record<string, number> = {};
   (reactions ?? []).forEach((r) => (counts[r.reaction_type] = (counts[r.reaction_type] ?? 0) + 1));
@@ -238,7 +255,10 @@ function PostSocial({ postId }: { postId: string }) {
             <button
               key={t}
               onClick={() => {
-                if (!user) { toast.error("Zaloguj się, żeby reagować"); return; }
+                if (!user) {
+                  toast.error("Zaloguj się, żeby reagować");
+                  return;
+                }
                 toggle.mutate(t as ReactionType);
               }}
               className={`pz-reaction-pop chip text-sm ${active ? "bg-tomato text-cream" : "bg-card border border-border hover:border-tomato"}`}
@@ -264,14 +284,17 @@ function PostSocial({ postId }: { postId: string }) {
             <div key={c.id} className="flex items-start gap-2 text-sm">
               <UserAvatar
                 avatarUrl={c.author?.avatar_url}
-                avatarSource={(c.author?.avatar_source ?? "initials") as "google" | "upload" | "initials"}
+                avatarSource={
+                  (c.author?.avatar_source ?? "initials") as "google" | "upload" | "initials"
+                }
                 displayName={c.author?.display_name}
                 username={c.author?.username}
                 size={24}
               />
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-semibold">
-                  {c.author?.display_name || (c.author?.username ? `@${c.author.username}` : "Anonim")}
+                <div className="text-xs font-semibold" style={vipNameStyle(c.author)}>
+                  {c.author?.display_name ||
+                    (c.author?.username ? `@${c.author.username}` : "Anonim")}
                 </div>
                 <SmartText>{c.body}</SmartText>
               </div>
@@ -308,11 +331,16 @@ function HeaderLine({ item }: { item: WallItem }) {
   const a = item.author;
   const authorName = a?.display_name || (a?.username ? `@${a.username}` : "Znajomy");
   const authorLink = a?.username ? (
-    <Link to="/u/$username" params={{ username: a.username }} className="hover:text-tomato">
+    <Link
+      to="/u/$username"
+      params={{ username: a.username }}
+      className="hover:text-tomato"
+      style={vipNameStyle(a)}
+    >
       {authorName}
     </Link>
   ) : (
-    <span>{authorName}</span>
+    <span style={vipNameStyle(a)}>{authorName}</span>
   );
   const placeLink = item.place ? (
     <Link

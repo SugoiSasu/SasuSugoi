@@ -3,13 +3,25 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Upload, ArrowLeft, Save, Eye, EyeOff, Users as UsersIcon, Heart, Bookmark, CheckCircle2 } from "lucide-react";
+import {
+  Loader2,
+  Upload,
+  ArrowLeft,
+  Save,
+  Eye,
+  EyeOff,
+  Users as UsersIcon,
+  Heart,
+  Bookmark,
+  CheckCircle2,
+} from "lucide-react";
 import { useUser } from "@/lib/use-auth";
 import {
   useMyProfile,
   useUpdateProfile,
   uploadAvatar,
   POZNAN_DISTRICTS,
+  type Profile,
 } from "@/lib/profile-api";
 import { useUserRanks } from "@/lib/ranks-api";
 import { useMyFriendships } from "@/lib/friends-api";
@@ -22,6 +34,7 @@ import { CollapsiblePlaceList } from "@/components/CollapsiblePlaceList";
 import { CUISINES } from "@/data/places";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { isVipActive, VIP_NICK_COLORS, VipBadge } from "@/components/VipBadge";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "Mój profil — poŻeramy" }] }),
@@ -74,12 +87,12 @@ function ProfilePage() {
   const { data: favoritePlaces } = useMyFavoritePlaces();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const pendingCount = (friendships ?? []).filter((f) => f.status === "pending" && f.addressee_id === user?.id).length;
+  const pendingCount = (friendships ?? []).filter(
+    (f) => f.status === "pending" && f.addressee_id === user?.id,
+  ).length;
 
   function toggleCuisine(c: string) {
-    setFavCuisines((cur) =>
-      cur.includes(c) ? cur.filter((x) => x !== c) : [...cur, c],
-    );
+    setFavCuisines((cur) => (cur.includes(c) ? cur.filter((x) => x !== c) : [...cur, c]));
   }
 
   async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -141,7 +154,11 @@ function ProfilePage() {
       const msg = e?.message ?? "Nieznany błąd";
       let title = "Nie udało się zapisać profilu";
       let description = msg;
-      if (msg.includes("duplicate") || msg.includes("unique") || msg.includes("profiles_username_unique")) {
+      if (
+        msg.includes("duplicate") ||
+        msg.includes("unique") ||
+        msg.includes("profiles_username_unique")
+      ) {
         title = "Nick zajęty";
         description = `@${cleanUsername} jest już używany przez innego użytkownika — wybierz inny.`;
       } else if (msg.includes("profiles_username_format")) {
@@ -150,7 +167,11 @@ function ProfilePage() {
       } else if (msg.includes("profiles_bio_length")) {
         title = "Bio za długie";
         description = "Maksymalnie 500 znaków.";
-      } else if (msg.includes("row-level security") || msg.includes("permission") || e?.code === "42501") {
+      } else if (
+        msg.includes("row-level security") ||
+        msg.includes("permission") ||
+        e?.code === "42501"
+      ) {
         title = "Brak uprawnień do zapisu";
         description = "Sesja mogła wygasnąć — wyloguj się i zaloguj ponownie.";
       } else if (e?.code) {
@@ -233,10 +254,15 @@ function ProfilePage() {
             <Link to="/friends" className="chip bg-card border border-border hover:border-tomato">
               <UsersIcon size={12} /> Znajomi
               {pendingCount > 0 && (
-                <span className="ml-1 inline-grid place-items-center min-w-[16px] h-[16px] px-1 rounded-full bg-tomato text-cream text-[9px] font-bold">{pendingCount}</span>
+                <span className="ml-1 inline-grid place-items-center min-w-[16px] h-[16px] px-1 rounded-full bg-tomato text-cream text-[9px] font-bold">
+                  {pendingCount}
+                </span>
               )}
             </Link>
-            <button onClick={handleSignOut} className="text-sm text-muted-foreground hover:text-tomato min-h-11 px-2">
+            <button
+              onClick={handleSignOut}
+              className="text-sm text-muted-foreground hover:text-tomato min-h-11 px-2"
+            >
               Wyloguj
             </button>
           </div>
@@ -249,7 +275,9 @@ function ProfilePage() {
 
         {ranks && ranks.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-6">
-            {ranks.map((r) => <RankBadge key={r.id} rank={r} />)}
+            {ranks.map((r) => (
+              <RankBadge key={r.id} rank={r} />
+            ))}
           </div>
         )}
 
@@ -281,18 +309,28 @@ function ProfilePage() {
                   disabled={uploading}
                   className="inline-flex items-center gap-2 rounded-full bg-navy text-cream px-4 py-2 text-sm font-semibold hover:bg-tomato transition disabled:opacity-50"
                 >
-                  {uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                  {uploading ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Upload size={14} />
+                  )}
                   {uploading ? "Wgrywam..." : avatarPath ? "Zmień zdjęcie" : "Wgraj zdjęcie"}
                 </button>
                 {profile?.avatar_source === "google" && (
-                  <p className="text-xs text-muted-foreground mt-2">Używasz zdjęcia z Google. Wgranie nowego zastąpi je.</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Używasz zdjęcia z Google. Wgranie nowego zastąpi je.
+                  </p>
                 )}
                 {!avatarPath && (
-                  <p className="text-xs text-muted-foreground mt-2">Bez zdjęcia pokazujemy inicjały na kolorowym tle.</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Bez zdjęcia pokazujemy inicjały na kolorowym tle.
+                  </p>
                 )}
               </div>
             </div>
           </section>
+
+          {profile && isVipActive(profile) && <VipNickColorSection profile={profile} />}
 
           {/* Username + display name */}
           <section className="rounded-2xl bg-card border border-border p-5 space-y-4">
@@ -395,20 +433,44 @@ function ProfilePage() {
               Moje social media
             </label>
             <div className="grid sm:grid-cols-2 gap-3">
-              <SocialInput label="Instagram" value={instagramUrl} onChange={setInstagramUrl} placeholder="https://instagram.com/twoj-nick" />
-              <SocialInput label="TikTok" value={tiktokUrl} onChange={setTiktokUrl} placeholder="https://tiktok.com/@twoj-nick" />
-              <SocialInput label="YouTube" value={youtubeUrl} onChange={setYoutubeUrl} placeholder="https://youtube.com/@twoj-kanal" />
-              <SocialInput label="Facebook" value={facebookUrl} onChange={setFacebookUrl} placeholder="https://facebook.com/twoj-profil" />
-              <SocialInput label="X (Twitter)" value={xUrl} onChange={setXUrl} placeholder="https://x.com/twoj-nick" />
+              <SocialInput
+                label="Instagram"
+                value={instagramUrl}
+                onChange={setInstagramUrl}
+                placeholder="https://instagram.com/twoj-nick"
+              />
+              <SocialInput
+                label="TikTok"
+                value={tiktokUrl}
+                onChange={setTiktokUrl}
+                placeholder="https://tiktok.com/@twoj-nick"
+              />
+              <SocialInput
+                label="YouTube"
+                value={youtubeUrl}
+                onChange={setYoutubeUrl}
+                placeholder="https://youtube.com/@twoj-kanal"
+              />
+              <SocialInput
+                label="Facebook"
+                value={facebookUrl}
+                onChange={setFacebookUrl}
+                placeholder="https://facebook.com/twoj-profil"
+              />
+              <SocialInput
+                label="X (Twitter)"
+                value={xUrl}
+                onChange={setXUrl}
+                placeholder="https://x.com/twoj-nick"
+              />
             </div>
-            <p className="text-[11px] text-muted-foreground mt-2">Pełne URL-e. Linki pojawią się na Twoim publicznym profilu.</p>
+            <p className="text-[11px] text-muted-foreground mt-2">
+              Pełne URL-e. Linki pojawią się na Twoim publicznym profilu.
+            </p>
           </section>
 
           {/* Place lists */}
           <MyPlaceLists />
-
-
-
 
           {/* Privacy */}
           <section className="rounded-2xl bg-card border border-border p-5">
@@ -472,10 +534,22 @@ function ProfilePage() {
   );
 }
 
-function SocialInput({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder: string }) {
+function SocialInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
   return (
     <label className="block">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">{label}</div>
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+        {label}
+      </div>
       <input
         type="url"
         value={value}
@@ -534,6 +608,59 @@ function MyPlaceLists() {
         emptyTip="Klikaj serduszko na knajpie, do której chcesz wracać."
         emptyCta={{ to: "/", label: "Przeglądaj lokale" }}
       />
+    </section>
+  );
+}
+
+function VipNickColorSection({ profile }: { profile: Profile }) {
+  const updateProfile = useUpdateProfile();
+  const current = profile.vip_nick_color;
+
+  async function pick(color: string | null) {
+    try {
+      await updateProfile.mutateAsync({ vip_nick_color: color });
+      toast.success(color ? "Kolor nicku zapisany ✓" : "Kolor nicku zresetowany");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nie udało się zapisać koloru");
+    }
+  }
+
+  return (
+    <section className="rounded-2xl bg-card border border-amber-400/40 p-5 space-y-3">
+      <div className="flex items-center gap-2">
+        <VipBadge size="md" />
+        <label className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
+          Kolor nicku
+        </label>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        Benefit VIP — wybierz kolor, w jakim Twój nick pojawia się w recenzjach, na Pożeralni i
+        wszędzie indziej.
+      </p>
+      <div className="flex flex-wrap items-center gap-2.5">
+        {VIP_NICK_COLORS.map((color) => (
+          <button
+            key={color}
+            type="button"
+            onClick={() => pick(color)}
+            disabled={updateProfile.isPending}
+            aria-label={`Wybierz kolor ${color}`}
+            aria-pressed={current === color}
+            className={`w-9 h-9 rounded-full transition disabled:opacity-50 ${
+              current === color ? "ring-2 ring-offset-2 ring-navy scale-110" : "hover:scale-105"
+            }`}
+            style={{ backgroundColor: color }}
+          />
+        ))}
+        <button
+          type="button"
+          onClick={() => pick(null)}
+          disabled={updateProfile.isPending || !current}
+          className="ml-1 text-xs font-semibold text-muted-foreground hover:text-tomato disabled:opacity-40 disabled:hover:text-muted-foreground"
+        >
+          Wyczyść
+        </button>
+      </div>
     </section>
   );
 }

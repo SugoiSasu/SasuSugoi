@@ -3,13 +3,25 @@ import { useQuery, keepPreviousData, useQueryClient } from "@tanstack/react-quer
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useEffect, useState } from "react";
-import { Search, ChevronLeft, ChevronRight, Users, Loader2, X, Trophy, Crown, ChevronDown, ArrowUpDown, Filter } from "lucide-react";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Users,
+  Loader2,
+  X,
+  Trophy,
+  Crown,
+  ChevronDown,
+  ArrowUpDown,
+  Filter,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useUser } from "@/lib/use-auth";
 import type { AvatarSource } from "@/lib/profile-api";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import { VipBadge, isVipActive, vipNameStyle } from "@/components/VipBadge";
 
 const PAGE_SIZE = 24;
 
@@ -27,6 +39,9 @@ interface BrowseProfile {
   bio: string | null;
   district: string | null;
   points_total: number;
+  is_vip: boolean;
+  vip_until: string | null;
+  vip_nick_color: string | null;
 }
 
 interface BrowseResult {
@@ -39,7 +54,10 @@ async function fetchProfiles(q: string, page: number): Promise<BrowseResult> {
   const to = from + PAGE_SIZE - 1;
   let query = supabase
     .from("profiles")
-    .select("id, username, display_name, avatar_url, avatar_source, bio, district, points_total", { count: "exact" })
+    .select(
+      "id, username, display_name, avatar_url, avatar_source, bio, district, points_total, is_vip, vip_until, vip_nick_color",
+      { count: "exact" },
+    )
     .or("username.not.is.null,display_name.not.is.null")
     .order("points_total", { ascending: false })
     .order("created_at", { ascending: false })
@@ -60,7 +78,11 @@ export const Route = createFileRoute("/u/")({
   head: () => ({
     meta: [
       { title: "Ranking — poŻeramy" },
-      { name: "description", content: "Ranking poŻeraczy — top użytkownicy według punktów poŻarcia. Znajdź najbardziej głodnych recenzentów." },
+      {
+        name: "description",
+        content:
+          "Ranking poŻeraczy — top użytkownicy według punktów poŻarcia. Znajdź najbardziej głodnych recenzentów.",
+      },
     ],
   }),
   component: UsersBrowse,
@@ -71,7 +93,15 @@ export const Route = createFileRoute("/u/")({
         <div className="text-center">
           <p className="text-muted-foreground mb-3">Nie udało się załadować listy.</p>
           <p className="text-xs text-muted-foreground/70 mb-4">{error.message}</p>
-          <button onClick={() => { router.invalidate(); reset(); }} className="chip bg-tomato text-cream">Spróbuj ponownie</button>
+          <button
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
+            className="chip bg-tomato text-cream"
+          >
+            Spróbuj ponownie
+          </button>
         </div>
       </main>
     );
@@ -91,7 +121,9 @@ function UsersBrowse() {
 
   // Local input synced with URL — URL is debounced source of truth
   const [input, setInput] = useState(q);
-  useEffect(() => { setInput(q); }, [q]);
+  useEffect(() => {
+    setInput(q);
+  }, [q]);
   useEffect(() => {
     const t = setTimeout(() => {
       if (input !== q) {
@@ -139,18 +171,22 @@ function UsersBrowse() {
           </div>
           <h1 className="font-display text-3xl sm:text-4xl leading-tight">Ranking poŻeraczy</h1>
           <p className="text-cream/80 text-sm mt-2 max-w-prose">
-            Top pożeracze wg punktów poŻarcia, Twoi znajomi i wyszukiwanie po nicku — wszystko w jednym.
+            Top pożeracze wg punktów poŻarcia, Twoi znajomi i wyszukiwanie po nicku — wszystko w
+            jednym.
           </p>
         </div>
       </div>
 
       <RankingSection />
 
-
       <section className="mx-auto max-w-5xl px-4 pt-8 pb-4">
         <h2 className="font-display text-xl mb-3">Wszyscy użytkownicy</h2>
         <div className="relative">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Search
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
           <input
             type="search"
             value={input}
@@ -173,9 +209,13 @@ function UsersBrowse() {
         <div className="mt-2 text-xs text-muted-foreground flex items-center gap-2">
           {isFetching && <Loader2 size={12} className="animate-spin" />}
           {q ? (
-            <span>Znaleziono {total} {pluralize(total, "profil", "profile", "profili")} dla „{q}".</span>
+            <span>
+              Znaleziono {total} {pluralize(total, "profil", "profile", "profili")} dla „{q}".
+            </span>
           ) : (
-            <span>{total} {pluralize(total, "użytkownik", "użytkowników", "użytkowników")} łącznie.</span>
+            <span>
+              {total} {pluralize(total, "użytkownik", "użytkowników", "użytkowników")} łącznie.
+            </span>
           )}
         </div>
       </section>
@@ -205,8 +245,15 @@ function UsersBrowse() {
                     className="group-hover:ring-2 group-hover:ring-tomato/50 transition shrink-0"
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold truncate">{p.display_name || `@${p.username ?? "user"}`}</div>
-                    {p.username && <div className="text-xs text-muted-foreground truncate">@{p.username}</div>}
+                    <div className="flex items-center gap-1 min-w-0">
+                      <span className="text-sm font-semibold truncate" style={vipNameStyle(p)}>
+                        {p.display_name || `@${p.username ?? "user"}`}
+                      </span>
+                      {isVipActive(p) && <VipBadge />}
+                    </div>
+                    {p.username && (
+                      <div className="text-xs text-muted-foreground truncate">@{p.username}</div>
+                    )}
                     {(p.district || p.bio) && (
                       <div className="text-xs text-muted-foreground truncate mt-0.5">
                         {p.district && p.bio ? `${p.district} · ${p.bio}` : (p.district ?? p.bio)}
@@ -214,8 +261,12 @@ function UsersBrowse() {
                     )}
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="font-display text-lg leading-none text-tomato">{p.points_total}</div>
-                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5">pkt</div>
+                    <div className="font-display text-lg leading-none text-tomato">
+                      {p.points_total}
+                    </div>
+                    <div className="text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5">
+                      pkt
+                    </div>
                   </div>
                 </Link>
               </li>
@@ -257,7 +308,9 @@ function GridSkeleton() {
   return (
     <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {Array.from({ length: 9 }).map((_, i) => (
-        <li key={i}><Skeleton className="h-20 rounded-2xl" /></li>
+        <li key={i}>
+          <Skeleton className="h-20 rounded-2xl" />
+        </li>
       ))}
     </ul>
   );
@@ -289,10 +342,16 @@ const FILTER_LABEL: Record<RankFilter, string> = {
   withDistrict: "Z dzielnicą",
 };
 
-async function fetchRanking(limit: number, sort: RankSort, filter: RankFilter): Promise<BrowseProfile[]> {
+async function fetchRanking(
+  limit: number,
+  sort: RankSort,
+  filter: RankFilter,
+): Promise<BrowseProfile[]> {
   let q = supabase
     .from("profiles")
-    .select("id, username, display_name, avatar_url, avatar_source, bio, district, points_total")
+    .select(
+      "id, username, display_name, avatar_url, avatar_source, bio, district, points_total, is_vip, vip_until, vip_nick_color",
+    )
     .or("username.not.is.null,display_name.not.is.null");
 
   if (filter === "withAvatar") q = q.not("avatar_url", "is", null);
@@ -304,7 +363,9 @@ async function fetchRanking(limit: number, sort: RankSort, filter: RankFilter): 
   } else if (sort === "newest") {
     q = q.order("created_at", { ascending: false });
   } else {
-    q = q.order("display_name", { ascending: true, nullsFirst: false }).order("username", { ascending: true, nullsFirst: false });
+    q = q
+      .order("display_name", { ascending: true, nullsFirst: false })
+      .order("username", { ascending: true, nullsFirst: false });
   }
 
   const { data, error } = await q.limit(limit);
@@ -330,20 +391,17 @@ function RankingSection() {
   useEffect(() => {
     const ch = supabase
       .channel("ranking-profiles")
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "profiles" },
-        () => qc.invalidateQueries({ queryKey: ["users-ranking"] }),
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles" }, () =>
+        qc.invalidateQueries({ queryKey: ["users-ranking"] }),
       )
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "profiles" },
-        () => qc.invalidateQueries({ queryKey: ["users-ranking"] }),
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "profiles" }, () =>
+        qc.invalidateQueries({ queryKey: ["users-ranking"] }),
       )
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, [qc]);
-
 
   const rows = data ?? [];
   // In non-points sort modes, keep podium visible only when it makes sense
@@ -360,8 +418,11 @@ function RankingSection() {
           </div>
           <h2 className="font-display text-2xl sm:text-3xl leading-tight">Top pożeracze</h2>
           <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
-            {SORT_LABEL[sort]}{filter !== "all" ? ` · ${FILTER_LABEL[filter]}` : ""}.
-            {isFetching && <Loader2 size={11} className="animate-spin" aria-label="Aktualizuję ranking" />}
+            {SORT_LABEL[sort]}
+            {filter !== "all" ? ` · ${FILTER_LABEL[filter]}` : ""}.
+            {isFetching && (
+              <Loader2 size={11} className="animate-spin" aria-label="Aktualizuję ranking" />
+            )}
           </p>
         </div>
       </div>
@@ -372,12 +433,17 @@ function RankingSection() {
           <ArrowUpDown size={14} aria-hidden /> Sortuj
           <select
             value={sort}
-            onChange={(e) => { setSort(e.target.value as RankSort); setExpanded(false); }}
+            onChange={(e) => {
+              setSort(e.target.value as RankSort);
+              setExpanded(false);
+            }}
             className="min-h-11 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tomato"
             aria-label="Sortuj ranking"
           >
             {(Object.keys(SORT_LABEL) as RankSort[]).map((k) => (
-              <option key={k} value={k}>{SORT_LABEL[k]}</option>
+              <option key={k} value={k}>
+                {SORT_LABEL[k]}
+              </option>
             ))}
           </select>
         </label>
@@ -392,7 +458,10 @@ function RankingSection() {
                 <button
                   key={k}
                   type="button"
-                  onClick={() => { setFilter(k); setExpanded(false); }}
+                  onClick={() => {
+                    setFilter(k);
+                    setExpanded(false);
+                  }}
                   className={`min-h-11 shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition border ${active ? "bg-tomato text-cream border-tomato" : "bg-background text-foreground border-border hover:border-tomato"}`}
                   aria-pressed={active}
                 >
@@ -403,7 +472,6 @@ function RankingSection() {
           </div>
         </div>
       </div>
-
 
       {isLoading && rows.length === 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -431,7 +499,10 @@ function RankingSection() {
 
           {/* Rest list */}
           {rest.length > 0 && (
-            <ol className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden" start={podium.length + 1}>
+            <ol
+              className="rounded-2xl border border-border bg-card divide-y divide-border overflow-hidden"
+              start={podium.length + 1}
+            >
               {rest.map((p, i) => (
                 <RankRow key={p.id} profile={p} place={podium.length + i + 1} />
               ))}
@@ -448,7 +519,10 @@ function RankingSection() {
                 aria-expanded={expanded}
               >
                 {expanded ? "Zwiń ranking" : "Zobacz więcej"}
-                <ChevronDown size={14} className={expanded ? "rotate-180 transition" : "transition"} />
+                <ChevronDown
+                  size={14}
+                  className={expanded ? "rotate-180 transition" : "transition"}
+                />
               </button>
             </div>
           )}
@@ -461,10 +535,25 @@ function RankingSection() {
 function PodiumCard({ profile, place }: { profile: BrowseProfile; place: number }) {
   const styles =
     place === 1
-      ? { ring: "ring-2 ring-yellow-400", badge: "bg-yellow-400 text-navy", glow: "shadow-[0_8px_30px_-12px_rgba(250,204,21,0.55)]", label: "1. miejsce" }
+      ? {
+          ring: "ring-2 ring-yellow-400",
+          badge: "bg-yellow-400 text-navy",
+          glow: "shadow-[0_8px_30px_-12px_rgba(250,204,21,0.55)]",
+          label: "1. miejsce",
+        }
       : place === 2
-        ? { ring: "ring-2 ring-zinc-300", badge: "bg-zinc-300 text-navy", glow: "shadow-[0_8px_24px_-12px_rgba(212,212,216,0.5)]", label: "2. miejsce" }
-        : { ring: "ring-2 ring-amber-600/70", badge: "bg-amber-600 text-cream", glow: "shadow-[0_8px_24px_-12px_rgba(217,119,6,0.5)]", label: "3. miejsce" };
+        ? {
+            ring: "ring-2 ring-zinc-300",
+            badge: "bg-zinc-300 text-navy",
+            glow: "shadow-[0_8px_24px_-12px_rgba(212,212,216,0.5)]",
+            label: "2. miejsce",
+          }
+        : {
+            ring: "ring-2 ring-amber-600/70",
+            badge: "bg-amber-600 text-cream",
+            glow: "shadow-[0_8px_24px_-12px_rgba(217,119,6,0.5)]",
+            label: "3. miejsce",
+          };
   return (
     <li>
       <Link
@@ -473,7 +562,9 @@ function PodiumCard({ profile, place }: { profile: BrowseProfile; place: number 
         className={`relative flex flex-col items-center text-center gap-2 rounded-2xl bg-card border border-border p-4 pt-7 hover:border-tomato transition ${styles.glow}`}
         aria-label={`${styles.label}: ${profile.display_name || profile.username || "użytkownik"}`}
       >
-        <span className={`absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${styles.badge}`}>
+        <span
+          className={`absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${styles.badge}`}
+        >
           {place === 1 && <Crown size={12} />} #{place}
         </span>
         <UserAvatar
@@ -485,14 +576,20 @@ function PodiumCard({ profile, place }: { profile: BrowseProfile; place: number 
           className={styles.ring}
         />
         <div className="min-w-0 w-full">
-          <div className="text-sm font-semibold truncate">{profile.display_name || `@${profile.username ?? "user"}`}</div>
+          <div className="text-sm font-semibold truncate" style={vipNameStyle(profile)}>
+            {profile.display_name || `@${profile.username ?? "user"}`}
+          </div>
           {profile.username && profile.display_name && (
             <div className="text-[11px] text-muted-foreground truncate">@{profile.username}</div>
           )}
         </div>
         <div>
-          <div className="font-display text-2xl leading-none text-tomato">{profile.points_total}</div>
-          <div className="text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5">pkt PoŻarcia</div>
+          <div className="font-display text-2xl leading-none text-tomato">
+            {profile.points_total}
+          </div>
+          <div className="text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5">
+            pkt PoŻarcia
+          </div>
         </div>
       </Link>
     </li>
@@ -507,7 +604,9 @@ function RankRow({ profile, place }: { profile: BrowseProfile; place: number }) 
         params={{ username: profile.username ?? profile.id }}
         className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/40 transition"
       >
-        <span className="w-7 text-center text-sm font-bold text-muted-foreground tabular-nums">{place}</span>
+        <span className="w-7 text-center text-sm font-bold text-muted-foreground tabular-nums">
+          {place}
+        </span>
         <UserAvatar
           avatarUrl={profile.avatar_url}
           avatarSource={profile.avatar_source}
@@ -516,14 +615,23 @@ function RankRow({ profile, place }: { profile: BrowseProfile; place: number }) 
           size={36}
         />
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold truncate">{profile.display_name || `@${profile.username ?? "user"}`}</div>
+          <div className="flex items-center gap-1 min-w-0">
+            <span className="text-sm font-semibold truncate" style={vipNameStyle(profile)}>
+              {profile.display_name || `@${profile.username ?? "user"}`}
+            </span>
+            {isVipActive(profile) && <VipBadge />}
+          </div>
           {profile.username && profile.display_name && (
             <div className="text-[11px] text-muted-foreground truncate">@{profile.username}</div>
           )}
         </div>
         <div className="text-right shrink-0">
-          <div className="font-display text-base leading-none text-tomato">{profile.points_total}</div>
-          <div className="text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5">pkt</div>
+          <div className="font-display text-base leading-none text-tomato">
+            {profile.points_total}
+          </div>
+          <div className="text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5">
+            pkt
+          </div>
         </div>
       </Link>
     </li>

@@ -23,6 +23,7 @@ export interface Profile {
   x_url: string | null;
   is_vip: boolean;
   vip_until: string | null;
+  vip_nick_color: string | null;
 }
 
 export const POZNAN_DISTRICTS = [
@@ -76,7 +77,6 @@ export function useProfileByUsername(usernameOrId: string) {
   });
 }
 
-
 export interface ProfileUpdate {
   username?: string;
   display_name?: string | null;
@@ -91,6 +91,7 @@ export interface ProfileUpdate {
   youtube_url?: string | null;
   facebook_url?: string | null;
   x_url?: string | null;
+  vip_nick_color?: string | null;
 }
 
 /**
