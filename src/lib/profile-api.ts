@@ -21,6 +21,8 @@ export interface Profile {
   youtube_url: string | null;
   facebook_url: string | null;
   x_url: string | null;
+  is_vip: boolean;
+  vip_until: string | null;
 }
 
 export const POZNAN_DISTRICTS = [
