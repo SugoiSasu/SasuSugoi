@@ -150,24 +150,34 @@ export function PlaceReviewsSection({ placeId }: { placeId: string }) {
         <div className="grid place-items-center py-12">
           <Loader2 className="animate-spin" />
         </div>
-      ) : (reviews ?? []).length === 0 ? (
-        <div className="bg-card border border-dashed border-border rounded-2xl p-8 text-center text-sm text-muted-foreground">
-          Brak recenzji.
-        </div>
       ) : (
-        <ul className="space-y-3">
-          {(reviews ?? [])
-            .filter((r) => r.user_id !== user?.id)
-            .map((r) => (
-              <ReviewCard
-                key={r.id}
-                review={r}
-                placeId={placeId}
-                reply={replies?.[r.id] ?? null}
-                canReply={!!isOwner}
-              />
-            ))}
-        </ul>
+        (() => {
+          const others = (reviews ?? []).filter((r) => r.user_id !== user?.id);
+          if (others.length > 0) {
+            return (
+              <ul className="space-y-3">
+                {others.map((r) => (
+                  <ReviewCard
+                    key={r.id}
+                    review={r}
+                    placeId={placeId}
+                    reply={replies?.[r.id] ?? null}
+                    canReply={!!isOwner}
+                  />
+                ))}
+              </ul>
+            );
+          }
+          // count === 0 is already covered by the "Bądź pierwszą osobą…" header
+          // subtitle and the login/write-review prompt above — a second empty
+          // state here would just repeat the same message a third time.
+          if (count === 0) return null;
+          return (
+            <div className="bg-card border border-dashed border-border rounded-2xl p-8 text-center text-sm text-muted-foreground">
+              Jak na razie tylko Twoja recenzja — zaproś znajomych, niech też ocenią 🍽️
+            </div>
+          );
+        })()
       )}
     </section>
   );

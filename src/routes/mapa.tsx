@@ -8,15 +8,20 @@ import { useCuisines } from "@/lib/cuisines-api";
 import { searchPlaces } from "@/lib/place-search";
 import { useUserLocation, haversineKm, formatDistancePl } from "@/lib/geo";
 
-
-
 export const Route = createFileRoute("/mapa")({
   head: () => ({
     meta: [
       { title: "Mapa knajp w Poznaniu — poŻeramy" },
-      { name: "description", content: "Interaktywna mapa poznańskich knajp: filtruj po kuchni i ocenie, sprawdź co jest w pobliżu." },
+      {
+        name: "description",
+        content:
+          "Interaktywna mapa poznańskich knajp: filtruj po kuchni i ocenie, sprawdź co jest w pobliżu.",
+      },
       { property: "og:title", content: "Mapa knajp w Poznaniu — poŻeramy" },
-      { property: "og:description", content: "Interaktywna mapa poznańskich knajp: filtruj po kuchni i ocenie." },
+      {
+        property: "og:description",
+        content: "Interaktywna mapa poznańskich knajp: filtruj po kuchni i ocenie.",
+      },
     ],
   }),
   component: MapaPage,
@@ -57,7 +62,6 @@ function MapaPage() {
 
   const selRating = selected ? ratings?.get(selected.id) : undefined;
 
-
   const cuisineList = (cuisines ?? []).filter((c) => c.enabled !== false);
   const ratingOptions = [
     { value: 0, label: "Dowolna" },
@@ -68,7 +72,9 @@ function MapaPage() {
 
   const trigger = (active: boolean) =>
     `flex h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition sm:flex-none sm:px-4 ${
-      active ? "border-navy bg-navy text-cream" : "border-border bg-card text-foreground hover:border-tomato"
+      active
+        ? "border-navy bg-navy text-cream"
+        : "border-border bg-card text-foreground hover:border-tomato"
     }`;
 
   const optionRow = (active: boolean) =>
@@ -80,7 +86,10 @@ function MapaPage() {
     <div className="relative flex h-[calc(100dvh-8.5rem)] min-h-[520px] flex-col lg:h-dvh">
       <div className="border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
         <div className="relative mb-3">
-          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Search
+            size={16}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -96,7 +105,11 @@ function MapaPage() {
               <ChevronDown size={14} className="shrink-0 opacity-70" />
             </PopoverTrigger>
             <PopoverContent align="start" className="max-h-72 w-56 overflow-y-auto p-2">
-              <button type="button" className={optionRow(!cuisine)} onClick={() => setCuisine(null)}>
+              <button
+                type="button"
+                className={optionRow(!cuisine)}
+                onClick={() => setCuisine(null)}
+              >
                 Wszystkie kuchnie
                 {!cuisine && <Check size={14} />}
               </button>
@@ -125,7 +138,12 @@ function MapaPage() {
             </PopoverTrigger>
             <PopoverContent align="start" className="w-44 p-2">
               {ratingOptions.map((o) => (
-                <button key={o.value} type="button" className={optionRow(minRating === o.value)} onClick={() => setMinRating(o.value)}>
+                <button
+                  key={o.value}
+                  type="button"
+                  className={optionRow(minRating === o.value)}
+                  onClick={() => setMinRating(o.value)}
+                >
                   {o.label}
                   {minRating === o.value && <Check size={14} />}
                 </button>
@@ -145,9 +163,7 @@ function MapaPage() {
         </div>
       </div>
 
-
-
-      <div className="relative min-h-[320px] flex-1 lg:flex lg:min-h-0">
+      <div className="relative flex min-h-[320px] flex-1 lg:min-h-0">
         {/* Desktop-only results column */}
         <aside className="hidden lg:flex lg:w-96 lg:shrink-0 lg:flex-col lg:border-r lg:border-border lg:bg-background">
           <p className="border-b border-border px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -172,7 +188,12 @@ function MapaPage() {
                   >
                     <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-muted">
                       {p.cover_image_url && (
-                        <img src={p.cover_image_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+                        <img
+                          src={p.cover_image_url}
+                          alt=""
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -182,12 +203,17 @@ function MapaPage() {
                         {r ? (
                           <>
                             <Star size={12} className="fill-tomato text-tomato" />
-                            {r.avg.toFixed(1)} <span className="font-normal text-muted-foreground">({r.count})</span>
+                            {r.avg.toFixed(1)}{" "}
+                            <span className="font-normal text-muted-foreground">({r.count})</span>
                           </>
                         ) : (
                           <span className="font-normal text-muted-foreground">Brak ocen</span>
                         )}
-                        {dist !== null && <span className="font-normal text-muted-foreground">· {formatDistancePl(dist)}</span>}
+                        {dist !== null && (
+                          <span className="font-normal text-muted-foreground">
+                            · {formatDistancePl(dist)}
+                          </span>
+                        )}
                       </p>
                     </div>
                     <ChevronRight size={18} className="shrink-0 text-muted-foreground" />
@@ -237,7 +263,15 @@ function MapaPage() {
   );
 }
 
-function SelectedCard({ place, stat, dist }: { place: Place; stat?: { avg: number; count: number }; dist?: number | null }) {
+function SelectedCard({
+  place,
+  stat,
+  dist,
+}: {
+  place: Place;
+  stat?: { avg: number; count: number };
+  dist?: number | null;
+}) {
   return (
     <Link
       to="/k/$id"
@@ -246,7 +280,12 @@ function SelectedCard({ place, stat, dist }: { place: Place; stat?: { avg: numbe
     >
       <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-muted">
         {place.cover_image_url && (
-          <img src={place.cover_image_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+          <img
+            src={place.cover_image_url}
+            alt=""
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
         )}
       </div>
       <div className="min-w-0 flex-1">
@@ -259,12 +298,15 @@ function SelectedCard({ place, stat, dist }: { place: Place; stat?: { avg: numbe
           {stat ? (
             <>
               <Star size={12} className="fill-tomato text-tomato" />
-              {stat.avg.toFixed(1)} <span className="font-normal text-muted-foreground">({stat.count})</span>
+              {stat.avg.toFixed(1)}{" "}
+              <span className="font-normal text-muted-foreground">({stat.count})</span>
             </>
           ) : (
             <span className="font-normal text-muted-foreground">Brak ocen</span>
           )}
-          {dist != null && <span className="font-normal text-muted-foreground">· {formatDistancePl(dist)}</span>}
+          {dist != null && (
+            <span className="font-normal text-muted-foreground">· {formatDistancePl(dist)}</span>
+          )}
         </p>
       </div>
       <ChevronRight size={18} className="shrink-0 text-muted-foreground" />

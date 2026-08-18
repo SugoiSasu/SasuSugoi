@@ -7,7 +7,6 @@ import {
   Trophy,
   Megaphone,
   UserPlus,
-  LogIn,
   MessageCircle,
   Send,
 } from "lucide-react";
@@ -28,6 +27,7 @@ import {
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { vipNameStyle } from "@/components/VipBadge";
+import { AuthGate } from "@/components/AuthGate";
 
 export const Route = createFileRoute("/wall")({
   head: () => ({
@@ -72,39 +72,16 @@ function WallPage() {
             <Loader2 className="animate-spin" />
           </div>
         ) : !user ? (
-          <SignedOutTeaser />
+          <AuthGate
+            icon={Megaphone}
+            title="Zaloguj się, żeby zobaczyć feed"
+            description="Pożeralnia pokazuje recenzje znajomych, ich nowe ulubione miejscówki, zdobyte odznaki i aktualności z lokali, które obserwujesz."
+          />
         ) : (
           <SignedInFeed />
         )}
       </div>
     </main>
-  );
-}
-
-function SignedOutTeaser() {
-  return (
-    <div className="bg-card border border-border rounded-3xl p-8 text-center">
-      <Megaphone className="mx-auto text-tomato mb-3" size={36} />
-      <h2 className="font-display text-2xl mb-2">Zaloguj się, żeby zobaczyć feed</h2>
-      <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
-        Pożeralnia pokazuje recenzje znajomych, ich nowe ulubione miejscówki, zdobyte odznaki i
-        aktualności z lokali, które obserwujesz.
-      </p>
-      <div className="flex flex-wrap gap-2 justify-center">
-        <Link
-          to="/auth"
-          className="inline-flex items-center gap-2 rounded-full bg-tomato text-cream px-5 py-2.5 font-bold hover:bg-tomato/90"
-        >
-          <LogIn size={16} /> Zaloguj się
-        </Link>
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 rounded-full bg-card border border-border px-5 py-2.5 font-semibold hover:border-tomato"
-        >
-          Przeglądaj mapę
-        </Link>
-      </div>
-    </div>
   );
 }
 
