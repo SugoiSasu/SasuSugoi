@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useUser } from "@/lib/use-auth";
 import type { AvatarSource } from "@/lib/profile-api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 const PAGE_SIZE = 24;
@@ -256,7 +257,7 @@ function GridSkeleton() {
   return (
     <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {Array.from({ length: 9 }).map((_, i) => (
-        <li key={i} className="h-20 rounded-2xl bg-muted/40 animate-pulse" />
+        <li key={i}><Skeleton className="h-20 rounded-2xl" /></li>
       ))}
     </ul>
   );
@@ -407,7 +408,7 @@ function RankingSection() {
       {isLoading && rows.length === 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-32 rounded-2xl bg-muted/40 animate-pulse" />
+            <Skeleton key={i} className="h-32 rounded-2xl" />
           ))}
         </div>
       ) : rows.length === 0 ? (

@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { SmartText } from "@/components/SmartText";
 import { supabase } from "@/integrations/supabase/client";
 import { readingTimeLabel } from "@/lib/reading-time";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function clamp(str: string, max: number) {
   if (str.length <= max) return str;
@@ -83,11 +84,42 @@ export const Route = createFileRoute("/blog/$slug")({
   errorComponent: () => <div className="min-h-dvh grid place-items-center">Coś poszło nie tak.</div>,
 });
 
+function BlogPostSkeleton() {
+  return (
+    <main className="min-h-dvh bg-background">
+      <div className="bg-terrazzo-navy text-cream py-12">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
+          <Skeleton className="h-9 w-40 rounded-full mb-4" />
+          <div className="flex flex-wrap gap-2 mb-3">
+            <Skeleton className="h-6 w-16 rounded-full" />
+          </div>
+          <Skeleton className="h-11 sm:h-14 w-11/12 mb-3" />
+          <Skeleton className="h-11 sm:h-14 w-2/3 mb-4" />
+          <Skeleton className="h-5 w-full max-w-lg mb-4" />
+          <Skeleton className="h-4 w-40" />
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 -mt-8">
+        <Skeleton className="w-full aspect-[16/9] rounded-3xl" />
+      </div>
+
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 py-12 space-y-3">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-5/6" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-2/3" />
+      </div>
+    </main>
+  );
+}
+
 function BlogPostPage() {
   const { slug } = Route.useParams();
   const { data: post, isLoading, isError } = usePostBySlug(slug);
 
-  if (isLoading) return <div className="min-h-dvh grid place-items-center"><Loader2 className="animate-spin" size={28} /></div>;
+  if (isLoading) return <BlogPostSkeleton />;
   if (isError || !post) throw notFound();
 
   return (

@@ -21,6 +21,7 @@ import { PlaceListGrid } from "@/components/VisitStatus";
 import { CollapsiblePlaceList } from "@/components/CollapsiblePlaceList";
 import { CUISINES } from "@/data/places";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "Mój profil — poŻeramy" }] }),
@@ -170,8 +171,55 @@ function ProfilePage() {
 
   if (isLoading) {
     return (
-      <main id="main-content" className="min-h-dvh grid place-items-center">
-        <Loader2 className="animate-spin" />
+      <main id="main-content" className="min-h-dvh bg-background py-6 sm:py-10 px-3 sm:px-4">
+        <div className="mx-auto max-w-2xl">
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
+            <Skeleton className="h-9 w-32 rounded-full" />
+            <Skeleton className="h-9 w-24 rounded-full" />
+          </div>
+
+          <Skeleton className="h-9 w-48 mb-2" />
+          <Skeleton className="h-4 w-72 max-w-full mb-6" />
+
+          <div className="space-y-6">
+            {/* Avatar */}
+            <section className="rounded-2xl bg-card border border-border p-5">
+              <Skeleton className="h-3 w-32 mb-3" />
+              <div className="flex items-center gap-4">
+                <Skeleton className="w-20 h-20 rounded-full shrink-0" />
+                <Skeleton className="h-9 w-36 rounded-full" />
+              </div>
+            </section>
+
+            {/* Username + display name + bio + district */}
+            <section className="rounded-2xl bg-card border border-border p-5 space-y-4">
+              <Skeleton className="h-11 w-full rounded-xl" />
+              <Skeleton className="h-11 w-full rounded-xl" />
+              <Skeleton className="h-20 w-full rounded-xl" />
+              <Skeleton className="h-11 w-full rounded-xl" />
+            </section>
+
+            {/* Favorite cuisines */}
+            <section className="rounded-2xl bg-card border border-border p-5">
+              <Skeleton className="h-3 w-28 mb-3" />
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-8 w-20 rounded-full" />
+                ))}
+              </div>
+            </section>
+
+            {/* Place lists */}
+            <section className="rounded-2xl bg-card border border-border p-5 space-y-3">
+              <Skeleton className="h-6 w-40" />
+              <div className="grid grid-cols-6 sm:grid-cols-8 gap-2">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <Skeleton key={i} className="aspect-square rounded-xl" />
+                ))}
+              </div>
+            </section>
+          </div>
+        </div>
       </main>
     );
   }

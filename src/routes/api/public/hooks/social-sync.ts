@@ -155,6 +155,91 @@ async function fetchFacebook(handle: string): Promise<FetchResult> {
   );
 }
 
+// --- TikTok: real Login Kit OAuth (user must connect once via /api/public/hooks/tiktok-oauth-start) ---
+async function getValidTikTokAccessToken(): Promise<string> {
+  const clientKey = process.env.TIKTOK_CLIENT_KEY;
+  const clientSecret = process.env.TIKTOK_CLIENT_SECRET;
+  if (!clientKey || !clientSecret) throw new Error("Brak TIKTOK_CLIENT_KEY/TIKTOK_CLIENT_SECRET");
+
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: tokenRow, error } = await supabaseAdmin
+    .from("tiktok_oauth_tokens")
+    .select("access_token, refresh_token, expires_at, refresh_expires_at")
+    .eq("id", 1)
+    .maybeSingle();
+  if (error) throw new Error(`TikTok token lookup: ${error.message}`);
+  if (!tokenRow) {
+    throw new Error(
+      "TikTok nie jest połączony. Odwiedź /api/public/hooks/tiktok-oauth-start?secret=... aby połączyć konto.",
+    );
+  }
+
+  const now = Date.now();
+  // Refresh a bit early (60s) so the sync call itself never races an expiring token.
+  if (new Date(tokenRow.expires_at).getTime() - now > 60_000) {
+    return tokenRow.access_token;
+  }
+  if (new Date(tokenRow.refresh_expires_at).getTime() <= now) {
+    throw new Error(
+      "Token odświeżający TikToka wygasł. Odwiedź /api/public/hooks/tiktok-oauth-start?secret=... aby połączyć konto ponownie.",
+    );
+  }
+
+  const res = await fetch("https://open.tiktokapis.com/v2/oauth/token/", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded", "Cache-Control": "no-cache" },
+    body: new URLSearchParams({
+      client_key: clientKey,
+      client_secret: clientSecret,
+      grant_type: "refresh_token",
+      refresh_token: tokenRow.refresh_token,
+    }),
+  });
+  const json = (await res.json()) as {
+    access_token?: string;
+    expires_in?: number;
+    refresh_token?: string;
+    refresh_expires_in?: number;
+    error?: string;
+    error_description?: string;
+  };
+  if (!res.ok || !json.access_token || !json.refresh_token) {
+    throw new Error(`TikTok refresh: ${json.error_description ?? json.error ?? res.status}`);
+  }
+
+  await supabaseAdmin
+    .from("tiktok_oauth_tokens")
+    .update({
+      access_token: json.access_token,
+      refresh_token: json.refresh_token,
+      expires_at: new Date(now + (json.expires_in ?? 0) * 1000).toISOString(),
+      refresh_expires_at: new Date(now + (json.refresh_expires_in ?? 0) * 1000).toISOString(),
+    })
+    .eq("id", 1);
+
+  return json.access_token;
+}
+
+async function fetchTikTok(): Promise<FetchResult> {
+  const accessToken = await getValidTikTokAccessToken();
+  const res = await fetch(
+    "https://open.tiktokapis.com/v2/user/info/?fields=open_id,display_name,follower_count,video_count,likes_count",
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+  if (!res.ok) throw new Error(`TikTok ${res.status}`);
+  const j = (await res.json()) as {
+    data?: { user?: { follower_count?: number; video_count?: number; likes_count?: number } };
+    error?: { code?: string; message?: string };
+  };
+  if (j.error && j.error.code !== "ok") throw new Error(`TikTok: ${j.error.message ?? j.error.code}`);
+  const u = j.data?.user;
+  return {
+    followers: u?.follower_count ?? null,
+    posts: u?.video_count ?? null,
+    extra: { likes_count: u?.likes_count ?? null },
+  };
+}
+
 async function runPlatform(
   platform: Platform,
   handle: string,
@@ -166,30 +251,8 @@ async function runPlatform(
       return scrapeInstagram(handle);
     case "facebook":
       return fetchFacebook(handle);
-    case "tiktok": {
-      const lovableKey = process.env.LOVABLE_API_KEY;
-      const tiktokKey = process.env.TIKTOK_API_KEY;
-      if (!lovableKey || !tiktokKey) throw new Error("Brak TIKTOK_API_KEY");
-      const res = await fetch(
-        "https://connector-gateway.lovable.dev/tiktok/user/info/?fields=open_id,display_name,follower_count,video_count,likes_count",
-        {
-          headers: {
-            Authorization: `Bearer ${lovableKey}`,
-            "X-Connection-Api-Key": tiktokKey,
-          },
-        },
-      );
-      if (!res.ok) throw new Error(`TikTok ${res.status}`);
-      const j = (await res.json()) as {
-        data?: { user?: { follower_count?: number; video_count?: number; likes_count?: number } };
-      };
-      const u = j.data?.user;
-      return {
-        followers: u?.follower_count ?? null,
-        posts: u?.video_count ?? null,
-        extra: { likes_count: u?.likes_count ?? null },
-      };
-    }
+    case "tiktok":
+      return fetchTikTok();
   }
 }
 

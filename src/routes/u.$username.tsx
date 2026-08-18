@@ -25,6 +25,7 @@ import { runWithToast } from "@/components/AsyncState";
 import { RankBadge } from "@/components/RankBadge";
 import { LevelProgressCard } from "@/components/LevelProgress";
 import { VipBadge, isVipActive } from "@/components/VipBadge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function relativeTimePl(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -243,7 +244,7 @@ function FriendsList({ userId, count }: { userId: string; count: number }) {
       {isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-16 rounded-xl bg-muted/40 animate-pulse" />
+            <Skeleton key={i} className="h-16 rounded-xl" />
           ))}
         </div>
       ) : (data ?? []).length === 0 ? (
@@ -365,21 +366,21 @@ function ReviewsSkeleton() {
     <ul className="space-y-3">
       {Array.from({ length: 3 }).map((_, i) => (
         <li key={i} className="rounded-2xl bg-card border border-border p-4 flex gap-4">
-          <div className="w-20 h-20 rounded-xl bg-muted/40 animate-pulse shrink-0" />
+          <Skeleton className="w-20 h-20 rounded-xl shrink-0" />
           <div className="flex-1 min-w-0 space-y-2">
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-0.5">
                 {Array.from({ length: 5 }).map((_, s) => (
-                  <div key={s} className="w-3 h-3 rounded-full bg-muted/40 animate-pulse" />
+                  <Skeleton key={s} className="w-3 h-3 rounded-full" />
                 ))}
               </div>
-              <div className="h-4 w-32 rounded bg-muted/40 animate-pulse" />
+              <Skeleton className="h-4 w-32" />
             </div>
             <div className="space-y-1.5">
-              <div className="h-3 w-full rounded bg-muted/40 animate-pulse" />
-              <div className="h-3 w-5/6 rounded bg-muted/40 animate-pulse" />
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-5/6" />
             </div>
-            <div className="h-2.5 w-20 rounded bg-muted/40 animate-pulse" />
+            <Skeleton className="h-2.5 w-20" />
           </div>
         </li>
       ))}
@@ -926,7 +927,7 @@ function ActivityFeedSection({ userId, isMe }: { userId: string; isMe: boolean }
       {isLoading ? (
         <div className="rounded-2xl border border-border bg-card p-3 space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-10 rounded-xl bg-muted/40 animate-pulse" />
+            <Skeleton key={i} className="h-10 rounded-xl" />
           ))}
         </div>
       ) : events.length === 0 ? (

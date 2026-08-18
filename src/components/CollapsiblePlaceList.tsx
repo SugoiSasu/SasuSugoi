@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import type { VisitedPlace } from "@/lib/visits-api";
 import { PlaceListGrid } from "@/components/VisitStatus";
 import { EmptyPlaceListState } from "@/components/EmptyPlaceList";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type PlaceSort = "recent" | "alpha";
 
@@ -180,7 +181,7 @@ function ListSkeleton({ variant }: { variant?: "list" | "icons" }) {
     return (
       <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2">
         {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="aspect-square rounded-xl bg-muted/40 animate-pulse" />
+          <Skeleton key={i} className="aspect-square rounded-xl" />
         ))}
       </div>
     );
@@ -188,7 +189,7 @@ function ListSkeleton({ variant }: { variant?: "list" | "icons" }) {
   return (
     <div className="grid sm:grid-cols-2 gap-2">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="h-14 rounded-xl bg-muted/40 animate-pulse" />
+        <Skeleton key={i} className="h-14 rounded-xl" />
       ))}
     </div>
   );

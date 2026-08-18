@@ -1,6 +1,7 @@
 import { Loader2, AlertTriangle, RefreshCcw, Inbox } from "lucide-react";
 import type { ReactNode, ComponentType } from "react";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface AsyncStateProps {
   isLoading: boolean;
@@ -49,12 +50,12 @@ export function AsyncState({
         {Array.from({ length: skeletonRows }).map((_, i) => (
           <div
             key={i}
-            className="bg-card border border-border rounded-2xl p-3 flex items-center gap-3 animate-pulse"
+            className="bg-card border border-border rounded-2xl p-3 flex items-center gap-3"
           >
-            <div className="w-10 h-10 rounded-full bg-muted" />
+            <Skeleton className="w-10 h-10 rounded-full" />
             <div className="flex-1 space-y-2">
-              <div className="h-3 w-1/3 bg-muted rounded" />
-              <div className="h-2 w-1/4 bg-muted rounded" />
+              <Skeleton className="h-3 w-1/3" />
+              <Skeleton className="h-2 w-1/4" />
             </div>
           </div>
         ))}

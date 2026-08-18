@@ -1691,6 +1691,57 @@ export type Database = {
         }
         Relationships: []
       }
+      tiktok_oauth_flow: {
+        Row: {
+          code_verifier: string
+          created_at: string
+          state: string
+        }
+        Insert: {
+          code_verifier: string
+          created_at?: string
+          state: string
+        }
+        Update: {
+          code_verifier?: string
+          created_at?: string
+          state?: string
+        }
+        Relationships: []
+      }
+      tiktok_oauth_tokens: {
+        Row: {
+          access_token: string
+          expires_at: string
+          id: number
+          open_id: string | null
+          refresh_expires_at: string
+          refresh_token: string
+          scope: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          expires_at: string
+          id?: number
+          open_id?: string | null
+          refresh_expires_at: string
+          refresh_token: string
+          scope?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          expires_at?: string
+          id?: number
+          open_id?: string | null
+          refresh_expires_at?: string
+          refresh_token?: string
+          scope?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_id: string
