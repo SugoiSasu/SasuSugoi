@@ -213,6 +213,26 @@
   .marker-cluster { background: transparent !important; }
   .marker-cluster div { background: transparent !important; }
 
+  .pz-you-are-here {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #4285f4;
+    border: 3px solid var(--cream);
+    box-shadow: 0 2px 8px -1px rgba(0,0,0,.5);
+    position: relative;
+  }
+  .pz-you-are-here::before {
+    content: "";
+    position: absolute; inset: -12px;
+    border-radius: 50%;
+    background: #4285f4;
+    opacity: .28;
+    animation: pz-you-are-here-pulse 2.2s ease-out infinite;
+  }
+  @keyframes pz-you-are-here-pulse {
+    0%   { transform: scale(0.4); opacity: .5; }
+    100% { transform: scale(1); opacity: 0; }
+  }
+
   .leaflet-tooltip.pz-tooltip {
     background: var(--cream) !important;
     color: var(--navy) !important;

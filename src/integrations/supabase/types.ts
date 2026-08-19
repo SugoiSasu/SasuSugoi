@@ -334,6 +334,39 @@ export type Database = {
         }
         Relationships: []
       }
+      cookie_consent_log: {
+        Row: {
+          ad_personalization: boolean
+          ad_storage: boolean
+          ad_user_data: boolean
+          analytics_storage: boolean
+          anon_id: string
+          consent_version: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          ad_personalization: boolean
+          ad_storage: boolean
+          ad_user_data: boolean
+          analytics_storage: boolean
+          anon_id: string
+          consent_version: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          ad_personalization?: boolean
+          ad_storage?: boolean
+          ad_user_data?: boolean
+          analytics_storage?: boolean
+          anon_id?: string
+          consent_version?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       cuisines: {
         Row: {
           color: string | null
@@ -1688,57 +1721,6 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
-        }
-        Relationships: []
-      }
-      tiktok_oauth_flow: {
-        Row: {
-          code_verifier: string
-          created_at: string
-          state: string
-        }
-        Insert: {
-          code_verifier: string
-          created_at?: string
-          state: string
-        }
-        Update: {
-          code_verifier?: string
-          created_at?: string
-          state?: string
-        }
-        Relationships: []
-      }
-      tiktok_oauth_tokens: {
-        Row: {
-          access_token: string
-          expires_at: string
-          id: number
-          open_id: string | null
-          refresh_expires_at: string
-          refresh_token: string
-          scope: string | null
-          updated_at: string
-        }
-        Insert: {
-          access_token: string
-          expires_at: string
-          id?: number
-          open_id?: string | null
-          refresh_expires_at: string
-          refresh_token: string
-          scope?: string | null
-          updated_at?: string
-        }
-        Update: {
-          access_token?: string
-          expires_at?: string
-          id?: number
-          open_id?: string | null
-          refresh_expires_at?: string
-          refresh_token?: string
-          scope?: string | null
-          updated_at?: string
         }
         Relationships: []
       }

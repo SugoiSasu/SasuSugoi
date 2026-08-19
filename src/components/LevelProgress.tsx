@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 export const LEVEL_STEP = 150;
 
 export function levelInfo(points: number) {
@@ -19,6 +21,11 @@ interface LevelProgressCardProps {
  * the level formula so /osiagniecia and /u/$username never drift apart. */
 export function LevelProgressCard({ points, unlockedCount, totalBadges, className = "" }: LevelProgressCardProps) {
   const { level, pct, xpToNext } = levelInfo(points);
+  const [barPct, setBarPct] = useState(0);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setBarPct(pct));
+    return () => cancelAnimationFrame(id);
+  }, [pct]);
   return (
     <section className={`overflow-hidden rounded-3xl bg-navy p-5 text-cream ${className}`}>
       <p className="text-xs font-semibold uppercase tracking-wide text-cream/60">Twój postęp</p>
@@ -29,7 +36,7 @@ export function LevelProgressCard({ points, unlockedCount, totalBadges, classNam
         </p>
       </div>
       <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-cream/15">
-        <div className="h-full rounded-full bg-tomato transition-all duration-500" style={{ width: `${pct}%` }} />
+        <div className="h-full rounded-full bg-tomato transition-all duration-700 ease-out" style={{ width: `${barPct}%` }} />
       </div>
       {unlockedCount !== undefined && totalBadges !== undefined && (
         <p className="mt-3 text-xs text-cream/70">

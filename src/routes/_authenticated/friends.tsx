@@ -54,6 +54,7 @@ import {
   useRevokeInvite,
   useFriendSuggestions,
   useFriendLeaderboard,
+  useInviteStats,
   type FriendProfile,
 } from "@/lib/friends-api";
 import { useUserSearch } from "@/lib/wall-api";
@@ -992,6 +993,7 @@ function SuggestionsBlock() {
 
 function InviteBlock() {
   const { data: invites } = useMyInvites();
+  const { data: stats } = useInviteStats();
   const create = useCreateInvite();
   const revoke = useRevokeInvite();
   const [email, setEmail] = useState("");
@@ -1024,6 +1026,34 @@ function InviteBlock() {
       <h2 className="font-display text-xl mb-3 flex items-center gap-2">
         <Share2 size={18} className="text-tomato" /> Zaproś spoza poŻeramy
       </h2>
+
+      {stats && stats.sent > 0 && (
+        <div className="grid grid-cols-3 gap-2 mb-3">
+          <div className="bg-card border border-border rounded-2xl p-3 text-center">
+            <div className="font-display text-2xl leading-none">{stats.sent}</div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1.5">
+              Wysłane
+            </div>
+          </div>
+          <div className="bg-card border border-border rounded-2xl p-3 text-center">
+            <div className="font-display text-2xl leading-none text-emerald-600">
+              {stats.accepted}
+            </div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1.5">
+              Dołączyło
+            </div>
+          </div>
+          <div className="bg-tomato/10 border border-tomato/40 rounded-2xl p-3 text-center">
+            <div className="font-display text-2xl leading-none text-tomato">
+              +{stats.totalPoints}
+            </div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1.5">
+              Punktów
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
         <button
           type="button"
@@ -1114,6 +1144,37 @@ function InviteBlock() {
                   </li>
                 );
               })}
+          </ul>
+        </div>
+      )}
+
+      {stats && stats.acceptedList.length > 0 && (
+        <div className="mt-4">
+          <h3 className="text-sm font-semibold mb-2">Dołączyli z Twojego zaproszenia</h3>
+          <ul className="space-y-2">
+            {stats.acceptedList.map((r) => (
+              <li
+                key={r.inviteId}
+                className="bg-card border border-border rounded-2xl p-3 flex items-center gap-3"
+              >
+                <FriendAvatar profile={r.profile ?? undefined} size={36} />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold truncate">
+                    {r.profile?.display_name || (r.profile?.username ? `@${r.profile.username}` : "Użytkownik")}
+                  </div>
+                  {r.acceptedAt && (
+                    <div className="text-xs text-muted-foreground">
+                      Dołączył(a) {new Date(r.acceptedAt).toLocaleDateString("pl-PL")}
+                    </div>
+                  )}
+                </div>
+                {r.points > 0 && (
+                  <span className="chip bg-tomato/10 text-tomato shrink-0">
+                    <Trophy size={11} /> +{r.points}
+                  </span>
+                )}
+              </li>
+            ))}
           </ul>
         </div>
       )}

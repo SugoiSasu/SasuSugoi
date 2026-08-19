@@ -420,9 +420,10 @@ export interface FriendInvite {
   created_at: string;
 }
 
-export function useMyInvites() {
+export function useMyInvites(enabled = true) {
   return useQuery({
     queryKey: ["friend-invites"],
+    enabled,
     queryFn: async (): Promise<FriendInvite[]> => {
       const { data, error } = await supabase
         .from("friend_invites")
@@ -473,17 +474,148 @@ export function useRevokeInvite() {
   });
 }
 
+const ACCEPT_INVITE_ERROR_MESSAGES: Record<string, string> = {
+  invite_not_found: "Nie znaleźliśmy tego zaproszenia. Może link jest niepoprawny?",
+  invite_used: "To zaproszenie zostało już wykorzystane.",
+  invite_expired: "To zaproszenie już wygasło.",
+  cannot_invite_self: "To Twój własny link zaproszenia — wyślij go znajomym!",
+  blocked: "Nie można dołączyć do znajomych w tym przypadku.",
+};
+
 export function useAcceptInvite() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (token: string) => {
       const { data, error } = await supabase.rpc("accept_friend_invite", { _token: token });
-      if (error) throw error;
+      if (error) {
+        throw new Error(ACCEPT_INVITE_ERROR_MESSAGES[error.message] ?? "Nie udało się przyjąć zaproszenia.");
+      }
       return data as string;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-friendships"] });
       qc.invalidateQueries({ queryKey: ["friend-profiles"] });
+      qc.invalidateQueries({ queryKey: ["friend-leaderboard"] });
+      qc.invalidateQueries({ queryKey: ["user-achievements"] });
+      qc.invalidateQueries({ queryKey: ["profile"] });
+    },
+  });
+}
+
+export interface InvitePreview {
+  inviter_display_name: string | null;
+  inviter_username: string | null;
+  inviter_avatar_url: string | null;
+  status: string;
+  expired: boolean;
+}
+
+/** Public preview of an invite (inviter identity + status) — safe to show
+ * before the visitor logs in, so they know who invited them. */
+export function useInvitePreview(token: string | undefined) {
+  return useQuery({
+    queryKey: ["invite-preview", token ?? null],
+    enabled: !!token,
+    queryFn: async (): Promise<InvitePreview | null> => {
+      const { data, error } = await supabase.rpc("get_invite_preview", { _token: token! });
+      if (error) throw error;
+      return (data?.[0] as InvitePreview | undefined) ?? null;
+    },
+  });
+}
+
+/** Get-or-create the caller's active (pending, non-expired) invite link —
+ * reuses an existing one from useMyInvites rather than minting a new token
+ * every time the sidebar share button is opened. */
+export function useMyInviteLink(userId: string | null | undefined) {
+  const invites = useMyInvites(!!userId);
+  const create = useCreateInvite();
+  const active = (invites.data ?? []).find(
+    (i) => i.status === "pending" && new Date(i.expires_at).getTime() > Date.now(),
+  );
+
+  return {
+    token: active?.token,
+    isLoading: invites.isLoading,
+    ensure: async (): Promise<string> => {
+      if (active?.token) return active.token;
+      const created = await create.mutateAsync(undefined);
+      return created.token;
+    },
+  };
+}
+
+export interface AcceptedInviteRow {
+  inviteId: string;
+  acceptedAt: string | null;
+  points: number;
+  profile: FriendProfile | null;
+}
+
+export interface InviteStats {
+  sent: number;
+  accepted: number;
+  totalPoints: number;
+  acceptedList: AcceptedInviteRow[];
+}
+
+/** Stats for the invites I've sent: how many, how many accepted, points earned,
+ * and who joined via my link — surfaced on /friends so invites feel tracked. */
+export function useInviteStats() {
+  return useQuery({
+    queryKey: ["invite-stats"],
+    queryFn: async (): Promise<InviteStats> => {
+      const { data: me } = await supabase.auth.getUser();
+      if (!me.user) return { sent: 0, accepted: 0, totalPoints: 0, acceptedList: [] };
+
+      const { data: invites, error } = await supabase
+        .from("friend_invites")
+        .select("id, accepted_by, accepted_at, status")
+        .eq("inviter_id", me.user.id);
+      if (error) throw error;
+
+      const acceptedRows = (invites ?? []).filter(
+        (i): i is typeof i & { accepted_by: string } => i.status === "accepted" && !!i.accepted_by,
+      );
+
+      const profileIds = Array.from(new Set(acceptedRows.map((i) => i.accepted_by)));
+      let profilesById = new Map<string, FriendProfile>();
+      if (profileIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select(
+            "id, username, display_name, avatar_url, avatar_source, is_vip, vip_until, vip_nick_color",
+          )
+          .in("id", profileIds);
+        profilesById = new Map((profiles ?? []).map((p) => [p.id, p as FriendProfile]));
+      }
+
+      const inviteIds = acceptedRows.map((i) => i.id);
+      let pointsByInvite = new Map<string, number>();
+      if (inviteIds.length > 0) {
+        const { data: txns } = await supabase
+          .from("points_transactions")
+          .select("ref_id, points")
+          .eq("event_key", "invite_accepted")
+          .in("ref_id", inviteIds);
+        pointsByInvite = new Map((txns ?? []).map((t) => [t.ref_id as string, t.points as number]));
+      }
+
+      const acceptedList: AcceptedInviteRow[] = acceptedRows
+        .map((i) => ({
+          inviteId: i.id,
+          acceptedAt: i.accepted_at,
+          points: pointsByInvite.get(i.id) ?? 0,
+          profile: profilesById.get(i.accepted_by) ?? null,
+        }))
+        .sort((a, b) => (b.acceptedAt ?? "").localeCompare(a.acceptedAt ?? ""));
+
+      return {
+        sent: (invites ?? []).length,
+        accepted: acceptedRows.length,
+        totalPoints: acceptedList.reduce((sum, r) => sum + r.points, 0),
+        acceptedList,
+      };
     },
   });
 }

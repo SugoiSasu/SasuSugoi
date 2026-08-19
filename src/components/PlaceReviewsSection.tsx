@@ -420,7 +420,14 @@ function ReviewCard({
           </div>
           {review.body && <p className="text-sm mt-1.5 leading-relaxed">{review.body}</p>}
           {photoUrl && (
-            <img src={photoUrl} alt="" className="mt-2 max-h-64 rounded-xl object-cover" />
+            <img
+              src={photoUrl}
+              alt=""
+              className="mt-2 max-h-64 rounded-xl object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
           )}
         </div>
       </div>

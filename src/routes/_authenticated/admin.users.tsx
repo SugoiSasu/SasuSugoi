@@ -82,7 +82,7 @@ function AdminUsers() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="font-display text-3xl mb-1">Uzytkownicy i rangi</h1>
+        <h1 className="font-display text-3xl mb-1">Użytkownicy i rangi</h1>
         <p className="text-sm text-muted-foreground">
           Nadawaj i odbieraj rangi. Tylko Super Admin widzi tę stronę.
         </p>

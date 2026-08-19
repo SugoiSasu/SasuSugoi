@@ -160,7 +160,9 @@ export function useNotifications(limit = 30) {
       supabase.removeChannel(ch);
       setRealtimeStatus("idle");
     };
-  }, [user, qc]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- user.id (not the user object,
+    // whose reference changes on every onAuthStateChange tick) is what should retrigger this.
+  }, [user?.id, qc]);
 
   // Fallback polling: 15s when realtime not connected, 60s when healthy.
   const refetchInterval = rtStatus === "connected" ? 60_000 : 15_000;

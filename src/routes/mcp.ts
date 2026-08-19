@@ -9,6 +9,27 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type, Accept, Mcp-Protocol-Version",
 };
 
+// Best-effort in-memory rate limit (per warm serverless instance — not a
+// hard guarantee under multi-instance scaling, but a real deterrent against
+// casual scraping/amplification since this endpoint has no other throttle).
+const RATE_LIMIT_MAX = 30;
+const RATE_LIMIT_WINDOW_MS = 10_000;
+const hits = new Map<string, number[]>();
+
+function isRateLimited(key: string): boolean {
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW_MS;
+  const recent = (hits.get(key) ?? []).filter((t) => t > windowStart);
+  recent.push(now);
+  hits.set(key, recent);
+  if (hits.size > 5000) {
+    for (const [k, times] of hits) {
+      if (times.every((t) => t <= windowStart)) hits.delete(k);
+    }
+  }
+  return recent.length > RATE_LIMIT_MAX;
+}
+
 function jsonRpcError(status: number, code: number, message: string) {
   return Response.json(
     { jsonrpc: "2.0" as const, id: null, error: { code, message } },
@@ -26,6 +47,14 @@ export const Route = createFileRoute("/mcp")({
       DELETE: async () => jsonRpcError(405, -32000, "Method not allowed."),
 
       POST: async ({ request }) => {
+        const clientKey =
+          request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+          request.headers.get("x-real-ip") ??
+          "unknown";
+        if (isRateLimited(clientKey)) {
+          return jsonRpcError(429, -32000, "Too many requests — slow down.");
+        }
+
         let body: unknown;
         try {
           body = await request.json();

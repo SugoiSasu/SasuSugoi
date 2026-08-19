@@ -5,6 +5,7 @@ import { Plus, Save, Trash2, Loader2, X, Lock } from "lucide-react";
 import { useIsSuperAdmin } from "@/lib/use-auth";
 import { useRanks, useSaveRank, useDeleteRank, type Rank } from "@/lib/ranks-api";
 import { RankBadge } from "@/components/RankBadge";
+import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
 
 export const Route = createFileRoute("/_authenticated/admin/ranks")({
   head: () => ({ meta: [{ title: "Rangi — Panel admina" }] }),
@@ -21,6 +22,7 @@ function AdminRanks() {
   const save = useSaveRank();
   const del = useDeleteRank();
   const [editing, setEditing] = useState<Rank | "new" | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Rank | null>(null);
 
   if (!isSuper) {
     return (
@@ -32,11 +34,16 @@ function AdminRanks() {
     );
   }
 
-  async function handleDelete(r: Rank) {
-    if (r.is_system) return;
-    if (!confirm(`Usunąć rangę "${r.name}"?`)) return;
-    try { await del.mutateAsync(r.id); toast.success("Usunięto"); }
-    catch (e) { toast.error(e instanceof Error ? e.message : "Błąd"); }
+  async function handleDeleteConfirmed() {
+    if (!confirmDelete) return;
+    try {
+      await del.mutateAsync(confirmDelete.id);
+      toast.success("Usunięto");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Błąd");
+    } finally {
+      setConfirmDelete(null);
+    }
   }
 
   return (
@@ -72,7 +79,7 @@ function AdminRanks() {
               <div className="flex gap-2 pt-1">
                 <button onClick={() => setEditing(r)} className="flex-1 rounded-lg border border-border py-1.5 text-sm hover:border-tomato hover:text-tomato">Edytuj</button>
                 {!r.is_system && (
-                  <button onClick={() => handleDelete(r)} className="rounded-lg border border-border px-3 hover:border-destructive hover:text-destructive">
+                  <button onClick={() => setConfirmDelete(r)} className="rounded-lg border border-border px-3 hover:border-destructive hover:text-destructive">
                     <Trash2 size={13} />
                   </button>
                 )}
@@ -96,6 +103,15 @@ function AdminRanks() {
           saving={save.isPending}
         />
       )}
+
+      <ConfirmDeleteModal
+        open={!!confirmDelete}
+        title={`Usunąć rangę "${confirmDelete?.name}"?`}
+        description="Odznaka zniknie z profili wszystkich użytkowników, którzy ją mają."
+        pending={del.isPending}
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={handleDeleteConfirmed}
+      />
     </div>
   );
 }

@@ -29,7 +29,13 @@ import {
 import { useProfileByUsername } from "@/lib/profile-api";
 import { useUserRanks } from "@/lib/ranks-api";
 import { useUserReviewStats, useUserReviews, useReviewPhotoUrl } from "@/lib/reviews-api";
-import { useAchievements, useUserAchievements } from "@/lib/achievements-api";
+import {
+  useAchievements,
+  useUserAchievements,
+  computeProgress,
+  CRITERIA_LABELS,
+  type CriteriaType,
+} from "@/lib/achievements-api";
 import { useUserActivityFeed } from "@/lib/activity-feed-api";
 import {
   useFriendsCount,
@@ -155,7 +161,7 @@ function PublicProfile() {
   return (
     <main className="min-h-dvh bg-background">
       {/* Header */}
-      <div className="relative overflow-hidden bg-terrazzo-navy text-cream rounded-b-[2rem] sm:rounded-b-[2.5rem] shadow-xl">
+      <div className="relative overflow-hidden bg-terrazzo-navy text-cream rounded-b-[2rem] sm:rounded-b-[2.5rem] shadow-2xl">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 opacity-70"
@@ -164,19 +170,37 @@ function PublicProfile() {
               "radial-gradient(60% 60% at 15% 0%, hsl(var(--tomato) / 0.18), transparent 60%), radial-gradient(50% 50% at 100% 100%, hsl(var(--cream) / 0.08), transparent 60%)",
           }}
         />
+        <div
+          aria-hidden="true"
+          className="blob pointer-events-none absolute -right-16 -top-20 h-64 w-64 bg-tomato/25 blur-3xl"
+        />
+        <div
+          aria-hidden="true"
+          className="blob pointer-events-none absolute -left-20 bottom-0 h-56 w-56 bg-blush/20 blur-3xl"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/15 to-transparent"
+        />
         <div className="relative mx-auto max-w-3xl px-4 sm:px-6 pt-6 flex flex-wrap items-center gap-2">
           <BackButton to="/" />
           {me && <BackButton to="/friends" label="Znajomi" icon={Users} />}
         </div>
         <div className="relative mx-auto max-w-3xl px-4 sm:px-6 pb-12 sm:pb-14 pt-6 flex flex-col sm:flex-row gap-6 sm:gap-8 items-start animate-in fade-in slide-in-from-bottom-2 duration-500">
-          <UserAvatar
-            avatarUrl={profile.avatar_url}
-            avatarSource={profile.avatar_source}
-            displayName={profile.display_name}
-            username={profile.username}
-            size={112}
-            className="border-4 border-cream/20 shadow-xl transition-transform duration-500 hover:scale-[1.03]"
-          />
+          <div className="relative shrink-0">
+            <div
+              aria-hidden="true"
+              className="absolute -inset-2 rounded-full bg-gradient-to-br from-tomato/40 via-blush/25 to-transparent blur-md"
+            />
+            <UserAvatar
+              avatarUrl={profile.avatar_url}
+              avatarSource={profile.avatar_source}
+              displayName={profile.display_name}
+              username={profile.username}
+              size={112}
+              className="relative border-4 border-cream/25 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.55)] transition-transform duration-500 hover:scale-[1.03]"
+            />
+          </div>
           <div className="flex-1 min-w-0">
             <h1 className="font-display text-3xl sm:text-4xl leading-tight tracking-tight flex flex-wrap items-center gap-2.5">
               <span style={vipNameStyle(profile)}>
@@ -504,6 +528,9 @@ function ReviewListItem({ review }: { review: any }) {
           src={photoUrl}
           alt=""
           className="w-20 h-20 rounded-xl object-cover shrink-0 transition-transform duration-500 group-hover:scale-[1.03]"
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+          }}
         />
       )}
       <div className="flex-1 min-w-0">
@@ -868,33 +895,6 @@ function ProfileSocials({
       ))}
     </div>
   );
-}
-
-type CriteriaType = "reviews_count" | "unique_places" | "points_total" | "friends_count";
-
-const CRITERIA_LABELS: Record<CriteriaType, { unit: string; verb: string }> = {
-  reviews_count: { unit: "recenzji", verb: "Dodaj" },
-  unique_places: { unit: "unikalnych lokali", verb: "Odwiedź" },
-  points_total: { unit: "punktów PoŻarcia", verb: "Zdobądź" },
-  friends_count: { unit: "znajomych", verb: "Dodaj" },
-};
-
-function computeProgress(
-  a: import("@/lib/achievements-api").Achievement,
-  stats: Record<CriteriaType, number>,
-): {
-  current: number;
-  threshold: number;
-  type: CriteriaType | null;
-  pct: number;
-  remaining: number;
-} {
-  const type = (a.criteria?.type ?? null) as CriteriaType | null;
-  const threshold = Number(a.criteria?.threshold ?? 0) || 0;
-  const current = type && type in stats ? stats[type] : 0;
-  const pct = threshold > 0 ? Math.min(100, Math.round((current / threshold) * 100)) : 0;
-  const remaining = Math.max(0, threshold - current);
-  return { current, threshold, type, pct, remaining };
 }
 
 function AchievementsSection({

@@ -30,20 +30,6 @@ export type PlaceSuggestionInput = {
   submitter_email?: string;
 };
 
-export function useSubmitPlaceSuggestion() {
-  return useMutation({
-    mutationFn: async (values: PlaceSuggestionInput) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from("place_suggestions").insert({
-        ...values,
-        submitted_by: user?.id ?? null,
-      });
-      if (error) throw error;
-    },
-  });
-}
-
 export function usePlaceSuggestions() {
   return useQuery({
     queryKey: ["place-suggestions"],
@@ -59,19 +45,56 @@ export function usePlaceSuggestions() {
   });
 }
 
-export function useUpdateSuggestionStatus() {
+/** Approves a suggestion by creating an unpublished draft place from it (to
+ * finish in the Lokale tab), then marking the suggestion approved. */
+export function useApproveSuggestion() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({
-      id, status, approved_place_id,
-    }: { id: string; status: "approved" | "rejected"; approved_place_id?: string }) => {
+    mutationFn: async (s: PlaceSuggestion): Promise<string | undefined> => {
+      const { data: { user } } = await supabase.auth.getUser();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: created, error: insertError } = await (supabase as any)
+        .from("places")
+        .insert({
+          name: s.name,
+          cuisine: s.cuisine || "Inna",
+          address: s.address || "",
+          description: s.notes || "",
+          website: s.website || null,
+          instagram: s.instagram || null,
+          lat: 52.4082,
+          lng: 16.9335,
+          is_published: false,
+        })
+        .select("id")
+        .single();
+      if (insertError) throw insertError;
+      const approvedPlaceId: string | undefined = created?.id;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: updateError } = await (supabase as any).from("place_suggestions").update({
+        status: "approved",
+        reviewed_by: user?.id ?? null,
+        reviewed_at: new Date().toISOString(),
+        approved_place_id: approvedPlaceId ?? null,
+      }).eq("id", s.id);
+      if (updateError) throw updateError;
+      return approvedPlaceId;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["place-suggestions"] }),
+  });
+}
+
+export function useRejectSuggestion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase as any).from("place_suggestions").update({
-        status,
+        status: "rejected",
         reviewed_by: user?.id ?? null,
         reviewed_at: new Date().toISOString(),
-        approved_place_id: approved_place_id ?? null,
+        approved_place_id: null,
       }).eq("id", id);
       if (error) throw error;
     },

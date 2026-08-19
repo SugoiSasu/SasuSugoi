@@ -49,7 +49,7 @@ function NotificationsPage() {
   const current = filter as NotificationType | "all";
 
   const {
-    data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage, refetch,
+    data, isLoading, isError, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage, refetch,
   } = useNotificationsInfinite(current);
   const markRead = useMarkRead();
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -115,7 +115,7 @@ function NotificationsPage() {
           isLoading={isLoading}
           isError={isError}
           isEmpty={items.length === 0}
-          isFetching={!isLoading && !isError && data?.pages[0] !== undefined && items.length > 0 && false}
+          isFetching={!isLoading && !isError && data?.pages[0] !== undefined && items.length > 0 && isFetching}
           onRetry={() => refetch()}
           emptyIcon={Bell}
           emptyTitle="Cisza w eterze"

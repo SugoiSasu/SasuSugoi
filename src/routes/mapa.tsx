@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, ChevronDown, ChevronRight, Clock, Search, Star } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Clock, List, Map as MapIcon, Search, Star } from "lucide-react";
 import FoodMap from "@/components/FoodMap";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { usePlaces, usePlaceRatingsMap, isPlaceOpenNow, type Place } from "@/lib/places-api";
 import { useCuisines } from "@/lib/cuisines-api";
 import { searchPlaces } from "@/lib/place-search";
 import { useUserLocation, haversineKm, formatDistancePl } from "@/lib/geo";
+import { cuisineMeta } from "@/data/places";
 
 export const Route = createFileRoute("/mapa")({
   head: () => ({
@@ -37,6 +38,7 @@ function MapaPage() {
   const [openNow, setOpenNow] = useState(false);
   const [selected, setSelected] = useState<Place | null>(null);
   const [focusTick, setFocusTick] = useState(0);
+  const [mobileView, setMobileView] = useState<"map" | "list">("map");
   const userLoc = useUserLocation();
 
   const filtered = useMemo(() => {
@@ -164,11 +166,22 @@ function MapaPage() {
       </div>
 
       <div className="relative flex min-h-[320px] flex-1 lg:min-h-0">
-        {/* Desktop-only results column */}
-        <aside className="hidden lg:flex lg:w-96 lg:shrink-0 lg:flex-col lg:border-r lg:border-border lg:bg-background">
-          <p className="border-b border-border px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {listResults.length} {listResults.length === 1 ? "lokal" : "lokali"}
-          </p>
+        {/* Desktop: static column. Mobile: full-screen sheet over the map, toggled by the floating pill below. */}
+        <aside
+          className={`${mobileView === "list" ? "flex" : "hidden"} absolute inset-0 z-20 flex-col bg-background lg:static lg:z-auto lg:flex lg:w-96 lg:shrink-0 lg:border-r lg:border-border`}
+        >
+          <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+            <p className="text-sm font-bold">
+              {listResults.length} {listResults.length === 1 ? "lokal" : "lokali"}
+            </p>
+            <button
+              type="button"
+              onClick={() => setMobileView("map")}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:border-tomato lg:hidden"
+            >
+              <MapIcon size={13} /> Pokaż mapę
+            </button>
+          </div>
           <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
             {listResults.map((p) => {
               const r = ratings?.get(p.id);
@@ -181,19 +194,25 @@ function MapaPage() {
                     onClick={() => {
                       setSelected(p);
                       setFocusTick((t) => t + 1);
+                      setMobileView("map");
                     }}
                     className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition hover:border-tomato hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tomato ${
                       isActive ? "border-tomato bg-blush/40" : "border-border bg-card"
                     }`}
                   >
-                    <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-muted">
-                      {p.cover_image_url && (
+                    <div
+                      className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl text-2xl"
+                      style={p.cover_image_url ? undefined : { background: `${cuisineMeta(p.cuisine).color}26` }}
+                    >
+                      {p.cover_image_url ? (
                         <img
                           src={p.cover_image_url}
                           alt=""
                           className="h-full w-full object-cover"
                           loading="lazy"
                         />
+                      ) : (
+                        cuisineMeta(p.cuisine).emoji
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -238,8 +257,19 @@ function MapaPage() {
               focusPlaceId={selected?.id ?? null}
               focusTick={focusTick}
               onSelect={(p) => setSelected(p)}
+              userLocation={userLoc}
             />
           </div>
+
+          {!selected && mobileView === "map" && (
+            <button
+              type="button"
+              onClick={() => setMobileView("list")}
+              className="absolute bottom-4 left-1/2 z-10 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-navy px-4 py-2.5 text-xs font-semibold text-cream shadow-xl lg:hidden"
+            >
+              <List size={14} /> Pokaż listę · {listResults.length}
+            </button>
+          )}
 
           {selected && (
             <>
@@ -278,14 +308,19 @@ function SelectedCard({
       params={{ id: place.slug }}
       className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-xl transition hover:border-tomato"
     >
-      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-muted">
-        {place.cover_image_url && (
+      <div
+        className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl text-2xl"
+        style={place.cover_image_url ? undefined : { background: `${cuisineMeta(place.cuisine).color}26` }}
+      >
+        {place.cover_image_url ? (
           <img
             src={place.cover_image_url}
             alt=""
             className="h-full w-full object-cover"
             loading="lazy"
           />
+        ) : (
+          cuisineMeta(place.cuisine).emoji
         )}
       </div>
       <div className="min-w-0 flex-1">

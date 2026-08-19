@@ -4,7 +4,7 @@ import { z } from "zod";
 
 const CACHE_MS = 48 * 60 * 60 * 1000;
 
-const platformSchema = z.enum(["instagram", "tiktok", "youtube", "facebook"]);
+const platformSchema = z.enum(["instagram", "youtube", "facebook"]);
 
 const refreshSchema = z.object({
   platform: platformSchema,
@@ -33,37 +33,6 @@ async function fetchInstagram(): Promise<FetchResult> {
   }
   const data = (await res.json()) as { followers_count?: number; media_count?: number };
   return { followers: data.followers_count ?? null, posts: data.media_count ?? null };
-}
-
-async function fetchTikTok(): Promise<FetchResult> {
-  const lovableKey = process.env.LOVABLE_API_KEY;
-  const tiktokKey = process.env.TIKTOK_API_KEY;
-  if (!lovableKey || !tiktokKey) {
-    throw new Error(
-      "Brak TIKTOK_API_KEY. Podłącz konektor TikTok przez panel (Lovable connector → TikTok).",
-    );
-  }
-  const url =
-    "https://connector-gateway.lovable.dev/tiktok/user/info/?fields=open_id,display_name,follower_count,video_count,likes_count";
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${lovableKey}`,
-      "X-Connection-Api-Key": tiktokKey,
-    },
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`TikTok API ${res.status}: ${body.slice(0, 200)}`);
-  }
-  const json = (await res.json()) as {
-    data?: { user?: { follower_count?: number; video_count?: number; likes_count?: number } };
-  };
-  const u = json.data?.user;
-  return {
-    followers: u?.follower_count ?? null,
-    posts: u?.video_count ?? null,
-    extra: { likes_count: u?.likes_count ?? null },
-  };
 }
 
 async function fetchYouTube(handle: string): Promise<FetchResult> {
@@ -140,9 +109,6 @@ export const refreshSocialMetrics = createServerFn({ method: "POST" })
       switch (data.platform) {
         case "instagram":
           result = await fetchInstagram();
-          break;
-        case "tiktok":
-          result = await fetchTikTok();
           break;
         case "youtube":
           result = await fetchYouTube(row.handle);

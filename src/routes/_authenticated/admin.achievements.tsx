@@ -6,6 +6,7 @@ import { useIsAdmin } from "@/lib/use-auth";
 import {
   useAchievements, useSaveAchievement, useDeleteAchievement, type Achievement,
 } from "@/lib/achievements-api";
+import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
 
 export const Route = createFileRoute("/_authenticated/admin/achievements")({
   head: () => ({ meta: [{ title: "Achievementy — Panel admina" }] }),
@@ -33,13 +34,20 @@ function AdminAchievements() {
   const save = useSaveAchievement();
   const del = useDeleteAchievement();
   const [editing, setEditing] = useState<Achievement | "new" | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Achievement | null>(null);
 
   if (!isAdmin) return <div className="text-center py-20 text-muted-foreground">Tylko admin.</div>;
 
-  async function handleDelete(a: Achievement) {
-    if (!confirm(`Usunąć achievement "${a.name}"?`)) return;
-    try { await del.mutateAsync(a.id); toast.success("Usunięto"); }
-    catch (e) { toast.error(e instanceof Error ? e.message : "Błąd"); }
+  async function handleDeleteConfirmed() {
+    if (!confirmDelete) return;
+    try {
+      await del.mutateAsync(confirmDelete.id);
+      toast.success("Usunięto");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Błąd");
+    } finally {
+      setConfirmDelete(null);
+    }
   }
 
   return (
@@ -74,7 +82,7 @@ function AdminAchievements() {
               </div>
               <div className="flex gap-2 pt-1">
                 <button onClick={() => setEditing(a)} className="flex-1 rounded-lg border border-border py-1.5 text-sm hover:border-tomato hover:text-tomato">Edytuj</button>
-                <button onClick={() => handleDelete(a)} className="rounded-lg border border-border px-3 hover:border-destructive hover:text-destructive">
+                <button onClick={() => setConfirmDelete(a)} className="rounded-lg border border-border px-3 hover:border-destructive hover:text-destructive">
                   <Trash2 size={13} />
                 </button>
               </div>
@@ -94,6 +102,15 @@ function AdminAchievements() {
           saving={save.isPending}
         />
       )}
+
+      <ConfirmDeleteModal
+        open={!!confirmDelete}
+        title={`Usunąć achievement "${confirmDelete?.name}"?`}
+        description="Użytkownicy, którzy już go zdobyli, zachowają wpis w historii — tylko definicja zniknie z listy do zdobycia."
+        pending={del.isPending}
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={handleDeleteConfirmed}
+      />
     </div>
   );
 }

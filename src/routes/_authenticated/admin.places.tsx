@@ -14,6 +14,7 @@ import {
 import { useCuisines } from "@/lib/cuisines-api";
 import { cuisineMeta } from "@/data/places";
 import { toast } from "sonner";
+import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
 import {
   Plus,
   Pencil,
@@ -26,18 +27,10 @@ import {
   Image as ImageIcon,
   AlertCircle,
   Upload,
-  Sparkles,
 } from "lucide-react";
 import { initialsFromName, colorFromKey } from "@/lib/avatar-utils";
 import { supabase } from "@/integrations/supabase/client";
 import { MigratePlaceImagesButton, MigrateAllPlacesButton } from "@/components/PlaceImageMigration";
-import { useDebounced } from "@/lib/use-debounced";
-import {
-  searchGooglePlaces,
-  getGooglePlaceDetails,
-  type PlaceSearchResult,
-} from "@/lib/google-places.functions";
-
 export const Route = createFileRoute("/_authenticated/admin/places")({
   component: AdminPlaces,
 });
@@ -123,6 +116,7 @@ function AdminPlaces() {
   const save = useSavePlace();
   const del = useDeletePlace();
   const [editing, setEditing] = useState<Place | "new" | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Place | null>(null);
   const [query, setQuery] = useState("");
   const [cuisineFilter, setCuisineFilter] = useState<string>("Wszystko");
 
@@ -140,13 +134,15 @@ function AdminPlaces() {
     });
   }, [places, query, cuisineFilter]);
 
-  async function handleDelete(id: string, name: string) {
-    if (!confirm(`Usunąć "${name}"?`)) return;
+  async function handleDeleteConfirmed() {
+    if (!confirmDelete) return;
     try {
-      await del.mutateAsync(id);
+      await del.mutateAsync(confirmDelete.id);
       toast.success("Usunięto");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Błąd");
+    } finally {
+      setConfirmDelete(null);
     }
   }
 
@@ -266,7 +262,7 @@ function AdminPlaces() {
                     <Pencil size={13} /> Edytuj
                   </button>
                   <button
-                    onClick={() => handleDelete(p.id, p.name)}
+                    onClick={() => setConfirmDelete(p)}
                     className="rounded-lg border border-border px-3 hover:border-destructive hover:text-destructive transition"
                   >
                     <Trash2 size={13} />
@@ -298,6 +294,15 @@ function AdminPlaces() {
           error={save.error instanceof Error ? save.error.message : null}
         />
       )}
+
+      <ConfirmDeleteModal
+        open={!!confirmDelete}
+        title={`Usunąć "${confirmDelete?.name}"?`}
+        description="Lokal zniknie z mapy i wyszukiwania. Recenzje i historia wizyt użytkowników pozostaną osierocone."
+        pending={del.isPending}
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={handleDeleteConfirmed}
+      />
     </div>
   );
 }
@@ -400,21 +405,6 @@ function PlaceModal({
 
         <form onSubmit={submit} className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-4 space-y-3">
-            <GooglePlacesAutofill
-              onFill={(details) =>
-                setForm((f) => ({
-                  ...f,
-                  name: f.name || details.name,
-                  address: details.address,
-                  lat: details.lat,
-                  lng: details.lng,
-                  phone: details.phone ?? f.phone,
-                  website: details.website ?? f.website,
-                  price_range: details.priceRange ?? f.price_range,
-                  opening_hours: details.openingHours ?? f.opening_hours,
-                }))
-              }
-            />
             <FormField label="Nazwa">
               <input
                 required
@@ -774,109 +764,6 @@ function PlaceModal({
           </div>
         </form>
       </div>
-    </div>
-  );
-}
-
-function GooglePlacesAutofill({
-  onFill,
-}: {
-  onFill: (details: Awaited<ReturnType<typeof getGooglePlaceDetails>>) => void;
-}) {
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
-  const [results, setResults] = useState<PlaceSearchResult[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [filling, setFilling] = useState<string | null>(null);
-  const debouncedQuery = useDebounced(query, 350);
-  const requestId = useRef(0);
-  const search = useServerFn(searchGooglePlaces);
-  const getDetails = useServerFn(getGooglePlaceDetails);
-
-  useEffect(() => {
-    const q = debouncedQuery.trim();
-    if (q.length < 2) {
-      setResults([]);
-      setSearching(false);
-      return;
-    }
-    const id = ++requestId.current;
-    setSearching(true);
-    search({ data: { query: q } })
-      .then((res) => {
-        if (requestId.current === id) setResults(res);
-      })
-      .catch((e) => {
-        if (requestId.current === id)
-          toast.error(e instanceof Error ? e.message : "Błąd wyszukiwania Google Places");
-      })
-      .finally(() => {
-        if (requestId.current === id) setSearching(false);
-      });
-  }, [debouncedQuery]);
-
-  async function pick(result: PlaceSearchResult) {
-    setFilling(result.placeId);
-    try {
-      const details = await getDetails({ data: { placeId: result.placeId } });
-      onFill(details);
-      toast.success("Uzupełniono danymi z Google");
-      setOpen(false);
-      setQuery("");
-      setResults([]);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Nie udało się pobrać szczegółów");
-    } finally {
-      setFilling(null);
-    }
-  }
-
-  return (
-    <div className="relative rounded-2xl border border-dashed border-tomato/40 bg-tomato/5 p-3">
-      <label className="flex items-center gap-1.5 text-xs uppercase tracking-wider font-semibold text-tomato mb-1.5">
-        <Sparkles size={13} /> Uzupełnij z Google Places
-      </label>
-      <input
-        value={query}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          setOpen(true);
-        }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-        placeholder="Szukaj lokalu po nazwie…"
-        className="input"
-      />
-      {open && (searching || results.length > 0) && (
-        <div className="absolute left-3 right-3 top-full mt-1 z-20 rounded-xl border border-border bg-card shadow-lg overflow-hidden">
-          {searching && (
-            <div className="px-3 py-2.5 text-sm text-muted-foreground flex items-center gap-2">
-              <Loader2 size={14} className="animate-spin" /> Szukam…
-            </div>
-          )}
-          {!searching &&
-            results.map((r) => (
-              <button
-                key={r.placeId}
-                type="button"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => pick(r)}
-                disabled={filling !== null}
-                className="w-full text-left px-3 py-2.5 hover:bg-muted/60 disabled:opacity-50 border-b border-border last:border-0 flex items-center gap-2"
-              >
-                {filling === r.placeId ? (
-                  <Loader2 size={14} className="animate-spin shrink-0" />
-                ) : (
-                  <MapPin size={14} className="shrink-0 text-tomato" />
-                )}
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold truncate">{r.name}</span>
-                  <span className="block text-xs text-muted-foreground truncate">{r.address}</span>
-                </span>
-              </button>
-            ))}
-        </div>
-      )}
     </div>
   );
 }

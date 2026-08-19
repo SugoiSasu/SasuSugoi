@@ -19,11 +19,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/use-auth";
 import { useMyProfile } from "@/lib/profile-api";
 import { useUserVisitedPlaces, useUserFavoritePlaces } from "@/lib/visits-api";
-import { useFriendProfiles } from "@/lib/friends-api";
-import { useMyInviteLink } from "@/lib/friend-invites-api";
+import { useFriendProfiles, useMyInviteLink } from "@/lib/friends-api";
 import { UserAvatar } from "@/components/UserAvatar";
 import { levelInfo } from "@/components/LevelProgress";
 import { VipBadge, isVipActive, vipNameStyle } from "@/components/VipBadge";
+import { RandomPlaceCard } from "@/components/RandomPlaceCard";
 import logoDark from "@/assets/brand/po_zeramy-logo-dark.png.asset.json";
 
 const coreItems = [
@@ -54,7 +54,7 @@ export function AppSidebar() {
   const { data: visited } = useUserVisitedPlaces(user?.id, "visited");
   const { data: favs } = useUserFavoritePlaces(user?.id);
   const { data: friends } = useFriendProfiles(user?.id);
-  const { data: inviteToken } = useMyInviteLink(user?.id);
+  const inviteLink = useMyInviteLink(user?.id);
   const navigate = useNavigate();
   const qc = useQueryClient();
 
@@ -66,8 +66,14 @@ export function AppSidebar() {
   }
 
   async function inviteFriends() {
-    if (!inviteToken) return;
-    const url = `${window.location.origin}/zaproszenie/${inviteToken}`;
+    let token: string;
+    try {
+      token = await inviteLink.ensure();
+    } catch {
+      toast.error("Nie udało się przygotować linku zaproszenia");
+      return;
+    }
+    const url = `${window.location.origin}/i/${token}`;
     const text = "Dołącz do mnie na poŻeramy — znajdźmy razem najlepsze knajpy w Poznaniu!";
     if (navigator.share) {
       try {
@@ -205,11 +211,13 @@ export function AppSidebar() {
 
           {user && (
             <div className="pz-fade-in grid grid-cols-3 gap-1.5 rounded-2xl border border-cream/15 bg-cream/[0.06] p-2.5">
-              <StatChip icon={MapPinCheck} value={visited?.length ?? 0} label="Odwiedzone" />
-              <StatChip icon={Heart} value={favs?.length ?? 0} label="Ulubione" />
-              <StatChip icon={Users} value={friends?.length ?? 0} label="Znajomi" />
+              <StatChip to="/moje-miejsca" search={{ tab: "visited" }} icon={MapPinCheck} value={visited?.length ?? 0} label="Odwiedzone" />
+              <StatChip to="/moje-miejsca" search={{ tab: "fav" }} icon={Heart} value={favs?.length ?? 0} label="Ulubione" />
+              <StatChip to="/friends" icon={Users} value={friends?.length ?? 0} label="Znajomi" />
             </div>
           )}
+
+          {user && <RandomPlaceCard userId={user.id} />}
         </div>
       </div>
 
@@ -218,7 +226,7 @@ export function AppSidebar() {
           <button
             type="button"
             onClick={inviteFriends}
-            disabled={!inviteToken}
+            disabled={inviteLink.isLoading}
             className={`${linkBase} w-full text-left text-tomato hover:bg-tomato/10 hover:text-tomato disabled:opacity-50`}
           >
             <UserPlus2 size={18} className={iconCls} />
@@ -249,18 +257,27 @@ function StatChip({
   icon: Icon,
   value,
   label,
+  to,
+  search,
 }: {
   icon: typeof Users;
   value: number;
   label: string;
+  to: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  search?: any;
 }) {
   return (
-    <div className="flex flex-col items-center gap-0.5 rounded-xl py-1 text-center">
+    <Link
+      to={to}
+      search={search}
+      className="flex flex-col items-center gap-0.5 rounded-xl py-1 text-center transition-colors duration-150 hover:bg-cream/10"
+    >
       <Icon size={15} className="text-tomato" />
       <p className="font-display text-sm font-extrabold leading-none text-cream">{value}</p>
       <p className="truncate text-[9px] font-semibold uppercase tracking-wide text-cream/45">
         {label}
       </p>
-    </div>
+    </Link>
   );
 }

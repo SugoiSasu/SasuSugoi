@@ -180,7 +180,7 @@ function Comments({ postId }: { postId: string }) {
     try {
       await add.mutateAsync({ postId, content: text });
       setText("");
-      toast.success("Komentarz dodany — +1 pkt poŻarcia (po wdrożeniu systemu punktów)");
+      toast.success("Komentarz dodany");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Błąd");
     }

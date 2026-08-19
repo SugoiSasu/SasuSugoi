@@ -2,6 +2,7 @@ import { BackButton } from "@/components/BackButton";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import {
   Loader2,
@@ -14,8 +15,11 @@ import {
   Heart,
   Bookmark,
   CheckCircle2,
+  Trash2,
+  TriangleAlert,
 } from "lucide-react";
 import { useUser } from "@/lib/use-auth";
+import { deleteMyAccount } from "@/lib/admin-users.functions";
 import {
   useMyProfile,
   useUpdateProfile,
@@ -529,6 +533,8 @@ function ProfilePage() {
             </p>
           )}
         </form>
+
+        <DeleteAccountSection />
       </div>
     </main>
   );
@@ -608,6 +614,89 @@ function MyPlaceLists() {
         emptyTip="Klikaj serduszko na knajpie, do której chcesz wracać."
         emptyCta={{ to: "/", label: "Przeglądaj lokale" }}
       />
+    </section>
+  );
+}
+
+function DeleteAccountSection() {
+  const [open, setOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const doDelete = useServerFn(deleteMyAccount);
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await doDelete();
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      await supabase.auth.signOut();
+      toast.success("Konto usunięte. Żegnamy, było miło Cię gościć.");
+      navigate({ to: "/", replace: true });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nie udało się usunąć konta");
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <section className="mt-8 rounded-2xl border-2 border-destructive/30 bg-destructive/5 p-5">
+      <div className="flex items-start gap-3">
+        <TriangleAlert className="text-destructive shrink-0 mt-0.5" size={18} />
+        <div className="flex-1 min-w-0">
+          <h2 className="font-display text-lg text-destructive">Usuń konto</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Trwale usuwa Twoje konto oraz wszystkie powiązane dane: recenzje, ulubione, znajomości,
+            powiadomienia i punkty. Tej operacji nie można cofnąć.
+          </p>
+          {!open ? (
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="mt-3 inline-flex items-center gap-2 rounded-full border-2 border-destructive text-destructive px-4 py-2 text-sm font-semibold hover:bg-destructive/10"
+            >
+              <Trash2 size={14} /> Usuń konto
+            </button>
+          ) : (
+            <div className="mt-3 space-y-2 max-w-sm">
+              <label className="block text-xs font-semibold text-muted-foreground">
+                Wpisz <span className="font-mono text-destructive">USUŃ</span>, żeby potwierdzić
+              </label>
+              <input
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                className="w-full rounded-lg border-2 border-destructive/40 bg-background px-3 py-2 text-sm outline-none focus:border-destructive"
+                placeholder="USUŃ"
+                disabled={deleting}
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    setConfirmText("");
+                  }}
+                  disabled={deleting}
+                  className="rounded-full border border-border px-4 py-2 text-sm font-semibold hover:bg-muted disabled:opacity-50"
+                >
+                  Anuluj
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={confirmText !== "USUŃ" || deleting}
+                  className="inline-flex items-center gap-2 rounded-full bg-destructive text-destructive-foreground px-4 py-2 text-sm font-semibold hover:bg-destructive/90 disabled:opacity-40"
+                >
+                  {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                  Usuń konto na zawsze
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </section>
   );
 }

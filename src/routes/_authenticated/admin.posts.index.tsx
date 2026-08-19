@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { useAllPostsAdmin, useDeletePost } from "@/lib/posts-api";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Loader2, ExternalLink } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, ExternalLink, Search } from "lucide-react";
+import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
 
 export const Route = createFileRoute("/_authenticated/admin/posts/")({
   component: AdminPosts,
@@ -10,14 +12,29 @@ export const Route = createFileRoute("/_authenticated/admin/posts/")({
 function AdminPosts() {
   const { data: posts, isLoading } = useAllPostsAdmin();
   const del = useDeletePost();
+  const [search, setSearch] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
 
-  async function handleDelete(id: string, title: string) {
-    if (!confirm(`Usunąć wpis "${title}"?`)) return;
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return posts ?? [];
+    return (posts ?? []).filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.slug.toLowerCase().includes(q) ||
+        p.tags.some((t) => t.toLowerCase().includes(q)),
+    );
+  }, [posts, search]);
+
+  async function handleDeleteConfirmed() {
+    if (!confirmDelete) return;
     try {
-      await del.mutateAsync(id);
+      await del.mutateAsync(confirmDelete.id);
       toast.success("Usunięto");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Błąd");
+    } finally {
+      setConfirmDelete(null);
     }
   }
 
@@ -37,9 +54,21 @@ function AdminPosts() {
         </Link>
       </div>
 
+      {(posts?.length ?? 0) > 0 && (
+        <div className="relative mb-4 max-w-sm">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Szukaj po tytule, slugu, tagu…"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-card border border-border outline-none focus:border-tomato text-sm"
+          />
+        </div>
+      )}
+
       {isLoading ? (
         <div className="grid place-items-center py-20"><Loader2 className="animate-spin" size={28} /></div>
-      ) : posts && posts.length > 0 ? (
+      ) : filtered.length > 0 ? (
         <div className="bg-card border border-border rounded-2xl overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
@@ -52,7 +81,7 @@ function AdminPosts() {
               </tr>
             </thead>
             <tbody>
-              {posts.map((p) => (
+              {filtered.map((p) => (
                 <tr key={p.id} className="border-t border-border hover:bg-muted/30 transition">
                   <td className="px-4 py-3">
                     <div className="font-semibold">{p.title}</div>
@@ -78,7 +107,7 @@ function AdminPosts() {
                     <Link to="/admin/posts/$id" params={{ id: p.id }} className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground" title="Edytuj">
                       <Pencil size={14} />
                     </Link>
-                    <button onClick={() => handleDelete(p.id, p.title)} className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive" title="Usuń">
+                    <button onClick={() => setConfirmDelete({ id: p.id, title: p.title })} className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive" title="Usuń">
                       <Trash2 size={14} />
                     </button>
                   </td>
@@ -86,6 +115,10 @@ function AdminPosts() {
               ))}
             </tbody>
           </table>
+        </div>
+      ) : search ? (
+        <div className="text-center py-20 bg-card border border-border rounded-2xl">
+          <p className="text-muted-foreground">Nic nie pasuje do „{search}".</p>
         </div>
       ) : (
         <div className="text-center py-20 bg-card border border-border rounded-2xl">
@@ -95,6 +128,15 @@ function AdminPosts() {
           </Link>
         </div>
       )}
+
+      <ConfirmDeleteModal
+        open={!!confirmDelete}
+        title={`Usunąć wpis "${confirmDelete?.title}"?`}
+        description="Tej operacji nie można cofnąć."
+        pending={del.isPending}
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={handleDeleteConfirmed}
+      />
     </div>
   );
 }

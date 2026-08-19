@@ -20,6 +20,35 @@ export interface UserAchievement {
   unlocked_at: string;
 }
 
+export type CriteriaType = "reviews_count" | "unique_places" | "points_total" | "friends_count";
+
+export const CRITERIA_LABELS: Record<CriteriaType, { unit: string; verb: string }> = {
+  reviews_count: { unit: "recenzji", verb: "Dodaj" },
+  unique_places: { unit: "unikalnych lokali", verb: "Odwiedź" },
+  points_total: { unit: "punktów PoŻarcia", verb: "Zdobądź" },
+  friends_count: { unit: "znajomych", verb: "Dodaj" },
+};
+
+/** Shared achievement-progress formula — keep this the single source of truth
+ * so /osiagniecia and /u/$username never drift apart. */
+export function computeProgress(
+  a: Achievement,
+  stats: Record<CriteriaType, number>,
+): {
+  current: number;
+  threshold: number;
+  type: CriteriaType | null;
+  pct: number;
+  remaining: number;
+} {
+  const type = (a.criteria?.type ?? null) as CriteriaType | null;
+  const threshold = Number(a.criteria?.threshold ?? 0) || 0;
+  const current = type && type in stats ? stats[type] : 0;
+  const pct = threshold > 0 ? Math.min(100, Math.round((current / threshold) * 100)) : 0;
+  const remaining = Math.max(0, threshold - current);
+  return { current, threshold, type, pct, remaining };
+}
+
 export function useAchievements() {
   return useQuery({
     queryKey: ["achievements"],

@@ -3,8 +3,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Lock, Trophy } from "lucide-react";
 import { useUser } from "@/lib/use-auth";
 import { useMyProfile } from "@/lib/profile-api";
-import { useAchievements, useUserAchievements } from "@/lib/achievements-api";
-import { useFriendLeaderboard } from "@/lib/friends-api";
+import { useAchievements, useUserAchievements, computeProgress, type CriteriaType } from "@/lib/achievements-api";
+import { useFriendLeaderboard, useFriendsCount } from "@/lib/friends-api";
+import { useUserReviewStats } from "@/lib/reviews-api";
 import { UserAvatar } from "@/components/UserAvatar";
 import { LevelProgressCard } from "@/components/LevelProgress";
 
@@ -36,10 +37,18 @@ function AchievementsPage() {
   const { data: all, isLoading: loadingAll } = useAchievements();
   const { data: mine } = useUserAchievements(user?.id);
   const { data: leaders, isLoading: loadingLeaders } = useFriendLeaderboard();
+  const { data: reviewStats } = useUserReviewStats(user?.id);
+  const { data: friendsCount } = useFriendsCount(user?.id);
   const [filter, setFilter] = useState<Filter>("all");
 
   const points = profile?.points_total ?? 0;
   const unlocked = useMemo(() => new Set((mine ?? []).map((m) => m.achievement_id)), [mine]);
+  const userStats: Record<CriteriaType, number> = {
+    reviews_count: reviewStats?.reviewsCount ?? 0,
+    unique_places: reviewStats?.uniquePlaces ?? 0,
+    points_total: points,
+    friends_count: friendsCount ?? 0,
+  };
 
   const enabled = useMemo(() => (all ?? []).filter((a) => a.enabled !== false), [all]);
   const shown = useMemo(
@@ -104,23 +113,53 @@ function AchievementsPage() {
         <ul key={filter} className="pz-fade-in mt-4 grid grid-cols-3 gap-4 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7">
           {shown.map((a) => {
             const has = unlocked.has(a.id);
+            const progress = has ? null : computeProgress(a, userStats);
+            const inProgress = !!progress && progress.pct > 0;
+            const title = inProgress
+              ? `${a.description ?? a.name} — ${progress!.current}/${progress!.threshold || "?"}`
+              : (a.description ?? a.name);
             return (
-              <li key={a.id} className="text-center" title={a.description ?? a.name}>
+              <li key={a.id} className="text-center" title={title}>
                 <div
-                  className={`relative mx-auto grid aspect-square w-full max-w-[92px] place-items-center rounded-full border-2 transition ${
+                  className={`relative mx-auto grid aspect-square w-full max-w-[92px] place-items-center rounded-full border-2 transition hover:scale-105 ${
                     has
-                      ? `${badgeColor(a.id)} border-transparent text-cream hover:scale-105`
-                      : "border-border bg-muted/50 opacity-60 grayscale"
+                      ? `${badgeColor(a.id)} border-transparent text-cream`
+                      : inProgress
+                        ? "border-tomato/25 bg-muted/40"
+                        : "border-border bg-muted/50 opacity-60 grayscale"
                   }`}
                 >
-                  {a.icon_url && a.icon_url.startsWith("http") ? (
-                    <img src={a.icon_url} alt="" className="h-10 w-10 object-contain" loading="lazy" />
-                  ) : (
-                    <span className="text-[26px] leading-none">{a.icon_url && !a.icon_url.startsWith("http") ? a.icon_url : <Trophy size={26} />}</span>
+                  {inProgress && (
+                    <svg className="absolute inset-0 -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
+                      <circle cx="50" cy="50" r="46" fill="none" stroke="var(--border)" strokeWidth="4" />
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="46"
+                        fill="none"
+                        stroke="var(--tomato)"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                        strokeDasharray={`${(progress!.pct / 100) * 289} 289`}
+                        className="transition-[stroke-dasharray] duration-700 ease-out"
+                      />
+                    </svg>
                   )}
-                  {!has && (
+                  <span className={!has && !inProgress ? "" : !has ? "opacity-90" : ""}>
+                    {a.icon_url && a.icon_url.startsWith("http") ? (
+                      <img src={a.icon_url} alt="" className="h-10 w-10 object-contain" loading="lazy" />
+                    ) : (
+                      <span className="text-[26px] leading-none">{a.icon_url && !a.icon_url.startsWith("http") ? a.icon_url : <Trophy size={26} />}</span>
+                    )}
+                  </span>
+                  {!has && !inProgress && (
                     <span className="absolute bottom-0 right-0 grid h-5 w-5 place-items-center rounded-full bg-background/90">
                       <Lock size={11} className="text-muted-foreground" />
+                    </span>
+                  )}
+                  {inProgress && (
+                    <span className="absolute bottom-0 right-0 grid h-6 w-6 place-items-center rounded-full border border-tomato/40 bg-background text-[9px] font-bold text-tomato">
+                      {progress!.pct}%
                     </span>
                   )}
                 </div>

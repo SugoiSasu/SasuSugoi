@@ -18,21 +18,96 @@ function OwnerRequestsPage() {
   const { data, isLoading } = useAdminOwnerRequests(tab);
   const approve = useApproveOwnerRequest();
   const reject = useRejectOwnerRequest();
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
+
+  function toggleSelected(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  async function handleBulk(action: "approve" | "reject") {
+    const rows = data ?? [];
+    let targets = rows.filter((r) => selected.has(r.id));
+    const skipped = action === "approve" ? targets.filter((r) => !r.user_id).length : 0;
+    if (action === "approve") targets = targets.filter((r) => r.user_id);
+    if (targets.length === 0) {
+      if (skipped > 0) toast.warning("Zaznaczone zgłoszenia nie mają konta użytkownika — nie można zatwierdzić.");
+      return;
+    }
+    setBulkProgress({ done: 0, total: targets.length });
+    let okCount = 0;
+    let failCount = 0;
+    for (const r of targets) {
+      try {
+        if (action === "approve") await approve.mutateAsync(r.id);
+        else await reject.mutateAsync(r.id);
+        okCount++;
+      } catch {
+        failCount++;
+      }
+      setBulkProgress((p) => (p ? { done: p.done + 1, total: p.total } : p));
+    }
+    setBulkProgress(null);
+    setSelected(new Set());
+    const verb = action === "approve" ? "Zatwierdzono" : "Odrzucono";
+    if (failCount === 0 && skipped === 0) toast.success(`${verb} ${okCount} zgłoszeń`);
+    else toast.warning(`${verb} ${okCount}${failCount ? `, ${failCount} nieudanych` : ""}${skipped ? `, ${skipped} pominiętych (brak konta)` : ""}`);
+  }
 
   return (
     <div>
       <h1 className="font-display text-3xl mb-4">Zgłoszenia właścicieli</h1>
-      <div className="flex gap-2 mb-5">
-        {(["pending", "approved", "rejected"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`chip ${tab === t ? "bg-tomato text-cream" : "bg-card border border-border"}`}
-          >
-            {t === "pending" ? "Oczekujące" : t === "approved" ? "Zatwierdzone" : "Odrzucone"}
-          </button>
-        ))}
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
+        <div className="flex gap-2">
+          {(["pending", "approved", "rejected"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => { setTab(t); setSelected(new Set()); }}
+              className={`chip ${tab === t ? "bg-tomato text-cream" : "bg-card border border-border"}`}
+            >
+              {t === "pending" ? "Oczekujące" : t === "approved" ? "Zatwierdzone" : "Odrzucone"}
+            </button>
+          ))}
+        </div>
+        {tab === "pending" && selected.size > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-semibold text-muted-foreground">Zaznaczono {selected.size}</span>
+            <button
+              onClick={() => handleBulk("approve")}
+              disabled={!!bulkProgress}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 text-white px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
+            >
+              <CheckCircle2 size={13} /> Zatwierdź zaznaczone
+            </button>
+            <button
+              onClick={() => handleBulk("reject")}
+              disabled={!!bulkProgress}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:border-destructive hover:text-destructive disabled:opacity-50"
+            >
+              <XCircle size={13} /> Odrzuć zaznaczone
+            </button>
+            <button
+              onClick={() => setSelected(new Set())}
+              disabled={!!bulkProgress}
+              className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
+            >
+              Anuluj zaznaczenie
+            </button>
+          </div>
+        )}
       </div>
+
+      {bulkProgress && (
+        <div className="mb-4 rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground flex items-center gap-2">
+          <Loader2 size={13} className="animate-spin" />
+          Przetwarzanie {bulkProgress.done} z {bulkProgress.total}…
+        </div>
+      )}
 
       {isLoading ? (
         <div className="grid place-items-center py-16">
@@ -47,6 +122,15 @@ function OwnerRequestsPage() {
               key={r.id}
               className="rounded-2xl border border-border bg-card p-4 flex flex-col sm:flex-row gap-4 sm:items-start"
             >
+              {tab === "pending" && (
+                <input
+                  type="checkbox"
+                  checked={selected.has(r.id)}
+                  onChange={() => toggleSelected(r.id)}
+                  className="mt-1.5 w-4 h-4 accent-tomato shrink-0"
+                  aria-label={`Zaznacz zgłoszenie „${r.name}"`}
+                />
+              )}
               <div className="flex-1 min-w-0 space-y-1.5">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-bold text-lg">{r.name}</span>

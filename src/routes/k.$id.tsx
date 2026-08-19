@@ -1018,5 +1018,3 @@ function igEmbedUrl(url: string | null): string | null {
   }
 }
 
-// Silence unused-import warnings for keys referenced from types
-void DAY_KEYS; void DAY_LABELS;

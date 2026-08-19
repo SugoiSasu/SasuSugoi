@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { z } from "zod";
+import { zodValidator } from "@tanstack/zod-adapter";
 import { Bookmark, Check, ChevronRight, Heart, Search, Star, Users } from "lucide-react";
 import { useUser } from "@/lib/use-auth";
 import { useUserVisitedPlaces, useUserFavoritePlaces, type VisitedPlace } from "@/lib/visits-api";
@@ -9,7 +11,12 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { useUserLocation, haversineKm, formatDistancePl } from "@/lib/geo";
 import { AuthGate } from "@/components/AuthGate";
 
+const searchSchema = z.object({
+  tab: z.enum(["want", "visited", "fav", "friends"]).catch("want").optional(),
+});
+
 export const Route = createFileRoute("/moje-miejsca")({
+  validateSearch: zodValidator(searchSchema),
   head: () => ({
     meta: [
       { title: "Moje miejsca — poŻeramy" },
@@ -33,7 +40,8 @@ type Sort = "recent" | "alpha" | "rating" | "near";
 
 function MyPlacesPage() {
   const { user } = useUser();
-  const [tab, setTab] = useState<Tab>("want");
+  const { tab: tabFromUrl } = Route.useSearch();
+  const [tab, setTab] = useState<Tab>(tabFromUrl ?? "want");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("recent");
   const { data: want, isLoading: loadingWant } = useUserVisitedPlaces(user?.id, "want");

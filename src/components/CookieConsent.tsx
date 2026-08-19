@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { GA_MEASUREMENT_ID, disableGA, hasAnalyticsConsent, isGALoaded, loadGA, trackEvent } from "@/lib/analytics";
+import { supabase } from "@/integrations/supabase/client";
 
 
 /**
@@ -17,6 +18,40 @@ import { GA_MEASUREMENT_ID, disableGA, hasAnalyticsConsent, isGALoaded, loadGA, 
  */
 
 const STORAGE_KEY = "pz_cookie_consent_v1";
+const ANON_ID_KEY = "pz_cookie_consent_anon_id";
+const CONSENT_LOG_VERSION = "1";
+
+// Random per-browser id, unrelated to any account — lets us prove what a
+// given (anonymous) session consented to and when, without identifying
+// anyone. Never sent anywhere except our own consent log.
+function getOrCreateAnonId(): string {
+  try {
+    let id = localStorage.getItem(ANON_ID_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(ANON_ID_KEY, id);
+    }
+    return id;
+  } catch {
+    return "unknown";
+  }
+}
+
+function logConsentServerSide(state: Omit<ConsentState, "ts" | "version">) {
+  supabase
+    .from("cookie_consent_log")
+    .insert({
+      anon_id: getOrCreateAnonId(),
+      analytics_storage: state.analytics_storage === "granted",
+      ad_storage: state.ad_storage === "granted",
+      ad_user_data: state.ad_user_data === "granted",
+      ad_personalization: state.ad_personalization === "granted",
+      consent_version: CONSENT_LOG_VERSION,
+    })
+    .then(({ error }) => {
+      if (error) console.warn("cookie consent log failed", error.message);
+    });
+}
 
 type ConsentValue = "granted" | "denied";
 
@@ -88,6 +123,7 @@ function persist(next: Omit<ConsentState, "ts" | "version">) {
     /* ignore */
   }
   pushConsentUpdate(next);
+  logConsentServerSide(next);
 }
 
 export function CookieConsent() {
