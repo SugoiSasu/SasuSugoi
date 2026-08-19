@@ -334,6 +334,39 @@ export type Database = {
         }
         Relationships: []
       }
+      cookie_consent_log: {
+        Row: {
+          ad_personalization: boolean
+          ad_storage: boolean
+          ad_user_data: boolean
+          analytics_storage: boolean
+          anon_id: string
+          consent_version: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          ad_personalization: boolean
+          ad_storage: boolean
+          ad_user_data: boolean
+          analytics_storage: boolean
+          anon_id: string
+          consent_version: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          ad_personalization?: boolean
+          ad_storage?: boolean
+          ad_user_data?: boolean
+          analytics_storage?: boolean
+          anon_id?: string
+          consent_version?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       cuisines: {
         Row: {
           color: string | null

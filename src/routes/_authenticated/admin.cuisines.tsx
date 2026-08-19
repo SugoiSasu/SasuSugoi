@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Loader2, Save, X } from "lucide-react";
 import { useCuisines, useSaveCuisine, useDeleteCuisine, type Cuisine, type CuisineInput } from "@/lib/cuisines-api";
 import { useIsSuperAdmin } from "@/lib/use-auth";
+import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
 
 export const Route = createFileRoute("/_authenticated/admin/cuisines")({
   component: AdminCuisines,
@@ -19,15 +20,22 @@ function AdminCuisines() {
   const save = useSaveCuisine();
   const del = useDeleteCuisine();
   const [editing, setEditing] = useState<Cuisine | "new" | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Cuisine | null>(null);
 
   if (!isSuper) {
     return <div className="text-center py-20 text-muted-foreground">Tylko head admin może edytować kuchnie.</div>;
   }
 
-  async function handleDelete(id: string, name: string) {
-    if (!confirm(`Usunąć kuchnię "${name}"? Lokale z tą kuchnią pozostaną, ale będą miały wartość niepowiązaną z listą.`)) return;
-    try { await del.mutateAsync(id); toast.success("Usunięto"); }
-    catch (e) { toast.error(e instanceof Error ? e.message : "Błąd"); }
+  async function handleDeleteConfirmed() {
+    if (!confirmDelete) return;
+    try {
+      await del.mutateAsync(confirmDelete.id);
+      toast.success("Usunięto");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Błąd");
+    } finally {
+      setConfirmDelete(null);
+    }
   }
 
   return (
@@ -54,7 +62,7 @@ function AdminCuisines() {
                 <div className="text-xs text-muted-foreground">Sort: {c.sort_order} · {c.enabled ? "✓ aktywna" : "⏸ ukryta"}</div>
               </div>
               <button onClick={() => setEditing(c)} className="p-2 rounded-lg border border-border hover:border-tomato hover:text-tomato"><Pencil size={13} /></button>
-              <button onClick={() => handleDelete(c.id, c.name)} className="p-2 rounded-lg border border-border hover:border-destructive hover:text-destructive"><Trash2 size={13} /></button>
+              <button onClick={() => setConfirmDelete(c)} className="p-2 rounded-lg border border-border hover:border-destructive hover:text-destructive"><Trash2 size={13} /></button>
             </div>
           ))}
         </div>
@@ -73,6 +81,15 @@ function AdminCuisines() {
           } catch (e) { toast.error(e instanceof Error ? e.message : "Błąd"); }
         }}
       />}
+
+      <ConfirmDeleteModal
+        open={!!confirmDelete}
+        title={`Usunąć kuchnię "${confirmDelete?.name}"?`}
+        description="Lokale z tą kuchnią pozostaną, ale będą miały wartość niepowiązaną z listą."
+        pending={del.isPending}
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={handleDeleteConfirmed}
+      />
     </div>
   );
 }

@@ -20,6 +20,8 @@ import {
   LogOut,
   LogIn,
   Store,
+  HelpCircle,
+  Sparkles,
 } from "lucide-react";
 import { useUser, useIsAdmin, useIsSuperAdmin } from "@/lib/use-auth";
 import { useMyProfile } from "@/lib/profile-api";
@@ -29,6 +31,8 @@ import { useMyOwnedPlaces } from "@/lib/owners-api";
 import { UserAvatar } from "@/components/UserAvatar";
 import { RankBadge } from "@/components/RankBadge";
 import { supabase } from "@/integrations/supabase/client";
+import { openOnboarding } from "@/lib/onboarding";
+import { openPatchNotes, hasUnseenPatchNotes } from "@/lib/patch-notes";
 
 export function UserMenu() {
   // Avoid SSR/CSR hydration mismatch: render a stable placeholder until mounted.
@@ -109,6 +113,8 @@ function HoverDropdown({
   onSignOut: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [unseenPatchNotes, setUnseenPatchNotes] = useState(false);
+  useEffect(() => setUnseenPatchNotes(hasUnseenPatchNotes()), []);
 
   return (
     <div className="relative inline-flex items-center rounded-full sm:bg-card sm:border sm:border-border sm:hover:border-tomato sm:pl-1 sm:pr-1 sm:py-1 gap-0.5 sm:gap-1">
@@ -217,6 +223,21 @@ function HoverDropdown({
             <Link to="/profile" className="cursor-pointer">
               <Settings size={14} className="mr-2" /> Ustawienia profilu
             </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={openOnboarding} className="cursor-pointer">
+            <HelpCircle size={14} className="mr-2" /> Jak korzystać z appki?
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              setUnseenPatchNotes(false);
+              openPatchNotes();
+            }}
+            className="cursor-pointer"
+          >
+            <Sparkles size={14} className="mr-2" /> Co nowego?
+            {unseenPatchNotes && (
+              <span className="ml-auto h-1.5 w-1.5 rounded-full bg-tomato" aria-label="Nowości" />
+            )}
           </DropdownMenuItem>
           {isOwner && (
             <>

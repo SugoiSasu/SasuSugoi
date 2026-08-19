@@ -1,22 +1,28 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, ChevronDown, ChevronRight, Clock, Search, Star } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Clock, List, Map as MapIcon, Search, Star } from "lucide-react";
 import FoodMap from "@/components/FoodMap";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { usePlaces, usePlaceRatingsMap, isPlaceOpenNow, type Place } from "@/lib/places-api";
 import { useCuisines } from "@/lib/cuisines-api";
 import { searchPlaces } from "@/lib/place-search";
 import { useUserLocation, haversineKm, formatDistancePl } from "@/lib/geo";
-
-
+import { cuisineMeta } from "@/data/places";
 
 export const Route = createFileRoute("/mapa")({
   head: () => ({
     meta: [
       { title: "Mapa knajp w Poznaniu — poŻeramy" },
-      { name: "description", content: "Interaktywna mapa poznańskich knajp: filtruj po kuchni i ocenie, sprawdź co jest w pobliżu." },
+      {
+        name: "description",
+        content:
+          "Interaktywna mapa poznańskich knajp: filtruj po kuchni i ocenie, sprawdź co jest w pobliżu.",
+      },
       { property: "og:title", content: "Mapa knajp w Poznaniu — poŻeramy" },
-      { property: "og:description", content: "Interaktywna mapa poznańskich knajp: filtruj po kuchni i ocenie." },
+      {
+        property: "og:description",
+        content: "Interaktywna mapa poznańskich knajp: filtruj po kuchni i ocenie.",
+      },
     ],
   }),
   component: MapaPage,
@@ -32,6 +38,7 @@ function MapaPage() {
   const [openNow, setOpenNow] = useState(false);
   const [selected, setSelected] = useState<Place | null>(null);
   const [focusTick, setFocusTick] = useState(0);
+  const [mobileView, setMobileView] = useState<"map" | "list">("map");
   const userLoc = useUserLocation();
 
   const filtered = useMemo(() => {
@@ -57,7 +64,6 @@ function MapaPage() {
 
   const selRating = selected ? ratings?.get(selected.id) : undefined;
 
-
   const cuisineList = (cuisines ?? []).filter((c) => c.enabled !== false);
   const ratingOptions = [
     { value: 0, label: "Dowolna" },
@@ -68,7 +74,9 @@ function MapaPage() {
 
   const trigger = (active: boolean) =>
     `flex h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition sm:flex-none sm:px-4 ${
-      active ? "border-navy bg-navy text-cream" : "border-border bg-card text-foreground hover:border-tomato"
+      active
+        ? "border-navy bg-navy text-cream"
+        : "border-border bg-card text-foreground hover:border-tomato"
     }`;
 
   const optionRow = (active: boolean) =>
@@ -80,7 +88,10 @@ function MapaPage() {
     <div className="relative flex h-[calc(100dvh-8.5rem)] min-h-[520px] flex-col lg:h-dvh">
       <div className="border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
         <div className="relative mb-3">
-          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Search
+            size={16}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -96,7 +107,11 @@ function MapaPage() {
               <ChevronDown size={14} className="shrink-0 opacity-70" />
             </PopoverTrigger>
             <PopoverContent align="start" className="max-h-72 w-56 overflow-y-auto p-2">
-              <button type="button" className={optionRow(!cuisine)} onClick={() => setCuisine(null)}>
+              <button
+                type="button"
+                className={optionRow(!cuisine)}
+                onClick={() => setCuisine(null)}
+              >
                 Wszystkie kuchnie
                 {!cuisine && <Check size={14} />}
               </button>
@@ -125,7 +140,12 @@ function MapaPage() {
             </PopoverTrigger>
             <PopoverContent align="start" className="w-44 p-2">
               {ratingOptions.map((o) => (
-                <button key={o.value} type="button" className={optionRow(minRating === o.value)} onClick={() => setMinRating(o.value)}>
+                <button
+                  key={o.value}
+                  type="button"
+                  className={optionRow(minRating === o.value)}
+                  onClick={() => setMinRating(o.value)}
+                >
                   {o.label}
                   {minRating === o.value && <Check size={14} />}
                 </button>
@@ -145,14 +165,23 @@ function MapaPage() {
         </div>
       </div>
 
-
-
-      <div className="relative min-h-[320px] flex-1 lg:flex lg:min-h-0">
-        {/* Desktop-only results column */}
-        <aside className="hidden lg:flex lg:w-96 lg:shrink-0 lg:flex-col lg:border-r lg:border-border lg:bg-background">
-          <p className="border-b border-border px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {listResults.length} {listResults.length === 1 ? "lokal" : "lokali"}
-          </p>
+      <div className="relative flex min-h-[320px] flex-1 lg:min-h-0">
+        {/* Desktop: static column. Mobile: full-screen sheet over the map, toggled by the floating pill below. */}
+        <aside
+          className={`${mobileView === "list" ? "flex" : "hidden"} absolute inset-0 z-20 flex-col bg-background lg:static lg:z-auto lg:flex lg:w-96 lg:shrink-0 lg:border-r lg:border-border`}
+        >
+          <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+            <p className="text-sm font-bold">
+              {listResults.length} {listResults.length === 1 ? "lokal" : "lokali"}
+            </p>
+            <button
+              type="button"
+              onClick={() => setMobileView("map")}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold hover:border-tomato lg:hidden"
+            >
+              <MapIcon size={13} /> Pokaż mapę
+            </button>
+          </div>
           <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
             {listResults.map((p) => {
               const r = ratings?.get(p.id);
@@ -165,14 +194,25 @@ function MapaPage() {
                     onClick={() => {
                       setSelected(p);
                       setFocusTick((t) => t + 1);
+                      setMobileView("map");
                     }}
                     className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition hover:border-tomato hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tomato ${
                       isActive ? "border-tomato bg-blush/40" : "border-border bg-card"
                     }`}
                   >
-                    <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-muted">
-                      {p.cover_image_url && (
-                        <img src={p.cover_image_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+                    <div
+                      className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl text-2xl"
+                      style={p.cover_image_url ? undefined : { background: `${cuisineMeta(p.cuisine).color}26` }}
+                    >
+                      {p.cover_image_url ? (
+                        <img
+                          src={p.cover_image_url}
+                          alt=""
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        cuisineMeta(p.cuisine).emoji
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -182,12 +222,17 @@ function MapaPage() {
                         {r ? (
                           <>
                             <Star size={12} className="fill-tomato text-tomato" />
-                            {r.avg.toFixed(1)} <span className="font-normal text-muted-foreground">({r.count})</span>
+                            {r.avg.toFixed(1)}{" "}
+                            <span className="font-normal text-muted-foreground">({r.count})</span>
                           </>
                         ) : (
                           <span className="font-normal text-muted-foreground">Brak ocen</span>
                         )}
-                        {dist !== null && <span className="font-normal text-muted-foreground">· {formatDistancePl(dist)}</span>}
+                        {dist !== null && (
+                          <span className="font-normal text-muted-foreground">
+                            · {formatDistancePl(dist)}
+                          </span>
+                        )}
                       </p>
                     </div>
                     <ChevronRight size={18} className="shrink-0 text-muted-foreground" />
@@ -212,8 +257,19 @@ function MapaPage() {
               focusPlaceId={selected?.id ?? null}
               focusTick={focusTick}
               onSelect={(p) => setSelected(p)}
+              userLocation={userLoc}
             />
           </div>
+
+          {!selected && mobileView === "map" && (
+            <button
+              type="button"
+              onClick={() => setMobileView("list")}
+              className="absolute bottom-4 left-1/2 z-10 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-navy px-4 py-2.5 text-xs font-semibold text-cream shadow-xl lg:hidden"
+            >
+              <List size={14} /> Pokaż listę · {listResults.length}
+            </button>
+          )}
 
           {selected && (
             <>
@@ -237,16 +293,34 @@ function MapaPage() {
   );
 }
 
-function SelectedCard({ place, stat, dist }: { place: Place; stat?: { avg: number; count: number }; dist?: number | null }) {
+function SelectedCard({
+  place,
+  stat,
+  dist,
+}: {
+  place: Place;
+  stat?: { avg: number; count: number };
+  dist?: number | null;
+}) {
   return (
     <Link
       to="/k/$id"
       params={{ id: place.slug }}
       className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-xl transition hover:border-tomato"
     >
-      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-muted">
-        {place.cover_image_url && (
-          <img src={place.cover_image_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+      <div
+        className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl text-2xl"
+        style={place.cover_image_url ? undefined : { background: `${cuisineMeta(place.cuisine).color}26` }}
+      >
+        {place.cover_image_url ? (
+          <img
+            src={place.cover_image_url}
+            alt=""
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          cuisineMeta(place.cuisine).emoji
         )}
       </div>
       <div className="min-w-0 flex-1">
@@ -259,12 +333,15 @@ function SelectedCard({ place, stat, dist }: { place: Place; stat?: { avg: numbe
           {stat ? (
             <>
               <Star size={12} className="fill-tomato text-tomato" />
-              {stat.avg.toFixed(1)} <span className="font-normal text-muted-foreground">({stat.count})</span>
+              {stat.avg.toFixed(1)}{" "}
+              <span className="font-normal text-muted-foreground">({stat.count})</span>
             </>
           ) : (
             <span className="font-normal text-muted-foreground">Brak ocen</span>
           )}
-          {dist != null && <span className="font-normal text-muted-foreground">· {formatDistancePl(dist)}</span>}
+          {dist != null && (
+            <span className="font-normal text-muted-foreground">· {formatDistancePl(dist)}</span>
+          )}
         </p>
       </div>
       <ChevronRight size={18} className="shrink-0 text-muted-foreground" />

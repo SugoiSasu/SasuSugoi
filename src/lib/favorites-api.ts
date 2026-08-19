@@ -15,6 +15,9 @@ export interface FavoritedByFriend {
   display_name: string | null;
   avatar_url: string | null;
   avatar_source: "google" | "upload" | "initials";
+  is_vip: boolean;
+  vip_until: string | null;
+  vip_nick_color: string | null;
 }
 
 /** All of my favorite place ids. */
@@ -99,9 +102,7 @@ export function useFavoriteCounts() {
   return useQuery({
     queryKey: ["place-favorite-counts"],
     queryFn: async (): Promise<Record<string, number>> => {
-      const { data, error } = await supabase
-        .from("place_favorites")
-        .select("place_id");
+      const { data, error } = await supabase.from("place_favorites").select("place_id");
       if (error) throw error;
       const counts: Record<string, number> = {};
       for (const row of data ?? []) {
@@ -117,7 +118,6 @@ export function useFavoriteCount(placeId: string) {
   const { data } = useFavoriteCounts();
   return data?.[placeId] ?? 0;
 }
-
 
 /** Friends (accepted) who favorited a given place. */
 export function useFriendsWhoFavorited(placeId: string) {
@@ -145,7 +145,9 @@ export function useFriendsWhoFavorited(placeId: string) {
       if (userIds.length === 0) return [];
       const { data: profiles, error: pErr } = await supabase
         .from("profiles")
-        .select("id, username, display_name, avatar_url, avatar_source")
+        .select(
+          "id, username, display_name, avatar_url, avatar_source, is_vip, vip_until, vip_nick_color",
+        )
         .in("id", userIds);
       if (pErr) throw pErr;
       return (profiles ?? []).map((p) => ({
@@ -154,6 +156,9 @@ export function useFriendsWhoFavorited(placeId: string) {
         display_name: p.display_name,
         avatar_url: p.avatar_url,
         avatar_source: p.avatar_source as "google" | "upload" | "initials",
+        is_vip: p.is_vip,
+        vip_until: p.vip_until,
+        vip_nick_color: p.vip_nick_color,
       }));
     },
   });
@@ -173,7 +178,21 @@ export function useMyFavoritePlaces() {
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? [])
-        .map((row) => (row as unknown as { place: { id: string; slug: string; name: string; cuisine: string; address: string; cover_image_url: string | null } | null }).place)
+        .map(
+          (row) =>
+            (
+              row as unknown as {
+                place: {
+                  id: string;
+                  slug: string;
+                  name: string;
+                  cuisine: string;
+                  address: string;
+                  cover_image_url: string | null;
+                } | null;
+              }
+            ).place,
+        )
         .filter((p): p is NonNullable<typeof p> => !!p);
     },
   });

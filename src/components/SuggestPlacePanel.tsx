@@ -1,25 +1,44 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Send, Loader2, Lightbulb } from "lucide-react";
-import { useSubmitPlaceSuggestion } from "@/lib/place-suggestions-api";
+import { submitPlaceSuggestion } from "@/lib/place-suggestions.functions";
 import { useCuisines } from "@/lib/cuisines-api";
 
 export function SuggestPlacePanel() {
   const [open, setOpen] = useState(false);
   const { data: cuisines } = useCuisines();
-  const submit = useSubmitPlaceSuggestion();
+  const submitFn = useServerFn(submitPlaceSuggestion);
+  const submit = useMutation({ mutationFn: submitFn });
   const [form, setForm] = useState({
     name: "", address: "", cuisine: "", website: "", instagram: "", notes: "",
     submitter_name: "", submitter_email: "",
   });
+  const [honeypot, setHoneypot] = useState("");
+  const openedAtRef = useRef<number | null>(null);
+
+  function handleToggle() {
+    setOpen((v) => {
+      if (!v) openedAtRef.current = Date.now();
+      return !v;
+    });
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim()) return;
     try {
-      await submit.mutateAsync(form);
+      await submit.mutateAsync({
+        data: {
+          ...form,
+          honeypot,
+          elapsed_ms: openedAtRef.current ? Date.now() - openedAtRef.current : 0,
+        },
+      });
       toast.success("Dzięki! Zgłoszenie trafiło do redakcji 🍽️");
       setForm({ name: "", address: "", cuisine: "", website: "", instagram: "", notes: "", submitter_name: "", submitter_email: "" });
+      setHoneypot("");
       setOpen(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Nie udało się wysłać");
@@ -41,7 +60,7 @@ export function SuggestPlacePanel() {
           </div>
           <button
             type="button"
-            onClick={() => setOpen((v) => !v)}
+            onClick={handleToggle}
             className="rounded-full bg-tomato text-cream px-5 py-2.5 font-semibold hover:bg-tomato/90 transition"
           >
             {open ? "Zamknij" : "Zgłoś lokal"}
@@ -50,6 +69,15 @@ export function SuggestPlacePanel() {
 
         {open && (
           <form onSubmit={onSubmit} className="mt-5 grid gap-3 sm:grid-cols-2">
+            <input
+              type="text"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              className="hidden"
+            />
             <label className="block sm:col-span-2">
               <span className="text-xs uppercase font-semibold text-muted-foreground">Nazwa lokalu *</span>
               <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input" />

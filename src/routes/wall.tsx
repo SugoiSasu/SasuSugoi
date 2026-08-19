@@ -1,17 +1,33 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { Loader2, Star, Heart, Trophy, Megaphone, UserPlus, LogIn, MessageCircle, Send } from "lucide-react";
+import {
+  Loader2,
+  Star,
+  Heart,
+  Trophy,
+  Megaphone,
+  UserPlus,
+  MessageCircle,
+  Send,
+} from "lucide-react";
 import { useWallFeed, type WallItem } from "@/lib/wall-api";
 import { UserAvatar } from "@/components/UserAvatar";
 import { SmartText } from "@/components/SmartText";
 import { ReviewSocial } from "@/components/ReviewSocial";
 import { useUser } from "@/lib/use-auth";
 import {
-  REACTION_TYPES, REACTION_EMOJI, type ReactionType,
-  usePostReactions, useToggleReaction,
-  usePostComments, useAddPostComment,
+  REACTION_TYPES,
+  REACTION_EMOJI,
+  type ReactionType,
+  usePostReactions,
+  useToggleReaction,
+  usePostComments,
+  useAddPostComment,
 } from "@/lib/post-social-api";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { vipNameStyle } from "@/components/VipBadge";
+import { AuthGate } from "@/components/AuthGate";
 
 export const Route = createFileRoute("/wall")({
   head: () => ({
@@ -56,39 +72,16 @@ function WallPage() {
             <Loader2 className="animate-spin" />
           </div>
         ) : !user ? (
-          <SignedOutTeaser />
+          <AuthGate
+            icon={Megaphone}
+            title="Zaloguj się, żeby zobaczyć feed"
+            description="Pożeralnia pokazuje recenzje znajomych, ich nowe ulubione miejscówki, zdobyte odznaki i aktualności z lokali, które obserwujesz."
+          />
         ) : (
           <SignedInFeed />
         )}
       </div>
     </main>
-  );
-}
-
-function SignedOutTeaser() {
-  return (
-    <div className="bg-card border border-border rounded-3xl p-8 text-center">
-      <Megaphone className="mx-auto text-tomato mb-3" size={36} />
-      <h2 className="font-display text-2xl mb-2">Zaloguj się, żeby zobaczyć feed</h2>
-      <p className="text-sm text-muted-foreground mb-5 max-w-md mx-auto">
-        Pożeralnia pokazuje recenzje znajomych, ich nowe ulubione miejscówki, zdobyte odznaki i
-        aktualności z lokali, które obserwujesz.
-      </p>
-      <div className="flex flex-wrap gap-2 justify-center">
-        <Link
-          to="/auth"
-          className="inline-flex items-center gap-2 rounded-full bg-tomato text-cream px-5 py-2.5 font-bold hover:bg-tomato/90"
-        >
-          <LogIn size={16} /> Zaloguj się
-        </Link>
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 rounded-full bg-card border border-border px-5 py-2.5 font-semibold hover:border-tomato"
-        >
-          Przeglądaj mapę
-        </Link>
-      </div>
-    </div>
   );
 }
 
@@ -98,17 +91,17 @@ function SignedInFeed() {
     return (
       <ul className="space-y-3" aria-busy="true" aria-live="polite">
         {Array.from({ length: 4 }).map((_, i) => (
-          <li key={i} className="bg-card border border-border rounded-3xl p-4 animate-pulse">
+          <li key={i} className="bg-card border border-border rounded-3xl p-4">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-muted" />
+              <Skeleton className="w-10 h-10 rounded-full" />
               <div className="flex-1 space-y-2">
-                <div className="h-3 w-1/3 bg-muted rounded" />
-                <div className="h-2 w-1/5 bg-muted rounded" />
+                <Skeleton className="h-3 w-1/3" />
+                <Skeleton className="h-2 w-1/5" />
               </div>
             </div>
             <div className="space-y-2">
-              <div className="h-3 w-full bg-muted rounded" />
-              <div className="h-3 w-5/6 bg-muted rounded" />
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-5/6" />
             </div>
           </li>
         ))}
@@ -211,7 +204,9 @@ function PostSocial({ postId }: { postId: string }) {
   const add = useAddPostComment(postId);
   const [text, setText] = useState("");
   const [showComments, setShowComments] = useState(false);
-  const myReaction = user ? (reactions ?? []).find((r) => r.user_id === user.id)?.reaction_type : undefined;
+  const myReaction = user
+    ? (reactions ?? []).find((r) => r.user_id === user.id)?.reaction_type
+    : undefined;
 
   const counts: Record<string, number> = {};
   (reactions ?? []).forEach((r) => (counts[r.reaction_type] = (counts[r.reaction_type] ?? 0) + 1));
@@ -237,7 +232,10 @@ function PostSocial({ postId }: { postId: string }) {
             <button
               key={t}
               onClick={() => {
-                if (!user) { toast.error("Zaloguj się, żeby reagować"); return; }
+                if (!user) {
+                  toast.error("Zaloguj się, żeby reagować");
+                  return;
+                }
                 toggle.mutate(t as ReactionType);
               }}
               className={`pz-reaction-pop chip text-sm ${active ? "bg-tomato text-cream" : "bg-card border border-border hover:border-tomato"}`}
@@ -263,14 +261,17 @@ function PostSocial({ postId }: { postId: string }) {
             <div key={c.id} className="flex items-start gap-2 text-sm">
               <UserAvatar
                 avatarUrl={c.author?.avatar_url}
-                avatarSource={(c.author?.avatar_source ?? "initials") as "google" | "upload" | "initials"}
+                avatarSource={
+                  (c.author?.avatar_source ?? "initials") as "google" | "upload" | "initials"
+                }
                 displayName={c.author?.display_name}
                 username={c.author?.username}
                 size={24}
               />
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-semibold">
-                  {c.author?.display_name || (c.author?.username ? `@${c.author.username}` : "Anonim")}
+                <div className="text-xs font-semibold" style={vipNameStyle(c.author)}>
+                  {c.author?.display_name ||
+                    (c.author?.username ? `@${c.author.username}` : "Anonim")}
                 </div>
                 <SmartText>{c.body}</SmartText>
               </div>
@@ -307,11 +308,16 @@ function HeaderLine({ item }: { item: WallItem }) {
   const a = item.author;
   const authorName = a?.display_name || (a?.username ? `@${a.username}` : "Znajomy");
   const authorLink = a?.username ? (
-    <Link to="/u/$username" params={{ username: a.username }} className="hover:text-tomato">
+    <Link
+      to="/u/$username"
+      params={{ username: a.username }}
+      className="hover:text-tomato"
+      style={vipNameStyle(a)}
+    >
       {authorName}
     </Link>
   ) : (
-    <span>{authorName}</span>
+    <span style={vipNameStyle(a)}>{authorName}</span>
   );
   const placeLink = item.place ? (
     <Link

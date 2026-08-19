@@ -4,6 +4,7 @@ import { usePublishedPosts } from "@/lib/posts-api";
 import { ArrowLeft, ArrowRight, Clock } from "lucide-react";
 import { SmartText } from "@/components/SmartText";
 import { readingTimeLabel } from "@/lib/reading-time";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/blog/")({
   head: () => ({
@@ -36,12 +37,12 @@ function BlogIndex() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" aria-busy="true" aria-live="polite">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="rounded-3xl overflow-hidden bg-card border border-border">
-                <div className="aspect-[5/3] bg-muted animate-pulse" />
+                <Skeleton className="aspect-[5/3] rounded-none" />
                 <div className="p-5 space-y-3">
-                  <div className="h-3 w-20 bg-muted rounded animate-pulse" />
-                  <div className="h-5 w-11/12 bg-muted rounded animate-pulse" />
-                  <div className="h-4 w-full bg-muted rounded animate-pulse" />
-                  <div className="h-4 w-2/3 bg-muted rounded animate-pulse" />
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-5 w-11/12" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
                 </div>
               </div>
             ))}

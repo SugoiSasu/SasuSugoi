@@ -10,6 +10,9 @@ export interface WallAuthor {
   display_name: string | null;
   avatar_url: string | null;
   avatar_source: "google" | "upload" | "initials";
+  is_vip: boolean;
+  vip_until: string | null;
+  vip_nick_color: string | null;
 }
 
 export interface WallPlace {
@@ -183,7 +186,9 @@ export function useWallFeed() {
       if (profileIdsToFetch.size) {
         const { data: profs } = await supabase
           .from("profiles")
-          .select("id, username, display_name, avatar_url, avatar_source")
+          .select(
+            "id, username, display_name, avatar_url, avatar_source, is_vip, vip_until, vip_nick_color",
+          )
           .in("id", Array.from(profileIdsToFetch));
         const map = new Map((profs ?? []).map((p) => [p.id, p as WallAuthor]));
         items.forEach((it) => {
@@ -198,7 +203,12 @@ export function useWallFeed() {
         const map = new Map(
           (pls ?? []).map((p) => [
             p.id,
-            { id: p.id, slug: p.slug ?? null, name: p.name, cuisine: p.cuisine ?? null } as WallPlace,
+            {
+              id: p.id,
+              slug: p.slug ?? null,
+              name: p.name,
+              cuisine: p.cuisine ?? null,
+            } as WallPlace,
           ]),
         );
         items.forEach((it) => {

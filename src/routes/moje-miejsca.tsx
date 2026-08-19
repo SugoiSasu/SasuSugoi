@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { z } from "zod";
+import { zodValidator } from "@tanstack/zod-adapter";
 import { Bookmark, Check, ChevronRight, Heart, Search, Star, Users } from "lucide-react";
 import { useUser } from "@/lib/use-auth";
 import { useUserVisitedPlaces, useUserFavoritePlaces, type VisitedPlace } from "@/lib/visits-api";
@@ -7,14 +9,27 @@ import { useFriendProfiles } from "@/lib/friends-api";
 import { usePlaceRatingsMap } from "@/lib/places-api";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useUserLocation, haversineKm, formatDistancePl } from "@/lib/geo";
+import { AuthGate } from "@/components/AuthGate";
+
+const searchSchema = z.object({
+  tab: z.enum(["want", "visited", "fav", "friends"]).catch("want").optional(),
+});
 
 export const Route = createFileRoute("/moje-miejsca")({
+  validateSearch: zodValidator(searchSchema),
   head: () => ({
     meta: [
       { title: "Moje miejsca — poŻeramy" },
-      { name: "description", content: "Twoja lista knajp: do odwiedzenia, odwiedzone i ulubione. Wracaj do miejsc, które poŻarłeś." },
+      {
+        name: "description",
+        content:
+          "Twoja lista knajp: do odwiedzenia, odwiedzone i ulubione. Wracaj do miejsc, które poŻarłeś.",
+      },
       { property: "og:title", content: "Moje miejsca — poŻeramy" },
-      { property: "og:description", content: "Twoja lista knajp: do odwiedzenia, odwiedzone i ulubione." },
+      {
+        property: "og:description",
+        content: "Twoja lista knajp: do odwiedzenia, odwiedzone i ulubione.",
+      },
     ],
   }),
   component: MyPlacesPage,
@@ -25,7 +40,8 @@ type Sort = "recent" | "alpha" | "rating" | "near";
 
 function MyPlacesPage() {
   const { user } = useUser();
-  const [tab, setTab] = useState<Tab>("want");
+  const { tab: tabFromUrl } = Route.useSearch();
+  const [tab, setTab] = useState<Tab>(tabFromUrl ?? "want");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("recent");
   const { data: want, isLoading: loadingWant } = useUserVisitedPlaces(user?.id, "want");
@@ -41,7 +57,13 @@ function MyPlacesPage() {
   };
 
   const loading =
-    tab === "want" ? loadingWant : tab === "visited" ? loadingVisited : tab === "fav" ? loadingFavs : loadingFriends;
+    tab === "want"
+      ? loadingWant
+      : tab === "visited"
+        ? loadingVisited
+        : tab === "fav"
+          ? loadingFavs
+          : loadingFriends;
 
   const tabs: { key: Tab; label: string; count: number }[] = [
     { key: "want", label: "Do odwiedzenia", count: want?.length ?? 0 },
@@ -51,7 +73,13 @@ function MyPlacesPage() {
   ];
 
   const base: VisitedPlace[] =
-    tab === "want" ? want ?? [] : tab === "visited" ? visited ?? [] : tab === "fav" ? favs ?? [] : [];
+    tab === "want"
+      ? (want ?? [])
+      : tab === "visited"
+        ? (visited ?? [])
+        : tab === "fav"
+          ? (favs ?? [])
+          : [];
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -77,18 +105,21 @@ function MyPlacesPage() {
   const filteredFriends = useMemo(() => {
     const q = query.trim().toLowerCase();
     return (friends ?? []).filter(
-      (f) => !q || (f.display_name ?? "").toLowerCase().includes(q) || (f.username ?? "").toLowerCase().includes(q),
+      (f) =>
+        !q ||
+        (f.display_name ?? "").toLowerCase().includes(q) ||
+        (f.username ?? "").toLowerCase().includes(q),
     );
   }, [friends, query]);
 
   if (!user) {
     return (
-      <main id="main-content" className="mx-auto max-w-3xl px-4 py-16 text-center">
-        <h1 className="font-display text-2xl font-extrabold">Moje miejsca</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Zaloguj się, żeby zapisywać knajpy na swoich listach.</p>
-        <Link to="/auth" className="mt-6 inline-flex rounded-full bg-tomato px-6 py-3 text-sm font-semibold text-cream">
-          Zaloguj się
-        </Link>
+      <main id="main-content" className="mx-auto max-w-2xl px-4 py-10 sm:py-16">
+        <AuthGate
+          icon={Bookmark}
+          title="Zaloguj się, żeby zobaczyć swoje miejsca"
+          description="Zapisuj knajpy do odwiedzenia, oznaczaj odwiedzone i zbieraj ulubione — wszystko w jednym miejscu, razem ze znajomymi."
+        />
       </main>
     );
   }
@@ -105,7 +136,9 @@ function MyPlacesPage() {
             type="button"
             onClick={() => setTab(t.key)}
             className={`-mb-px min-h-11 shrink-0 border-b-2 px-1 py-2.5 text-sm font-semibold transition ${
-              tab === t.key ? "border-tomato text-tomato" : "border-transparent text-muted-foreground hover:text-navy"
+              tab === t.key
+                ? "border-tomato text-tomato"
+                : "border-transparent text-muted-foreground hover:text-navy"
             }`}
           >
             {t.label} <span className="opacity-70">{t.count}</span>
@@ -115,7 +148,10 @@ function MyPlacesPage() {
 
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative flex-1">
-          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Search
+            size={16}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -139,7 +175,9 @@ function MyPlacesPage() {
                 type="button"
                 onClick={() => setSort(key)}
                 className={`min-h-11 rounded-full border px-3 py-2 text-xs font-semibold transition ${
-                  sort === key ? "border-tomato bg-tomato/10 text-tomato" : "border-border bg-card hover:border-tomato"
+                  sort === key
+                    ? "border-tomato bg-tomato/10 text-tomato"
+                    : "border-border bg-card hover:border-tomato"
                 }`}
               >
                 {label}
@@ -150,9 +188,15 @@ function MyPlacesPage() {
       </div>
 
       {loading ? (
-        <ul className="mt-5 space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 xl:grid-cols-3" aria-busy="true">
+        <ul
+          className="mt-5 space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 xl:grid-cols-3"
+          aria-busy="true"
+        >
           {Array.from({ length: 5 }).map((_, i) => (
-            <li key={i} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
+            <li
+              key={i}
+              className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3"
+            >
               <div className="pz-skel h-16 w-16 shrink-0 rounded-xl" />
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="pz-skel h-3.5 w-2/5" />
@@ -163,8 +207,10 @@ function MyPlacesPage() {
           ))}
         </ul>
       ) : tab === "friends" ? (
-        <ul key="friends" className="pz-fade-in mt-5 space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 xl:grid-cols-3">
-
+        <ul
+          key="friends"
+          className="pz-fade-in mt-5 space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 xl:grid-cols-3"
+        >
           {filteredFriends.map((f) => (
             <li key={f.id}>
               <Link
@@ -172,10 +218,17 @@ function MyPlacesPage() {
                 params={{ username: f.username ?? f.id }}
                 className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 transition hover:border-tomato"
               >
-                <UserAvatar avatarUrl={f.avatar_url} displayName={f.display_name} username={f.username} size={44} />
+                <UserAvatar
+                  avatarUrl={f.avatar_url}
+                  displayName={f.display_name}
+                  username={f.username}
+                  size={44}
+                />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{f.display_name || f.username}</p>
-                  {f.username && <p className="truncate text-xs text-muted-foreground">@{f.username}</p>}
+                  {f.username && (
+                    <p className="truncate text-xs text-muted-foreground">@{f.username}</p>
+                  )}
                 </div>
                 <ChevronRight size={18} className="shrink-0 text-muted-foreground" />
               </Link>
@@ -189,7 +242,10 @@ function MyPlacesPage() {
           )}
         </ul>
       ) : (
-        <ul key={tab} className="pz-fade-in mt-5 space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 xl:grid-cols-3">
+        <ul
+          key={tab}
+          className="pz-fade-in mt-5 space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 xl:grid-cols-3"
+        >
           {list.map((p) => {
             const r = ratings?.get(p.id);
             const dist = distanceFor(p);
@@ -217,25 +273,43 @@ function MyPlacesPage() {
                       {r ? (
                         <>
                           <Star size={12} className="fill-tomato text-tomato" />
-                          {r.avg.toFixed(1)} <span className="font-normal text-muted-foreground">({r.count})</span>
+                          {r.avg.toFixed(1)}{" "}
+                          <span className="font-normal text-muted-foreground">({r.count})</span>
                         </>
                       ) : (
                         <span className="font-normal text-muted-foreground">Brak ocen</span>
                       )}
                       {dist !== null && (
-                        <span className="font-normal text-muted-foreground">· {formatDistancePl(dist)}</span>
+                        <span className="font-normal text-muted-foreground">
+                          · {formatDistancePl(dist)}
+                        </span>
                       )}
                     </p>
                   </div>
-                  <ChevronRight size={18} className="shrink-0 text-muted-foreground transition group-hover:translate-x-0.5" />
+                  <ChevronRight
+                    size={18}
+                    className="shrink-0 text-muted-foreground transition group-hover:translate-x-0.5"
+                  />
                 </Link>
               </li>
             );
           })}
           {list.length === 0 && (
             <EmptyState
-              icon={tab === "fav" ? <Heart size={20} /> : tab === "visited" ? <Check size={20} /> : <Bookmark size={20} />}
-              text={query ? "Nic nie pasuje do wyszukiwania." : "Tu jeszcze pusto — dodaj pierwszą knajpę z jej profilu."}
+              icon={
+                tab === "fav" ? (
+                  <Heart size={20} />
+                ) : tab === "visited" ? (
+                  <Check size={20} />
+                ) : (
+                  <Bookmark size={20} />
+                )
+              }
+              text={
+                query
+                  ? "Nic nie pasuje do wyszukiwania."
+                  : "Tu jeszcze pusto — dodaj pierwszą knajpę z jej profilu."
+              }
             />
           )}
         </ul>
@@ -247,9 +321,14 @@ function MyPlacesPage() {
 function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <li className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground lg:col-span-full">
-      <span className="mb-2 inline-grid h-10 w-10 place-items-center rounded-full bg-muted">{icon}</span>
+      <span className="mb-2 inline-grid h-10 w-10 place-items-center rounded-full bg-muted">
+        {icon}
+      </span>
       <p>{text}</p>
-      <Link to="/mapa" className="mt-4 inline-flex rounded-full bg-navy px-5 py-2.5 text-xs font-semibold text-cream">
+      <Link
+        to="/mapa"
+        className="mt-4 inline-flex rounded-full bg-navy px-5 py-2.5 text-xs font-semibold text-cream"
+      >
         Przeglądaj knajpy
       </Link>
     </li>

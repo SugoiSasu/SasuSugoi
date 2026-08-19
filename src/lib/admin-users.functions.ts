@@ -27,3 +27,16 @@ export const deleteUserAccount = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+/** Self-service account deletion (GDPR Art. 17) — any authenticated user may
+ * delete their own account. Deleting the auth.users row cascades through
+ * every table with an ON DELETE CASCADE user_id FK (reviews, friendships,
+ * favorites, notifications, etc.). */
+export const deleteMyAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

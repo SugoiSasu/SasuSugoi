@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, Loader2, Save, X, Megaphone } from "lucide-react";
 import { useAllPlacePosts, useUpsertPlacePost, useDeletePlacePost, type PlacePost } from "@/lib/place-posts-api";
 import { usePlaces } from "@/lib/places-api";
+import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
 
 export const Route = createFileRoute("/_authenticated/admin/place-posts")({
   head: () => ({ meta: [{ title: "Wpisy lokali — Panel admina" }] }),
@@ -20,6 +21,7 @@ function AdminPlacePosts() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<PlacePost | null>(null);
   const [form, setForm] = useState<typeof EMPTY>(EMPTY);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   function startEdit(p: PlacePost | null) {
     setEditing(p);
@@ -45,10 +47,16 @@ function AdminPlacePosts() {
     } catch (e) { toast.error(e instanceof Error ? e.message : "Błąd"); }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Usunąć wpis?")) return;
-    try { await del.mutateAsync(id); toast.success("Usunięto"); }
-    catch (e) { toast.error(e instanceof Error ? e.message : "Błąd"); }
+  async function handleDeleteConfirmed() {
+    if (!confirmDeleteId) return;
+    try {
+      await del.mutateAsync(confirmDeleteId);
+      toast.success("Usunięto");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Błąd");
+    } finally {
+      setConfirmDeleteId(null);
+    }
   }
 
   return (
@@ -83,7 +91,7 @@ function AdminPlacePosts() {
                   {p.body && <div className="text-xs text-muted-foreground truncate">{p.body}</div>}
                 </div>
                 <button onClick={() => startEdit(p)} className="chip bg-card border border-border hover:border-tomato">Edytuj</button>
-                <button onClick={() => handleDelete(p.id)} className="grid place-items-center w-8 h-8 rounded-full text-destructive hover:bg-destructive/10">
+                <button onClick={() => setConfirmDeleteId(p.id)} className="grid place-items-center w-8 h-8 rounded-full text-destructive hover:bg-destructive/10">
                   <Trash2 size={14} />
                 </button>
               </li>
@@ -130,6 +138,15 @@ function AdminPlacePosts() {
           </div>
         </div>
       )}
+
+      <ConfirmDeleteModal
+        open={!!confirmDeleteId}
+        title="Usunąć wpis?"
+        description="Zniknie z Walla u wszystkich, którzy mają ten lokal w ulubionych."
+        pending={del.isPending}
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={handleDeleteConfirmed}
+      />
 
       <style>{`
         .pp-input { width: 100%; background: hsl(var(--background)); border: 1px solid hsl(var(--border)); border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.875rem; }

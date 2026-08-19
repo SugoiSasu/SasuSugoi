@@ -24,6 +24,8 @@ import { BottomTabBar } from "@/components/BottomTabBar";
 
 import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/CookieConsent";
+import { OnboardingTour } from "@/components/OnboardingTour";
+import { PatchNotesModal } from "@/components/PatchNotesModal";
 
 
 
@@ -218,7 +220,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = pathname.startsWith("/admin");
-  const isAuth = pathname.startsWith("/auth") || pathname.startsWith("/zaproszenie");
+  const isAuth = pathname.startsWith("/auth") || pathname.startsWith("/zaproszenie") || pathname.startsWith("/i/");
   const showShell = !isAdmin && !isAuth;
 
   return (
@@ -245,6 +247,8 @@ function RootComponent() {
       </AlphaGate>
       <Toaster position="top-right" richColors closeButton />
       <CookieConsent />
+      {showShell && <OnboardingTour />}
+      {showShell && <PatchNotesModal />}
     </QueryClientProvider>
   );
 }

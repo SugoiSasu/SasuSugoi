@@ -13,6 +13,7 @@ import {
   ShoppingBag, Accessibility, Copy, Share2, ChevronDown,
 } from "lucide-react";
 import { PlaceReviewsSection } from "@/components/PlaceReviewsSection";
+import { Skeleton } from "@/components/ui/skeleton";
 import { usePlaceReviewStats } from "@/lib/reviews-api";
 import { SmartText } from "@/components/SmartText";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -253,29 +254,29 @@ function PlaceAvatar({ name, cover, color }: { name: string; cover: string | nul
 function PlaceProfileSkeleton() {
   return (
     <div className="bg-cream min-h-dvh">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 pb-24 animate-pulse">
-        <div className="h-9 w-40 rounded-full bg-navy/10 mb-5" />
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 pb-24">
+        <Skeleton className="h-9 w-40 rounded-full mb-5" />
         <div className="flex items-start gap-3 mb-5">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-navy/10" />
+          <Skeleton className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl" />
           <div className="flex-1 space-y-2">
-            <div className="h-8 w-3/4 rounded bg-navy/10" />
-            <div className="h-4 w-1/2 rounded bg-navy/10" />
-            <div className="h-4 w-2/3 rounded bg-navy/10" />
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-4 w-2/3" />
           </div>
         </div>
-        <div className="h-12 rounded-full bg-navy/10 mb-2" />
+        <Skeleton className="h-12 rounded-full mb-2" />
         <div className="grid grid-cols-2 gap-2 mb-3">
-          <div className="h-11 rounded-full bg-navy/10" />
-          <div className="h-11 rounded-full bg-navy/10" />
+          <Skeleton className="h-11 rounded-full" />
+          <Skeleton className="h-11 rounded-full" />
         </div>
         <div className="flex gap-2 mb-6">
-          <div className="h-8 w-24 rounded-full bg-navy/10" />
-          <div className="h-8 w-20 rounded-full bg-navy/10" />
-          <div className="h-8 w-28 rounded-full bg-navy/10" />
+          <Skeleton className="h-8 w-24 rounded-full" />
+          <Skeleton className="h-8 w-20 rounded-full" />
+          <Skeleton className="h-8 w-28 rounded-full" />
         </div>
-        <div className="h-14 rounded-2xl bg-navy/10 mb-3" />
-        <div className="h-14 rounded-2xl bg-navy/10 mb-3" />
-        <div className="h-60 rounded-2xl bg-navy/10" />
+        <Skeleton className="h-14 rounded-2xl mb-3" />
+        <Skeleton className="h-14 rounded-2xl mb-3" />
+        <Skeleton className="h-60 rounded-2xl" />
       </div>
     </div>
   );
@@ -1017,5 +1018,3 @@ function igEmbedUrl(url: string | null): string | null {
   }
 }
 
-// Silence unused-import warnings for keys referenced from types
-void DAY_KEYS; void DAY_LABELS;

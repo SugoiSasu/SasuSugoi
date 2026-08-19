@@ -14,19 +14,19 @@ import {
   type SocialAccount,
 } from "@/lib/social-api";
 import { refreshSocialMetrics } from "@/lib/social.functions";
-import { Crown, Instagram, Music2, Youtube, Facebook, RefreshCw, Trash2, Save, AlertTriangle, CheckCircle2, Plus } from "lucide-react";
+import { Crown, Instagram, Youtube, Facebook, RefreshCw, Trash2, Save, AlertTriangle, CheckCircle2, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
 
 export const Route = createFileRoute("/_authenticated/admin/social")({
   head: () => ({ meta: [{ title: "Social media — Panel admina" }] }),
   component: AdminSocial,
 });
 
-const PLATFORMS: SocialPlatform[] = ["instagram", "tiktok", "youtube", "facebook"];
+const PLATFORMS: SocialPlatform[] = ["instagram", "youtube", "facebook"];
 
-const ICON: Record<SocialPlatform, React.ReactNode> = {
+const ICON: Partial<Record<SocialPlatform, React.ReactNode>> = {
   instagram: <Instagram size={18} />,
-  tiktok: <Music2 size={18} />,
   youtube: <Youtube size={18} />,
   facebook: <Facebook size={18} />,
 };
@@ -94,12 +94,6 @@ function AdminSocial() {
               <li><code>YOUTUBE_API_KEY</code> — Google Cloud Console, YouTube Data API v3</li>
             </ul>
           </div>
-          <div className="rounded-xl border border-border p-3">
-            <div className="flex items-center gap-2 font-semibold mb-1"><Music2 size={14}/> TikTok</div>
-            <ul className="text-xs text-muted-foreground space-y-0.5">
-              <li>Konektor TikTok (OAuth) — <code>TIKTOK_API_KEY</code> pojawi się automatycznie</li>
-            </ul>
-          </div>
         </div>
       </section>
     </div>
@@ -124,6 +118,7 @@ function PlatformCard({
   const [manualFollowers, setManualFollowers] = useState<string>(
     account?.followers_count != null ? String(account.followers_count) : "",
   );
+  const [confirmRemove, setConfirmRemove] = useState(false);
 
   const hasAccount = !!account;
   const stale = account ? isStale(account) : true;
@@ -163,7 +158,6 @@ function PlatformCard({
   }
 
   async function remove() {
-    if (!confirm(`Usunąć konto ${PLATFORM_LABEL[platform]}?`)) return;
     try {
       await del.mutateAsync(platform);
       setHandle("");
@@ -171,6 +165,8 @@ function PlatformCard({
       toast.success("Usunięto");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Błąd");
+    } finally {
+      setConfirmRemove(false);
     }
   }
 
@@ -317,7 +313,7 @@ function PlatformCard({
               Wymuś
             </button>
             <button
-              onClick={remove}
+              onClick={() => setConfirmRemove(true)}
               disabled={del.isPending}
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-red-600 text-xs font-semibold hover:bg-red-500/10 disabled:opacity-50"
             >
@@ -326,6 +322,15 @@ function PlatformCard({
           </>
         )}
       </div>
+
+      <ConfirmDeleteModal
+        open={confirmRemove}
+        title={`Usunąć konto ${PLATFORM_LABEL[platform]}?`}
+        description="Handle, URL i historia metryk dla tej platformy znikną z panelu."
+        pending={del.isPending}
+        onCancel={() => setConfirmRemove(false)}
+        onConfirm={remove}
+      />
     </div>
   );
 }

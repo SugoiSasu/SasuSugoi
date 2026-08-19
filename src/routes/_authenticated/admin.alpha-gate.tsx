@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Crown, Lock, Save, Loader2 } from "lucide-react";
+import { Crown, Lock, Save, Loader2, Eye, EyeOff } from "lucide-react";
 import { useIsSuperAdmin } from "@/lib/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -16,6 +16,7 @@ function AdminAlphaGate() {
   const [enabled, setEnabled] = useState(false);
   const [password, setPassword] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (!isSuper) { setLoading(false); return; }
@@ -81,12 +82,24 @@ function AdminAlphaGate() {
 
         <label className="block">
           <div className="text-xs font-semibold text-muted-foreground mb-1">Hasło dostępu</div>
-          <input
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-mono focus:border-tomato outline-none"
-            placeholder="np. pozeramy-alpha-2025"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 pr-10 text-sm font-mono focus:border-tomato outline-none"
+              placeholder="np. pozeramy-alpha-2025"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Ukryj hasło" : "Pokaż hasło"}
+              aria-pressed={showPassword}
+              className="absolute right-1 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-8 h-8 rounded-full text-muted-foreground hover:text-navy hover:bg-navy/5"
+            >
+              {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+            </button>
+          </div>
           <p className="text-[11px] text-muted-foreground mt-1">
             Zmiana hasła wymaga ponownej weryfikacji u osób, które jeszcze go nie wpisały (już zalogowani goście nadal mają dostęp dopóki nie wyczyszczą danych przeglądarki).
           </p>

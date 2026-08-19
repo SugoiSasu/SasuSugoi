@@ -32,6 +32,9 @@ export interface PostComment {
     display_name: string | null;
     avatar_url: string | null;
     avatar_source: string | null;
+    is_vip: boolean;
+    vip_until: string | null;
+    vip_nick_color: string | null;
   } | null;
 }
 
@@ -134,7 +137,9 @@ export function usePostComments(postId: string | undefined) {
       if (ids.length) {
         const { data: profs } = await supabase
           .from("profiles")
-          .select("id, username, display_name, avatar_url, avatar_source")
+          .select(
+            "id, username, display_name, avatar_url, avatar_source, is_vip, vip_until, vip_nick_color",
+          )
           .in("id", ids);
         const map = new Map((profs ?? []).map((p) => [p.id, p]));
         rows.forEach((r) => (r.author = (map.get(r.user_id) as PostComment["author"]) ?? null));

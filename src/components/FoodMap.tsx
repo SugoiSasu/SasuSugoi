@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
@@ -17,9 +17,11 @@ interface Props {
   variant?: "full" | "mini";
   /** Real aggregated review ratings per place id. */
   ratings?: Map<string, { avg: number; count: number }>;
+  /** Visitor's browser geolocation, if granted — shown as a pulsing "you are here" dot. */
+  userLocation?: { lat: number; lng: number } | null;
 }
 
-export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, query = "", variant = "full", ratings }: Props) {
+export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, query = "", variant = "full", ratings, userLocation }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -29,9 +31,12 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
   const clusterRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markerByPlaceRef = useRef<Map<string, any>>(new Map());
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const youAreHereRef = useRef<any>(null);
 
   const selectRef = useRef(onSelect);
   selectRef.current = onSelect;
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,6 +61,7 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
           ...({ tap: true, tapTolerance: 20 } as Record<string, unknown>),
         });
         mapRef.current = map;
+        setMapReady(true);
         // Wheel zoom aktywne po kliknięciu / dotknięciu mapy; wyłącza się gdy mysz opuści mapę.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const anyMap = map as any;
@@ -258,6 +264,39 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
       openAndPulse();
     }
   }, [focusPlaceId, focusTick, places]);
+
+  useEffect(() => {
+    if (!mapReady || !mapRef.current) return;
+    let cancelled = false;
+    (async () => {
+      const L = (await import("leaflet")).default;
+      if (cancelled) return;
+      const map = mapRef.current;
+      if (youAreHereRef.current) {
+        map.removeLayer(youAreHereRef.current);
+        youAreHereRef.current = null;
+      }
+      if (userLocation) {
+        const icon = L.divIcon({
+          className: "",
+          html: '<div class="pz-you-are-here"></div>',
+          iconSize: [16, 16],
+          iconAnchor: [8, 8],
+        });
+        const marker = L.marker([userLocation.lat, userLocation.lng], {
+          icon,
+          zIndexOffset: 1000,
+          interactive: false,
+          keyboard: false,
+        });
+        marker.addTo(map);
+        youAreHereRef.current = marker;
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userLocation, mapReady]);
 
   useEffect(() => {
     return () => {

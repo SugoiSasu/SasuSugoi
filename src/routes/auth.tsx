@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Mail, ArrowLeft, Apple, Eye, EyeOff } from "lucide-react";
+import { TERMS_CONSENT_VERSION } from "@/lib/consent";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -24,9 +25,10 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Optional ?redirect=/some/path — e.g. an invite link sends the visitor
-  // here to log in first, then wants them back on /zaproszenie/$token.
+  // here to log in first, then wants them back on /i/$token.
   const redirectTo = (() => {
     const raw = new URLSearchParams(window.location.search).get("redirect");
     return raw && raw.startsWith("/") ? raw : "/profile";
@@ -41,6 +43,10 @@ function AuthPage() {
 
   async function handleEmail(e: React.FormEvent) {
     e.preventDefault();
+    if (mode === "signup" && !termsAccepted) {
+      toast.error("Zaakceptuj Regulamin i Politykę prywatności, żeby założyć konto.");
+      return;
+    }
     setLoading(true);
     try {
       if (mode === "signup") {
@@ -50,6 +56,13 @@ function AuthPage() {
           options: { emailRedirectTo: window.location.origin + redirectTo },
         });
         if (error) throw error;
+        // Record consent on the account itself (auth.users.raw_user_meta_data) —
+        // proof of which terms version was accepted and when.
+        await supabase.auth.updateUser({
+          data: { terms_accepted_at: new Date().toISOString(), terms_version: TERMS_CONSENT_VERSION },
+        }).catch(() => {
+          // Non-fatal: account is already created; consent metadata is best-effort.
+        });
         toast.success("Konto utworzone! Sprawdź email aby potwierdzić.");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -65,6 +78,10 @@ function AuthPage() {
   }
 
   async function handleOAuth(provider: "google" | "apple") {
+    if (mode === "signup" && !termsAccepted) {
+      toast.error("Zaakceptuj Regulamin i Politykę prywatności, żeby założyć konto.");
+      return;
+    }
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -94,11 +111,33 @@ function AuthPage() {
             : "Załóż konto, twórz swój wall i zapisuj ulubione miejsca."}
         </p>
 
+        {mode === "signup" && (
+          <label className="flex items-start gap-2.5 mb-4 text-xs text-muted-foreground cursor-pointer">
+            <input
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="mt-0.5 accent-tomato"
+            />
+            <span>
+              Akceptuję{" "}
+              <Link to="/regulamin" target="_blank" className="underline hover:text-tomato">
+                Regulamin
+              </Link>{" "}
+              i{" "}
+              <Link to="/polityka-prywatnosci" target="_blank" className="underline hover:text-tomato">
+                Politykę prywatności
+              </Link>
+              .
+            </span>
+          </label>
+        )}
+
         <div className="space-y-2 mb-4">
           <button
             type="button"
             onClick={() => handleOAuth("google")}
-            disabled={loading}
+            disabled={loading || (mode === "signup" && !termsAccepted)}
             aria-label="Kontynuuj z Google"
             className="w-full inline-flex items-center justify-center gap-2 rounded-full border-2 border-navy/20 py-3 font-semibold hover:bg-navy/5 transition disabled:opacity-50 min-h-11"
           >
@@ -108,7 +147,7 @@ function AuthPage() {
           <button
             type="button"
             onClick={() => handleOAuth("apple")}
-            disabled={loading}
+            disabled={loading || (mode === "signup" && !termsAccepted)}
             aria-label="Kontynuuj z Apple"
             className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-navy text-cream py-3 font-semibold hover:bg-navy/90 transition disabled:opacity-50 min-h-11"
           >
@@ -177,7 +216,7 @@ function AuthPage() {
           </div>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (mode === "signup" && !termsAccepted)}
             className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-tomato text-cream py-3 font-semibold hover:bg-tomato/90 transition disabled:opacity-50 min-h-11"
           >
             {loading ? <Loader2 className="animate-spin" size={18} aria-hidden /> : <Mail size={18} aria-hidden />}

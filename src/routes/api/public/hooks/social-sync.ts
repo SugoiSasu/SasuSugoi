@@ -1,9 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { timingSafeEqual } from "node:crypto";
+
+function constantTimeEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
 
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
 
-type Platform = "instagram" | "facebook" | "youtube" | "tiktok";
+type Platform = "instagram" | "facebook" | "youtube";
 interface FetchResult {
   followers: number | null;
   posts: number | null;
@@ -166,37 +174,26 @@ async function runPlatform(
       return scrapeInstagram(handle);
     case "facebook":
       return fetchFacebook(handle);
-    case "tiktok": {
-      const lovableKey = process.env.LOVABLE_API_KEY;
-      const tiktokKey = process.env.TIKTOK_API_KEY;
-      if (!lovableKey || !tiktokKey) throw new Error("Brak TIKTOK_API_KEY");
-      const res = await fetch(
-        "https://connector-gateway.lovable.dev/tiktok/user/info/?fields=open_id,display_name,follower_count,video_count,likes_count",
-        {
-          headers: {
-            Authorization: `Bearer ${lovableKey}`,
-            "X-Connection-Api-Key": tiktokKey,
-          },
-        },
-      );
-      if (!res.ok) throw new Error(`TikTok ${res.status}`);
-      const j = (await res.json()) as {
-        data?: { user?: { follower_count?: number; video_count?: number; likes_count?: number } };
-      };
-      const u = j.data?.user;
-      return {
-        followers: u?.follower_count ?? null,
-        posts: u?.video_count ?? null,
-        extra: { likes_count: u?.likes_count ?? null },
-      };
-    }
   }
 }
 
 export const Route = createFileRoute("/api/public/hooks/social-sync")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (!serviceKey) {
+          return new Response(JSON.stringify({ error: "Server configuration error" }), { status: 500 });
+        }
+        const authHeader = request.headers.get("Authorization");
+        if (!authHeader?.startsWith("Bearer ")) {
+          return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+        }
+        const token = authHeader.slice("Bearer ".length).trim();
+        if (!constantTimeEqual(token, serviceKey)) {
+          return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403 });
+        }
+
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: rows, error } = await supabaseAdmin
           .from("social_accounts")

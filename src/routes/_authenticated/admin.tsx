@@ -3,12 +3,57 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsAdmin, useIsSuperAdmin, useUser } from "@/lib/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Map as MapIcon, FileText, LogOut, Loader2, Crown, Users, Share2, Award, Trophy, Zap, Megaphone, Newspaper, Lock, Activity, Inbox, UtensilsCrossed, Lightbulb, Store } from "lucide-react";
+import { Map as MapIcon, FileText, LogOut, Loader2, Crown, Users, Share2, Award, Trophy, Zap, Megaphone, Newspaper, Lock, Activity, Inbox, UtensilsCrossed, Lightbulb, Store, ChevronDown } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Panel admina — poŻeramy" }] }),
   component: AdminShell,
 });
+
+interface NavItem {
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+  superOnly?: boolean;
+}
+
+const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
+  {
+    title: "Treść",
+    items: [
+      { to: "/admin/places", icon: <MapIcon size={14} />, label: "Lokale" },
+      { to: "/admin/cuisines", icon: <UtensilsCrossed size={14} />, label: "Kuchnie" },
+      { to: "/admin/posts", icon: <FileText size={14} />, label: "Blog" },
+      { to: "/admin/place-posts", icon: <Newspaper size={14} />, label: "Wpisy lokali" },
+    ],
+  },
+  {
+    title: "Moderacja",
+    items: [
+      { to: "/admin/suggestions", icon: <Lightbulb size={14} />, label: "Zgłoszenia" },
+      { to: "/admin/owner-requests", icon: <Store size={14} />, label: "Właściciele" },
+    ],
+  },
+  {
+    title: "Gamifikacja",
+    items: [
+      { to: "/admin/points", icon: <Zap size={14} />, label: "Punkty" },
+      { to: "/admin/achievements", icon: <Trophy size={14} />, label: "Achievementy" },
+      { to: "/admin/ranks", icon: <Award size={14} />, label: "Rangi", superOnly: true },
+    ],
+  },
+  {
+    title: "Super Admin",
+    items: [
+      { to: "/admin/social", icon: <Share2 size={14} />, label: "Social", superOnly: true },
+      { to: "/admin/ads", icon: <Megaphone size={14} />, label: "Reklamy", superOnly: true },
+      { to: "/admin/collab", icon: <Inbox size={14} />, label: "Współpraca", superOnly: true },
+      { to: "/admin/users", icon: <Users size={14} />, label: "Użytkownicy", superOnly: true },
+      { to: "/admin/alpha-gate", icon: <Lock size={14} />, label: "Alpha gate", superOnly: true },
+      { to: "/admin/notifications-monitor", icon: <Activity size={14} />, label: "Monitor powiadomień", superOnly: true },
+    ],
+  },
+];
 
 function AdminShell() {
   const { user } = useUser();
@@ -71,26 +116,22 @@ function AdminShell() {
             </button>
           </div>
         </div>
-        <nav className="flex overflow-x-auto border-t border-border">
-          <AdminTab to="/admin/places" icon={<MapIcon size={14} />} label="Lokale" pathname={pathname} />
-            <AdminTab to="/admin/suggestions" icon={<Lightbulb size={14} />} label="Zgłoszenia" pathname={pathname} />
-            <AdminTab to="/admin/owner-requests" icon={<Store size={14} />} label="Właściciele" pathname={pathname} />
-          <AdminTab to="/admin/cuisines" icon={<UtensilsCrossed size={14} />} label="Kuchnie" pathname={pathname} />
-          <AdminTab to="/admin/posts" icon={<FileText size={14} />} label="Blog" pathname={pathname} />
-          <AdminTab to="/admin/points" icon={<Zap size={14} />} label="Punkty" pathname={pathname} />
-          <AdminTab to="/admin/achievements" icon={<Trophy size={14} />} label="Achievementy" pathname={pathname} />
-          <AdminTab to="/admin/place-posts" icon={<Newspaper size={14} />} label="Wpisy lokali" pathname={pathname} />
-          {isSuper && (
-            <>
-              <AdminTab to="/admin/social" icon={<Share2 size={14} />} label="Social" pathname={pathname} />
-              <AdminTab to="/admin/ads" icon={<Megaphone size={14} />} label="Reklamy" pathname={pathname} />
-              <AdminTab to="/admin/collab" icon={<Inbox size={14} />} label="Współpraca" pathname={pathname} />
-              <AdminTab to="/admin/ranks" icon={<Award size={14} />} label="Rangi" pathname={pathname} />
-              <AdminTab to="/admin/users" icon={<Users size={14} />} label="Użytkownicy" pathname={pathname} />
-              <AdminTab to="/admin/alpha-gate" icon={<Lock size={14} />} label="Alpha gate" pathname={pathname} />
-              <AdminTab to="/admin/notifications-monitor" icon={<Activity size={14} />} label="Monitor powiadomień" pathname={pathname} />
-            </>
-          )}
+        <MobileAdminNav groups={NAV_GROUPS} isSuper={isSuper} pathname={pathname} navigate={navigate} />
+        <nav className="hidden sm:flex overflow-x-auto border-t border-border">
+          {NAV_GROUPS.map((group, gi) => {
+            const items = group.items.filter((it) => !it.superOnly || isSuper);
+            if (items.length === 0) return null;
+            return (
+              <div
+                key={group.title}
+                className={`flex shrink-0 ${gi > 0 ? "ml-2 border-l border-border pl-2" : ""}`}
+              >
+                {items.map((it) => (
+                  <AdminTab key={it.to} to={it.to} icon={it.icon} label={it.label} pathname={pathname} />
+                ))}
+              </div>
+            );
+          })}
         </nav>
       </header>
       <main id="main-content" className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
@@ -111,5 +152,46 @@ function AdminTab({ to, icon, label, pathname }: { to: string; icon: React.React
     >
       {icon} {label}
     </Link>
+  );
+}
+
+function MobileAdminNav({
+  groups,
+  isSuper,
+  pathname,
+  navigate,
+}: {
+  groups: { title: string; items: NavItem[] }[];
+  isSuper: boolean;
+  pathname: string;
+  navigate: ReturnType<typeof useNavigate>;
+}) {
+  const current = groups
+    .flatMap((g) => g.items)
+    .find((it) => pathname.startsWith(it.to));
+  return (
+    <div className="relative sm:hidden border-t border-border">
+      <select
+        aria-label="Sekcja panelu admina"
+        value={current?.to ?? ""}
+        onChange={(e) => navigate({ to: e.target.value })}
+        className="w-full appearance-none bg-transparent px-4 py-3 pr-10 text-sm font-semibold text-tomato outline-none"
+      >
+        {groups.map((group) => {
+          const items = group.items.filter((it) => !it.superOnly || isSuper);
+          if (items.length === 0) return null;
+          return (
+            <optgroup key={group.title} label={group.title}>
+              {items.map((it) => (
+                <option key={it.to} value={it.to}>
+                  {it.label}
+                </option>
+              ))}
+            </optgroup>
+          );
+        })}
+      </select>
+      <ChevronDown size={16} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-tomato" />
+    </div>
   );
 }

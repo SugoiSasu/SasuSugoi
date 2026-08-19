@@ -6,6 +6,7 @@ import { useIsSuperAdmin, useUser } from "@/lib/use-auth";
 import { useAllAds, useUpsertAd, useDeleteAd, useDuplicateAd, useAdStats, getAdLiveStatus, type Ad, type LiveAdStatus } from "@/lib/ads-api";
 import { usePlaces } from "@/lib/places-api";
 import { supabase } from "@/integrations/supabase/client";
+import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
 
 export const Route = createFileRoute("/_authenticated/admin/ads")({
   head: () => ({ meta: [{ title: "Reklamy — Panel admina" }] }),
@@ -362,41 +363,14 @@ function AdminAds() {
         </div>
       )}
 
-      {confirmDeleteId && (
-        <div
-          className="fixed inset-0 z-[60] grid place-items-center bg-black/60 p-4"
-          onClick={() => !del.isPending && setConfirmDeleteId(null)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-card border border-border rounded-2xl w-full max-w-sm p-5 shadow-xl"
-          >
-            <h3 className="font-display text-lg mb-1">Usunąć reklamę?</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Tej operacji nie można cofnąć. Reklama zniknie z paska na górze strony.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setConfirmDeleteId(null)}
-                disabled={del.isPending}
-                className="chip bg-card border border-border disabled:opacity-50"
-              >
-                Anuluj
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDeleteConfirmed(confirmDeleteId)}
-                disabled={del.isPending}
-                className="inline-flex items-center gap-2 rounded-full bg-destructive text-destructive-foreground px-4 py-2 text-sm font-semibold hover:bg-destructive/90 disabled:opacity-50"
-              >
-                {del.isPending ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                Usuń
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDeleteModal
+        open={!!confirmDeleteId}
+        title="Usunąć reklamę?"
+        description="Tej operacji nie można cofnąć. Reklama zniknie z paska na górze strony."
+        pending={del.isPending}
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={() => handleDeleteConfirmed(confirmDeleteId!)}
+      />
 
 
       <style>{`
