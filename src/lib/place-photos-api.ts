@@ -28,7 +28,7 @@ export function usePlacePhotos(placeId: string) {
     queryFn: async (): Promise<PlacePhoto[]> => {
       const { data, error } = await supabase
         .from("place_photos")
-        .select("*")
+        .select("id, place_id, url, storage_path, caption, sort_order, uploaded_by, created_at")
         .eq("place_id", placeId)
         .order("sort_order", { ascending: true })
         .order("created_at", { ascending: true });

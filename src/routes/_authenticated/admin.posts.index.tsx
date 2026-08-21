@@ -93,7 +93,7 @@ function AdminPosts() {
                     </span>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell text-xs text-muted-foreground">
-                    {p.tags.join(", ") || "—"}
+                    {p.tags.join(", ") || " - "}
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell text-xs text-muted-foreground">
                     {new Date(p.updated_at).toLocaleDateString("pl-PL")}

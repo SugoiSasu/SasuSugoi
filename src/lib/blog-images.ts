@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 const BUCKET = "blog-images";
-// 10 lat — wpisy blogowe mają być długoterminowo dostępne
+// 10 lat - wpisy blogowe mają być długoterminowo dostępne
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 365 * 10;
 
 /**

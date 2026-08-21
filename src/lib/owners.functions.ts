@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-/* Zgłoszenie właściciela — zalogowany użytkownik. */
+/* Zgłoszenie właściciela - zalogowany użytkownik. */
 export const submitOwnerRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
@@ -32,7 +32,7 @@ export const submitOwnerRequest = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/* Zatwierdzenie zgłoszenia — tylko admin/super_admin. */
+/* Zatwierdzenie zgłoszenia - tylko admin/super_admin. */
 export const approveOwnerRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ requestId: z.string().uuid() }).parse(d))
@@ -57,7 +57,7 @@ export const approveOwnerRequest = createServerFn({ method: "POST" })
     if (qErr) throw new Error(qErr.message);
     if (!req) throw new Error("Zgłoszenie nie istnieje");
     if (req.status !== "pending") throw new Error("Zgłoszenie już rozpatrzone");
-    if (!req.user_id) throw new Error("Zgłoszenie bez konta użytkownika — poproś o rejestrację");
+    if (!req.user_id) throw new Error("Zgłoszenie bez konta użytkownika - poproś o rejestrację");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 

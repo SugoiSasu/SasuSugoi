@@ -52,6 +52,7 @@ import {
   useFriendListMembers,
   useToggleListMember,
   useUserFriendProfiles,
+  useInviteStats,
 } from "@/lib/friends-api";
 import { useUserVisitedPlaces, useUserFavoritePlaces } from "@/lib/visits-api";
 import { useUser } from "@/lib/use-auth";
@@ -61,7 +62,7 @@ import { PlaceListGrid } from "@/components/VisitStatus";
 import { CollapsiblePlaceList } from "@/components/CollapsiblePlaceList";
 import { runWithToast } from "@/components/AsyncState";
 import { RankBadge } from "@/components/RankBadge";
-import { LevelProgressCard } from "@/components/LevelProgress";
+import { LevelProgressCard, levelInfo } from "@/components/LevelProgress";
 import { VipBadge, isVipActive, vipNameStyle } from "@/components/VipBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -82,8 +83,8 @@ function relativeTimePl(iso: string): string {
 
 export const Route = createFileRoute("/u/$username")({
   head: ({ params }) => {
-    const title = `@${params.username} — profil foodie | poŻeramy`;
-    const description = `Profil @${params.username} na poŻeramy — recenzje restauracji, ulubione miejscówki, achievementy i punkty PoŻarcia z Poznania.`;
+    const title = `@${params.username} - profil foodie | poŻeramy`;
+    const description = `Profil @${params.username} na poŻeramy - recenzje restauracji, ulubione miejscówki, achievementy i punkty PoŻarcia z Poznania.`;
     const url = `https://pozeramy.live/u/${params.username}`;
     return {
       meta: [
@@ -142,6 +143,7 @@ function PublicProfile() {
   const { data: friendsCount } = useFriendsCount(profile?.id);
   const { data: visitedList } = useUserVisitedPlaces(profile?.id, "visited");
   const visitedCount = visitedList?.length ?? 0;
+  const { data: inviteStats } = useInviteStats();
 
   if (isLoading) {
     return (
@@ -198,6 +200,8 @@ function PublicProfile() {
               displayName={profile.display_name}
               username={profile.username}
               size={112}
+              level={levelInfo(profile.points_total ?? 0).level}
+              gender={profile.gender}
               className="relative border-4 border-cream/25 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.55)] transition-transform duration-500 hover:scale-[1.03]"
             />
           </div>
@@ -287,11 +291,11 @@ function PublicProfile() {
           unique_places: stats?.uniquePlaces ?? 0,
           points_total: profile.points_total ?? 0,
           friends_count: friendsCount ?? 0,
+          // Only the profile owner's own referral count is knowable client-side
+          // (useInviteStats reads the current session, not an arbitrary profile).
+          referrals_count: isMe ? (inviteStats?.accepted ?? 0) : 0,
         }}
       />
-
-      {/* Recent activity */}
-      <ActivityFeedSection userId={profile.id} isMe={isMe} />
 
       {/* Place lists */}
       <PlaceLists userId={profile.id} isMe={isMe} cuisines={profile.favorite_cuisines ?? []} />
@@ -320,6 +324,10 @@ function PublicProfile() {
 
       {/* Friends list */}
       <FriendsList userId={profile.id} count={friendsCount ?? 0} />
+
+      {/* Recent activity - last, it's the least "decisional" section (nobody
+          browses a profile primarily to see a log of visits) */}
+      <ActivityFeedSection userId={profile.id} isMe={isMe} />
     </main>
   );
 }
@@ -412,7 +420,7 @@ function PlaceLists({
         loading={want.isLoading}
         emptyText={
           isMe
-            ? "Zapisuj knajpy, do których chcesz się wybrać — pojawią się tutaj."
+            ? "Zapisuj knajpy, do których chcesz się wybrać - pojawią się tutaj."
             : "Brak lokali na liście."
         }
         variant="icons"
@@ -421,7 +429,7 @@ function PlaceLists({
         emptyTitle="Chcę odwiedzić"
         emptyTip={
           isMe
-            ? "Zapisuj knajpy, do których chcesz się wybrać — pojawią się tutaj."
+            ? "Zapisuj knajpy, do których chcesz się wybrać - pojawią się tutaj."
             : "Brak lokali na liście."
         }
         emptyCta={{ to: "/", label: "Przeglądaj lokale" }}
@@ -433,7 +441,7 @@ function PlaceLists({
         loading={visited.isLoading}
         emptyText={
           isMe
-            ? "Oznaczaj lokale, w których byłeś — zbierzesz tu swoją mapę PoŻerania."
+            ? "Oznaczaj lokale, w których byłeś - zbierzesz tu swoją mapę PoŻerania."
             : "Brak odwiedzonych lokali."
         }
         variant="icons"
@@ -442,7 +450,7 @@ function PlaceLists({
         emptyTitle="Odwiedzone"
         emptyTip={
           isMe
-            ? "Oznaczaj lokale, w których byłeś — zbierzesz tu swoją mapę PoŻerania."
+            ? "Oznaczaj lokale, w których byłeś - zbierzesz tu swoją mapę PoŻerania."
             : "Brak odwiedzonych lokali."
         }
         emptyCta={{ to: "/", label: "Przeglądaj lokale" }}
@@ -1047,8 +1055,8 @@ function AchievementTile({
         })
       : null;
     const label = got
-      ? `Zdobyto: ${a.name}${a.description ? ` — ${a.description}` : ""}${dateLabel ? ` · ${dateLabel}` : ""}`
-      : `Zablokowany: ${a.name}${a.description ? ` — ${a.description}` : ""}`;
+      ? `Zdobyto: ${a.name}${a.description ? ` - ${a.description}` : ""}${dateLabel ? ` · ${dateLabel}` : ""}`
+      : `Zablokowany: ${a.name}${a.description ? ` - ${a.description}` : ""}`;
     return (
       <li
         tabIndex={0}
@@ -1079,7 +1087,7 @@ function AchievementTile({
     meta && progress.remaining > 0
       ? `${meta.verb} jeszcze ${progress.remaining} ${meta.unit}`
       : (a.description ?? "Wymagania nieokreślone");
-  const label = `${a.name}${a.description ? ` — ${a.description}` : ""} · postęp ${progress.pct}% (${progress.current} z ${progress.threshold || "?"})`;
+  const label = `${a.name}${a.description ? ` - ${a.description}` : ""} · postęp ${progress.pct}% (${progress.current} z ${progress.threshold || "?"})`;
 
   return (
     <li
@@ -1132,7 +1140,7 @@ function AchievementTile({
 }
 
 function ActivityFeedSection({ userId, isMe }: { userId: string; isMe: boolean }) {
-  const { data, isLoading } = useUserActivityFeed(userId, 8);
+  const { data, isLoading } = useUserActivityFeed(userId, 3);
   const events = data ?? [];
 
   const verb = (t: "visited" | "favorited" | "reviewed") =>

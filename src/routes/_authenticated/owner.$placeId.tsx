@@ -9,7 +9,7 @@ import { useIsOwnerOf } from "@/lib/owners-api";
 import type { OpeningHours } from "@/lib/places-api";
 
 export const Route = createFileRoute("/_authenticated/owner/$placeId")({
-  head: () => ({ meta: [{ title: "Edycja knajpy — poŻeramy" }] }),
+  head: () => ({ meta: [{ title: "Edycja knajpy - poŻeramy" }] }),
   component: OwnerPlaceEditor,
 });
 
@@ -215,7 +215,7 @@ function OwnerPlaceEditor() {
                       onChange={(e) => updateDay(key, { open: e.target.value })}
                       className="rounded-lg border border-border bg-white px-2 py-1 text-sm"
                     />
-                    <span className="text-navy/50">—</span>
+                    <span className="text-navy/50"> - </span>
                     <input
                       type="time"
                       value={d?.close ?? ""}

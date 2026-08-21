@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   Trash2,
   TriangleAlert,
+  KeyRound,
 } from "lucide-react";
 import { useUser } from "@/lib/use-auth";
 import { deleteMyAccount } from "@/lib/admin-users.functions";
@@ -39,9 +40,10 @@ import { CUISINES } from "@/data/places";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isVipActive, VIP_NICK_COLORS, VipBadge } from "@/components/VipBadge";
+import { passwordStrengthError } from "@/lib/password";
 
 export const Route = createFileRoute("/_authenticated/profile")({
-  head: () => ({ meta: [{ title: "Mój profil — poŻeramy" }] }),
+  head: () => ({ meta: [{ title: "Mój profil - poŻeramy" }] }),
   component: ProfilePage,
 });
 
@@ -57,6 +59,7 @@ function ProfilePage() {
   const [district, setDistrict] = useState("");
   const [favCuisines, setFavCuisines] = useState<string[]>([]);
   const [isPublic, setIsPublic] = useState(true);
+  const [gender, setGender] = useState<"M" | "K" | null>(null);
   const [avatarPath, setAvatarPath] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [instagramUrl, setInstagramUrl] = useState("");
@@ -78,6 +81,7 @@ function ProfilePage() {
     setDistrict(profile.district ?? "");
     setFavCuisines(profile.favorite_cuisines ?? []);
     setIsPublic(profile.is_public);
+    setGender(profile.gender);
     setAvatarPath(profile.avatar_url);
     setInstagramUrl(profile.instagram_url ?? "");
     setTiktokUrl(profile.tiktok_url ?? "");
@@ -142,6 +146,7 @@ function ProfilePage() {
         district: district || null,
         favorite_cuisines: favCuisines,
         is_public: isPublic,
+        gender,
         instagram_url: instagramUrl.trim() || null,
         tiktok_url: tiktokUrl.trim() || null,
         youtube_url: youtubeUrl.trim() || null,
@@ -164,7 +169,7 @@ function ProfilePage() {
         msg.includes("profiles_username_unique")
       ) {
         title = "Nick zajęty";
-        description = `@${cleanUsername} jest już używany przez innego użytkownika — wybierz inny.`;
+        description = `@${cleanUsername} jest już używany przez innego użytkownika - wybierz inny.`;
       } else if (msg.includes("profiles_username_format")) {
         title = "Nieprawidłowy format nicka";
         description = "Dozwolone: 3-20 znaków, małe litery a-z, cyfry 0-9 i podkreślnik _.";
@@ -177,7 +182,7 @@ function ProfilePage() {
         e?.code === "42501"
       ) {
         title = "Brak uprawnień do zapisu";
-        description = "Sesja mogła wygasnąć — wyloguj się i zaloguj ponownie.";
+        description = "Sesja mogła wygasnąć - wyloguj się i zaloguj ponownie.";
       } else if (e?.code) {
         description = `[${e.code}] ${msg}${e.details ? ` · ${e.details}` : ""}${e.hint ? ` · ${e.hint}` : ""}`;
       }
@@ -297,6 +302,7 @@ function ProfilePage() {
                 avatarSource={profile?.avatar_source}
                 displayName={displayName || profile?.display_name}
                 username={username || profile?.username}
+                gender={gender}
                 size={80}
               />
               <input
@@ -395,7 +401,7 @@ function ProfilePage() {
                 onChange={(e) => setDistrict(e.target.value)}
                 className="w-full rounded-xl border-2 border-border px-4 py-2.5 outline-none focus:border-tomato bg-background"
               >
-                <option value="">— wybierz —</option>
+                <option value=""> - wybierz - </option>
                 {POZNAN_DISTRICTS.map((d) => (
                   <option key={d} value={d}>
                     {d}
@@ -476,6 +482,33 @@ function ProfilePage() {
           {/* Place lists */}
           <MyPlaceLists />
 
+          {/* Default avatar */}
+          <section className="rounded-2xl bg-card border border-border p-5">
+            <p className="font-semibold mb-1">Domyślny awatar</p>
+            <p className="text-xs text-muted-foreground mb-3">
+              Dobiera kolor awatara, dopóki nie wgrasz własnego zdjęcia.
+            </p>
+            <div className="flex gap-2">
+              {([
+                ["M", "Mężczyzna"],
+                ["K", "Kobieta"],
+                [null, "Wolę nie podawać"],
+              ] as const).map(([value, label]) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setGender(value)}
+                  aria-pressed={gender === value}
+                  className={`flex-1 rounded-xl border-2 px-2 py-2 text-xs font-semibold transition ${
+                    gender === value ? "border-navy bg-navy text-cream" : "border-border bg-background text-foreground hover:border-tomato"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </section>
+
           {/* Privacy */}
           <section className="rounded-2xl bg-card border border-border p-5">
             <label className="flex items-start gap-3 cursor-pointer">
@@ -534,6 +567,7 @@ function ProfilePage() {
           )}
         </form>
 
+        <ChangePasswordSection />
         <DeleteAccountSection />
       </div>
     </main>
@@ -580,12 +614,12 @@ function MyPlaceLists() {
         title="Chcę odwiedzić"
         places={want.data}
         loading={want.isLoading}
-        emptyText="Zapisuj knajpy, do których chcesz się wybrać — pojawią się tutaj."
+        emptyText="Zapisuj knajpy, do których chcesz się wybrać - pojawią się tutaj."
         variant="icons"
         isMe={true}
         emptyIcon={<Bookmark size={24} className="text-amber-500" />}
         emptyTitle="Chcę odwiedzić"
-        emptyTip="Zapisuj knajpy, do których chcesz się wybrać — pojawią się tutaj."
+        emptyTip="Zapisuj knajpy, do których chcesz się wybrać - pojawią się tutaj."
         emptyCta={{ to: "/", label: "Przeglądaj lokale" }}
       />
       <CollapsiblePlaceList
@@ -593,12 +627,12 @@ function MyPlaceLists() {
         title="Odwiedziłem"
         places={visited.data}
         loading={visited.isLoading}
-        emptyText="Oznaczaj knajpy, w których byłeś — zbierzesz tu swoją mapę PoŻerania."
+        emptyText="Oznaczaj knajpy, w których byłeś - zbierzesz tu swoją mapę PoŻerania."
         variant="icons"
         isMe={true}
         emptyIcon={<CheckCircle2 size={24} className="text-emerald-600" />}
         emptyTitle="Odwiedziłem"
-        emptyTip="Oznaczaj knajpy, w których byłeś — zbierzesz tu swoją mapę PoŻerania."
+        emptyTip="Oznaczaj knajpy, w których byłeś - zbierzesz tu swoją mapę PoŻerania."
         emptyCta={{ to: "/", label: "Przeglądaj lokale" }}
       />
       <CollapsiblePlaceList
@@ -614,6 +648,125 @@ function MyPlaceLists() {
         emptyTip="Klikaj serduszko na knajpie, do której chcesz wracać."
         emptyCta={{ to: "/", label: "Przeglądaj lokale" }}
       />
+    </section>
+  );
+}
+
+function ChangePasswordSection() {
+  const { user } = useUser();
+  const hasPasswordLogin = user?.identities?.some((i) => i.provider === "email") ?? false;
+
+  const [open, setOpen] = useState(false);
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [showNext, setShowNext] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  if (!hasPasswordLogin) return null;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const strengthError = passwordStrengthError(next);
+    if (strengthError) {
+      setError(strengthError);
+      return;
+    }
+    if (!user?.email) return;
+    setSaving(true);
+    setError(null);
+    try {
+      // Re-authenticate with the current password before rotating it - updateUser()
+      // alone would let anyone with a hijacked, still-logged-in tab change the
+      // password without ever proving they know the old one.
+      const { error: reauthErr } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: current,
+      });
+      if (reauthErr) {
+        setError("Obecne hasło jest nieprawidłowe.");
+        return;
+      }
+      const { error: updateErr } = await supabase.auth.updateUser({ password: next });
+      if (updateErr) throw updateErr;
+      toast.success("Hasło zmienione ✓");
+      setOpen(false);
+      setCurrent("");
+      setNext("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nie udało się zmienić hasła");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <section className="mt-8 rounded-2xl bg-card border border-border p-5">
+      <div className="flex items-center gap-2 mb-1">
+        <KeyRound size={18} className="text-navy" />
+        <h2 className="font-display text-lg">Hasło</h2>
+      </div>
+      <p className="text-sm text-muted-foreground">Zmień hasło do logowania e-mailem.</p>
+      {!open ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="mt-3 inline-flex items-center gap-2 rounded-full border-2 border-navy text-navy px-4 py-2 text-sm font-semibold hover:bg-navy/5"
+        >
+          <KeyRound size={14} /> Zmień hasło
+        </button>
+      ) : (
+        <form onSubmit={handleSubmit} className="mt-3 space-y-2.5 max-w-sm" noValidate>
+          <input
+            type="password"
+            required
+            autoComplete="current-password"
+            value={current}
+            onChange={(e) => { setCurrent(e.target.value); if (error) setError(null); }}
+            placeholder="Obecne hasło"
+            className="w-full rounded-xl border-2 border-border px-4 py-2.5 outline-none focus:border-tomato"
+          />
+          <div className="relative">
+            <input
+              type={showNext ? "text" : "password"}
+              required
+              minLength={8}
+              autoComplete="new-password"
+              value={next}
+              onChange={(e) => { setNext(e.target.value); if (error) setError(null); }}
+              placeholder="Nowe hasło (min. 8 znaków, litera i cyfra)"
+              className="w-full rounded-xl border-2 border-border px-4 py-2.5 pr-11 outline-none focus:border-tomato"
+            />
+            <button
+              type="button"
+              onClick={() => setShowNext((v) => !v)}
+              aria-label={showNext ? "Ukryj hasło" : "Pokaż hasło"}
+              className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-8 h-8 rounded-full text-muted-foreground hover:text-navy hover:bg-navy/5"
+            >
+              {showNext ? <EyeOff size={15} /> : <Eye size={15} />}
+            </button>
+          </div>
+          {error && <p className="text-xs text-destructive">{error}</p>}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => { setOpen(false); setCurrent(""); setNext(""); setError(null); }}
+              disabled={saving}
+              className="rounded-full border border-border px-4 py-2 text-sm font-semibold hover:bg-muted disabled:opacity-50"
+            >
+              Anuluj
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="inline-flex items-center gap-2 rounded-full bg-tomato text-cream px-4 py-2 text-sm font-semibold hover:bg-tomato/90 disabled:opacity-50"
+            >
+              {saving ? <Loader2 size={14} className="animate-spin" /> : <KeyRound size={14} />}
+              Zapisz nowe hasło
+            </button>
+          </div>
+        </form>
+      )}
     </section>
   );
 }
@@ -723,7 +876,7 @@ function VipNickColorSection({ profile }: { profile: Profile }) {
         </label>
       </div>
       <p className="text-sm text-muted-foreground">
-        Benefit VIP — wybierz kolor, w jakim Twój nick pojawia się w recenzjach, na Pożeralni i
+        Benefit VIP - wybierz kolor, w jakim Twój nick pojawia się w recenzjach, na Pożeralni i
         wszędzie indziej.
       </p>
       <div className="flex flex-wrap items-center gap-2.5">

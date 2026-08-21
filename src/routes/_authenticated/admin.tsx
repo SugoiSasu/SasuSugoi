@@ -3,10 +3,23 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsAdmin, useIsSuperAdmin, useUser } from "@/lib/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { Map as MapIcon, FileText, LogOut, Loader2, Crown, Users, Share2, Award, Trophy, Zap, Megaphone, Newspaper, Lock, Activity, Inbox, UtensilsCrossed, Lightbulb, Store, ChevronDown } from "lucide-react";
+import {
+  Map as MapIcon,
+  FileText,
+  LogOut,
+  Loader2,
+  Users,
+  Share2,
+  Megaphone,
+  Inbox,
+  ShieldCheck,
+  Sparkles,
+  Settings2,
+  ChevronDown,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "Panel admina — poŻeramy" }] }),
+  head: () => ({ meta: [{ title: "Panel admina - poŻeramy" }] }),
   component: AdminShell,
 });
 
@@ -17,29 +30,24 @@ interface NavItem {
   superOnly?: boolean;
 }
 
+// Reorganized: Moderacja (suggestions+owner-requests), Gamifikacja
+// (points+achievements+ranks), and Ustawienia (alpha-gate+notifications-monitor)
+// are each now a single page with internal tabs instead of separate nav
+// entries. Places absorbed Cuisines and Place-posts as internal tabs too
+// (see admin.places.index.tsx) — was 15 top-level items, now 9.
 const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
     title: "Treść",
     items: [
       { to: "/admin/places", icon: <MapIcon size={14} />, label: "Lokale" },
-      { to: "/admin/cuisines", icon: <UtensilsCrossed size={14} />, label: "Kuchnie" },
       { to: "/admin/posts", icon: <FileText size={14} />, label: "Blog" },
-      { to: "/admin/place-posts", icon: <Newspaper size={14} />, label: "Wpisy lokali" },
     ],
   },
   {
-    title: "Moderacja",
+    title: "Zarządzanie",
     items: [
-      { to: "/admin/suggestions", icon: <Lightbulb size={14} />, label: "Zgłoszenia" },
-      { to: "/admin/owner-requests", icon: <Store size={14} />, label: "Właściciele" },
-    ],
-  },
-  {
-    title: "Gamifikacja",
-    items: [
-      { to: "/admin/points", icon: <Zap size={14} />, label: "Punkty" },
-      { to: "/admin/achievements", icon: <Trophy size={14} />, label: "Achievementy" },
-      { to: "/admin/ranks", icon: <Award size={14} />, label: "Rangi", superOnly: true },
+      { to: "/admin/moderacja", icon: <ShieldCheck size={14} />, label: "Moderacja" },
+      { to: "/admin/gamifikacja", icon: <Sparkles size={14} />, label: "Gamifikacja" },
     ],
   },
   {
@@ -49,8 +57,12 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
       { to: "/admin/ads", icon: <Megaphone size={14} />, label: "Reklamy", superOnly: true },
       { to: "/admin/collab", icon: <Inbox size={14} />, label: "Współpraca", superOnly: true },
       { to: "/admin/users", icon: <Users size={14} />, label: "Użytkownicy", superOnly: true },
-      { to: "/admin/alpha-gate", icon: <Lock size={14} />, label: "Alpha gate", superOnly: true },
-      { to: "/admin/notifications-monitor", icon: <Activity size={14} />, label: "Monitor powiadomień", superOnly: true },
+      {
+        to: "/admin/ustawienia",
+        icon: <Settings2 size={14} />,
+        label: "Ustawienia",
+        superOnly: true,
+      },
     ],
   },
 ];
@@ -84,20 +96,53 @@ function AdminShell() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-dvh grid place-items-center bg-background p-4">
-        <div className="max-w-md text-center bg-card border border-border rounded-3xl p-8 shadow-lg">
-          <Crown className="mx-auto text-tomato mb-3" size={40} />
-          <h1 className="font-display text-2xl mb-2">Brak uprawnień admina</h1>
-          <p className="text-sm text-muted-foreground mb-6">
-            Konto <strong>{user?.email}</strong> nie ma roli admina. Tylko Head Admin (pożeramy) może nadać Ci dostęp.
+      <div className="min-h-dvh grid place-items-center bg-background p-4 overflow-hidden">
+        <div className="relative max-w-md text-center bg-card border border-border rounded-3xl p-8 shadow-lg pz-403-card">
+          <div className="relative mx-auto mb-4 w-20 h-20">
+            <span
+              className="absolute inset-0 grid place-items-center text-5xl pz-403-plate"
+              aria-hidden="true"
+            >
+              🍽️
+            </span>
+            <span
+              className="absolute -bottom-1 -right-2 grid place-items-center w-9 h-9 rounded-full bg-tomato text-cream text-base shadow-md pz-403-lock"
+              aria-hidden="true"
+            >
+              🔒
+            </span>
+          </div>
+          <h1 className="font-display text-2xl mb-2">Ten stolik jest zarezerwowany</h1>
+          <p className="text-sm text-muted-foreground mb-1">
+            Konto <strong>{user?.email}</strong> nie jest na liście gości VIP (czyli adminów).
           </p>
-          <Link to="/" className="rounded-full bg-tomato text-cream px-6 py-3 font-semibold hover:bg-tomato/90 transition inline-block">
+          <p className="text-sm text-muted-foreground mb-6">
+            Nawet najlepsza recenzja Cię tu nie wpuści - o dostęp poproś Head Admina (pożeramy) 😅
+          </p>
+          <Link
+            to="/"
+            className="rounded-full bg-tomato text-cream px-6 py-3 font-semibold hover:bg-tomato/90 transition inline-block"
+          >
             Wróć na stronę główną
           </Link>
-          <button onClick={signOut} className="mt-4 text-sm text-muted-foreground hover:text-tomato block mx-auto">
+          <button
+            onClick={signOut}
+            className="mt-4 text-sm text-muted-foreground hover:text-tomato block mx-auto"
+          >
             Wyloguj
           </button>
         </div>
+        <style>{`
+          @keyframes pz-403-in { from { opacity: 0; transform: translateY(10px) scale(0.97); } to { opacity: 1; transform: none; } }
+          @keyframes pz-403-wobble { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+          @keyframes pz-403-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+          .pz-403-card { animation: pz-403-in 400ms cubic-bezier(0.16, 1, 0.3, 1); }
+          .pz-403-plate { animation: pz-403-wobble 2.2s ease-in-out infinite; transform-origin: 50% 65%; }
+          .pz-403-lock { animation: pz-403-pulse 1.6s ease-in-out infinite; }
+          @media (prefers-reduced-motion: reduce) {
+            .pz-403-card, .pz-403-plate, .pz-403-lock { animation: none; }
+          }
+        `}</style>
       </div>
     );
   }
@@ -107,16 +152,26 @@ function AdminShell() {
       <header className="border-b border-border bg-card sticky top-0 z-30">
         <div className="mx-auto max-w-6xl flex items-center justify-between gap-4 px-4 sm:px-6 py-3">
           <div className="flex items-center gap-6">
-            <Link to="/" className="font-display text-xl font-bold">poŻeramy <span className="text-tomato">/ admin</span></Link>
+            <Link to="/" className="font-display text-xl font-bold">
+              poŻeramy <span className="text-tomato">/ admin</span>
+            </Link>
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden md:inline text-xs text-muted-foreground">{user?.email}</span>
-            <button onClick={signOut} className="chip bg-card border border-border hover:border-tomato">
+            <button
+              onClick={signOut}
+              className="chip bg-card border border-border hover:border-tomato"
+            >
               <LogOut size={14} /> Wyloguj
             </button>
           </div>
         </div>
-        <MobileAdminNav groups={NAV_GROUPS} isSuper={isSuper} pathname={pathname} navigate={navigate} />
+        <MobileAdminNav
+          groups={NAV_GROUPS}
+          isSuper={isSuper}
+          pathname={pathname}
+          navigate={navigate}
+        />
         <nav className="hidden sm:flex overflow-x-auto border-t border-border">
           {NAV_GROUPS.map((group, gi) => {
             const items = group.items.filter((it) => !it.superOnly || isSuper);
@@ -127,7 +182,13 @@ function AdminShell() {
                 className={`flex shrink-0 ${gi > 0 ? "ml-2 border-l border-border pl-2" : ""}`}
               >
                 {items.map((it) => (
-                  <AdminTab key={it.to} to={it.to} icon={it.icon} label={it.label} pathname={pathname} />
+                  <AdminTab
+                    key={it.to}
+                    to={it.to}
+                    icon={it.icon}
+                    label={it.label}
+                    pathname={pathname}
+                  />
                 ))}
               </div>
             );
@@ -141,13 +202,25 @@ function AdminShell() {
   );
 }
 
-function AdminTab({ to, icon, label, pathname }: { to: string; icon: React.ReactNode; label: string; pathname: string }) {
+function AdminTab({
+  to,
+  icon,
+  label,
+  pathname,
+}: {
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+  pathname: string;
+}) {
   const active = pathname.startsWith(to);
   return (
     <Link
       to={to}
       className={`shrink-0 inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold transition border-b-2 ${
-        active ? "border-tomato text-tomato" : "border-transparent text-foreground hover:text-tomato"
+        active
+          ? "border-tomato text-tomato"
+          : "border-transparent text-foreground hover:text-tomato"
       }`}
     >
       {icon} {label}
@@ -166,9 +239,7 @@ function MobileAdminNav({
   pathname: string;
   navigate: ReturnType<typeof useNavigate>;
 }) {
-  const current = groups
-    .flatMap((g) => g.items)
-    .find((it) => pathname.startsWith(it.to));
+  const current = groups.flatMap((g) => g.items).find((it) => pathname.startsWith(it.to));
   return (
     <div className="relative sm:hidden border-t border-border">
       <select
@@ -191,7 +262,10 @@ function MobileAdminNav({
           );
         })}
       </select>
-      <ChevronDown size={16} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-tomato" />
+      <ChevronDown
+        size={16}
+        className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-tomato"
+      />
     </div>
   );
 }

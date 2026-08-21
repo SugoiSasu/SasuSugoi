@@ -33,7 +33,7 @@ const CollabConfirmationEmail = ({
         <Heading style={brand.h1}>Dostaliśmy Twoje zgłoszenie! 🎉</Heading>
         <Text style={brand.text}>
           Cześć{brandName ? ` ${brandName}` : ''}, dzięki za wiadomość dotyczącą
-          współpracy z poŻeramy. Zgłoszenie trafiło do naszego panelu — odpowiadamy
+          współpracy z poŻeramy. Zgłoszenie trafiło do naszego panelu - odpowiadamy
           zwykle w ciągu 48 godzin (dni robocze).
         </Text>
         {message ? (
@@ -55,7 +55,7 @@ const CollabConfirmationEmail = ({
         <Hr style={brand.hr} />
         <Text style={brand.footer}>
           Otrzymujesz tę wiadomość, ponieważ wysłano zgłoszenie współpracy z Twoim
-          adresem e-mail w formularzu na pozeramy.live. Jeśli to nie Ty — po prostu
+          adresem e-mail w formularzu na pozeramy.live. Jeśli to nie Ty - po prostu
           zignoruj tę wiadomość.
         </Text>
       </Container>
@@ -65,7 +65,7 @@ const CollabConfirmationEmail = ({
 
 export const template = {
   component: CollabConfirmationEmail,
-  subject: 'Dostaliśmy Twoje zgłoszenie współpracy — poŻeramy',
+  subject: 'Dostaliśmy Twoje zgłoszenie współpracy - poŻeramy',
   displayName: 'Potwierdzenie zgłoszenia współpracy',
   previewData: {
     brandName: 'Pizza Forte',

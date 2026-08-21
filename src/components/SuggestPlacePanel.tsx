@@ -89,7 +89,7 @@ export function SuggestPlacePanel() {
             <label className="block">
               <span className="text-xs uppercase font-semibold text-muted-foreground">Kuchnia</span>
               <select value={form.cuisine} onChange={(e) => setForm({ ...form, cuisine: e.target.value })} className="input">
-                <option value="">— wybierz —</option>
+                <option value=""> - wybierz - </option>
                 {(cuisines ?? []).filter((c) => c.enabled).map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
             </label>

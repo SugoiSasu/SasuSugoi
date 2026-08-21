@@ -100,7 +100,7 @@ export function PlacePostsSection({ placeId, placeName }: { placeId: string; pla
         ) : !posts || posts.length === 0 ? (
           <div className="text-sm text-navy/60 text-center py-6">
             {isOwner
-              ? "Brak wpisów — dodaj pierwszy, żeby dać znać obserwującym."
+              ? "Brak wpisów - dodaj pierwszy, żeby dać znać obserwującym."
               : `${placeName} nie opublikował(a) jeszcze żadnych wpisów.`}
           </div>
         ) : (
@@ -361,7 +361,7 @@ function PostSocial({ postId }: { postId: string }) {
       {commentsOpen && (
         <div className="mt-3 space-y-3">
           {(comments ?? []).length === 0 && (
-            <div className="text-xs text-navy/50">Brak komentarzy — bądź pierwszy.</div>
+            <div className="text-xs text-navy/50">Brak komentarzy - bądź pierwszy.</div>
           )}
           <ul className="space-y-2">
             {(comments ?? []).map((c) => (

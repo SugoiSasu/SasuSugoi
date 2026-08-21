@@ -24,7 +24,7 @@ export interface EnqueueParams {
 /**
  * Server-only helper: renders a registered template and enqueues it for sending
  * using the Supabase service role. Use from PUBLIC/unauthenticated triggers
- * (contact forms, collab submissions) — the standard send route requires a user JWT.
+ * (contact forms, collab submissions) - the standard send route requires a user JWT.
  */
 export async function enqueueTransactionalEmailInternal({
   templateName,

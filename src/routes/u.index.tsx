@@ -17,6 +17,7 @@ import {
   Filter,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeIlikeTerm } from "@/lib/postgrest-filter";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useUser } from "@/lib/use-auth";
 import type { AvatarSource } from "@/lib/profile-api";
@@ -62,9 +63,8 @@ async function fetchProfiles(q: string, page: number): Promise<BrowseResult> {
     .order("points_total", { ascending: false })
     .order("created_at", { ascending: false })
     .range(from, to);
-  const trimmed = q.trim();
-  if (trimmed) {
-    const safe = trimmed.replace(/[%,]/g, " ");
+  const safe = sanitizeIlikeTerm(q);
+  if (safe) {
     const like = `%${safe}%`;
     query = query.or(`username.ilike.${like},display_name.ilike.${like}`);
   }
@@ -77,11 +77,11 @@ export const Route = createFileRoute("/u/")({
   validateSearch: zodValidator(searchSchema),
   head: () => ({
     meta: [
-      { title: "Ranking — poŻeramy" },
+      { title: "Ranking - poŻeramy" },
       {
         name: "description",
         content:
-          "Ranking poŻeraczy — top użytkownicy według punktów poŻarcia. Znajdź najbardziej głodnych recenzentów.",
+          "Ranking poŻeraczy - top użytkownicy według punktów poŻarcia. Znajdź najbardziej głodnych recenzentów.",
       },
     ],
   }),
@@ -119,7 +119,7 @@ function UsersBrowse() {
   const { q, page } = Route.useSearch();
   const navigate = useNavigate({ from: "/u/" });
 
-  // Local input synced with URL — URL is debounced source of truth
+  // Local input synced with URL - URL is debounced source of truth
   const [input, setInput] = useState(q);
   useEffect(() => {
     setInput(q);
@@ -171,7 +171,7 @@ function UsersBrowse() {
           </div>
           <h1 className="font-display text-3xl sm:text-4xl leading-tight">Ranking poŻeraczy</h1>
           <p className="text-cream/80 text-sm mt-2 max-w-prose">
-            Top pożeracze wg punktów poŻarcia, Twoi znajomi i wyszukiwanie po nicku — wszystko w
+            Top pożeracze wg punktów poŻarcia, Twoi znajomi i wyszukiwanie po nicku - wszystko w
             jednym.
           </p>
         </div>
@@ -325,7 +325,7 @@ function pluralize(n: number, one: string, few: string, many: string) {
 }
 
 /* ============================================================
- * RANKING — top 3 podium + top 10, then "Zobacz więcej"
+ * RANKING - top 3 podium + top 10, then "Zobacz więcej"
  * ============================================================ */
 type RankSort = "points" | "newest" | "alpha";
 type RankFilter = "all" | "withAvatar" | "withBio" | "withDistrict";
@@ -485,7 +485,7 @@ function RankingSection() {
         </div>
       ) : (
         <>
-          {/* Podium — top 3 (only in points+all mode) */}
+          {/* Podium - top 3 (only in points+all mode) */}
           {podium.length > 0 && (
             <ol
               className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4"

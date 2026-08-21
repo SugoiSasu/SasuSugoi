@@ -1,5 +1,5 @@
 /**
- * GA4 analytics helper — Google Consent Mode v2 aware.
+ * GA4 analytics helper - Google Consent Mode v2 aware.
  *
  * - Nie ładujemy skryptu gtag.js dopóki użytkownik nie udzieli zgody na
  *   `analytics_storage`. Po zgodzie ładujemy raz i cache'ujemy Promise.
@@ -74,7 +74,7 @@ export function loadGA(): Promise<void> {
   return loadPromise;
 }
 
-/** Cofnięcie zgody — blokuje kolejne hity gtag i próbuje wyczyścić ciasteczka _ga*. */
+/** Cofnięcie zgody - blokuje kolejne hity gtag i próbuje wyczyścić ciasteczka _ga*. */
 export function disableGA() {
   if (typeof window === "undefined") return;
   (window as unknown as Record<string, unknown>)[DISABLE_FLAG] = true;
@@ -95,7 +95,7 @@ export function disableGA() {
 }
 
 /**
- * Wysyła event do GA4 — tylko jeśli user zgodził się na `analytics_storage`.
+ * Wysyła event do GA4 - tylko jeśli user zgodził się na `analytics_storage`.
  * Nigdy nie przekazujemy PII (email, IP itd.).
  */
 export function trackEvent(name: string, params: Record<string, unknown> = {}) {

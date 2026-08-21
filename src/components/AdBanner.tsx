@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { X, Megaphone } from "lucide-react";
-import { useActiveAds, trackAdImpression, trackAdClick, type Ad } from "@/lib/ads-api";
+import { useActiveAds, trackAdImpression, trackAdClick, DEFAULT_AD_CTA, type Ad } from "@/lib/ads-api";
+import { useUser } from "@/lib/use-auth";
+import { pickSeeded } from "@/lib/seeded-pick";
 
 const STORAGE_KEY = "pozeramy:ad-dismissed";
 
@@ -27,6 +29,7 @@ function setDismissed(set: Set<string>) {
 
 export function AdBanner() {
   const { data: ads } = useActiveAds();
+  const { user } = useUser();
   const [dismissed, setDismissedState] = useState<Set<string>>(() => new Set());
   const [mounted, setMounted] = useState(false);
   const trackedRef = useRef<string | null>(null);
@@ -36,14 +39,16 @@ export function AdBanner() {
     setDismissedState(getDismissed());
   }, []);
 
-  const ad = mounted ? (ads ?? []).find((a) => !dismissed.has(a.id)) : undefined;
+  const today = new Date().toISOString().slice(0, 10);
+  const eligible = (ads ?? []).filter((a) => !dismissed.has(a.id));
+  const ad = mounted ? pickSeeded(eligible, `banner-${user?.id ?? "anon"}-${today}`) ?? undefined : undefined;
 
   useEffect(() => {
     if (!ad) return;
     if (trackedRef.current === ad.id) return;
     trackedRef.current = ad.id;
-    trackAdImpression(ad.id);
-  }, [ad?.id]);
+    trackAdImpression(ad.id, user?.id);
+  }, [ad?.id, user?.id]);
 
   if (!mounted || !ad) return null;
 
@@ -74,7 +79,7 @@ export function AdBanner() {
           />
         )}
         <div className="flex-1 min-w-0 text-sm">
-          <AdContent ad={ad} />
+          <AdContent ad={ad} userId={user?.id} />
         </div>
         <button
           type="button"
@@ -103,22 +108,29 @@ export function AdBanner() {
   );
 }
 
-function AdContent({ ad }: { ad: Ad }) {
-  const msg = <span className="font-medium truncate block">{ad.message}</span>;
-  const onClick = () => trackAdClick(ad.id);
+function AdContent({ ad, userId }: { ad: Ad; userId: string | undefined }) {
+  const inner = (
+    <span className="flex items-center gap-2 min-w-0">
+      <span className="font-medium truncate">{ad.message}</span>
+      <span className="hidden sm:inline shrink-0 chip bg-tomato text-cream text-[10px]">
+        {ad.cta_label || DEFAULT_AD_CTA}
+      </span>
+    </span>
+  );
+  const onClick = () => trackAdClick(ad.id, userId);
   if (ad.place_id) {
     return (
       <Link to="/k/$id" params={{ id: ad.place_id }} onClick={onClick} className="hover:text-tomato transition-colors block">
-        {msg}
+        {inner}
       </Link>
     );
   }
   if (ad.link_url) {
     return (
       <a href={ad.link_url} target="_blank" rel="noreferrer" onClick={onClick} className="hover:text-tomato transition-colors block">
-        {msg}
+        {inner}
       </a>
     );
   }
-  return msg;
+  return inner;
 }

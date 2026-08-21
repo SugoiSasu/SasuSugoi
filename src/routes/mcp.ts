@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { JSONRPCMessageSchema, type JSONRPCMessage } from "@modelcontextprotocol/sdk/types.js";
 import { createPozeramyMcpServer } from "@/lib/mcp/server";
 import { OneShotHttpTransport } from "@/lib/mcp/http-transport";
+import { createRateLimiter } from "@/lib/rate-limit";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -9,26 +10,10 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type, Accept, Mcp-Protocol-Version",
 };
 
-// Best-effort in-memory rate limit (per warm serverless instance — not a
+// Best-effort in-memory rate limit (per warm serverless instance - not a
 // hard guarantee under multi-instance scaling, but a real deterrent against
 // casual scraping/amplification since this endpoint has no other throttle).
-const RATE_LIMIT_MAX = 30;
-const RATE_LIMIT_WINDOW_MS = 10_000;
-const hits = new Map<string, number[]>();
-
-function isRateLimited(key: string): boolean {
-  const now = Date.now();
-  const windowStart = now - RATE_LIMIT_WINDOW_MS;
-  const recent = (hits.get(key) ?? []).filter((t) => t > windowStart);
-  recent.push(now);
-  hits.set(key, recent);
-  if (hits.size > 5000) {
-    for (const [k, times] of hits) {
-      if (times.every((t) => t <= windowStart)) hits.delete(k);
-    }
-  }
-  return recent.length > RATE_LIMIT_MAX;
-}
+const isRateLimited = createRateLimiter(10_000, 30);
 
 function jsonRpcError(status: number, code: number, message: string) {
   return Response.json(
@@ -42,7 +27,7 @@ export const Route = createFileRoute("/mcp")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS_HEADERS }),
 
-      // No standalone SSE stream is offered — this server is stateless request/response only.
+      // No standalone SSE stream is offered - this server is stateless request/response only.
       GET: async () => jsonRpcError(405, -32000, "Method not allowed."),
       DELETE: async () => jsonRpcError(405, -32000, "Method not allowed."),
 
@@ -52,7 +37,7 @@ export const Route = createFileRoute("/mcp")({
           request.headers.get("x-real-ip") ??
           "unknown";
         if (isRateLimited(clientKey)) {
-          return jsonRpcError(429, -32000, "Too many requests — slow down.");
+          return jsonRpcError(429, -32000, "Too many requests - slow down.");
         }
 
         let body: unknown;
@@ -81,7 +66,7 @@ export const Route = createFileRoute("/mcp")({
           const responses = await transport.dispatch(messages);
 
           if (responses.length === 0) {
-            // All-notifications request (e.g. `notifications/initialized`) — nothing to return.
+            // All-notifications request (e.g. `notifications/initialized`) - nothing to return.
             return new Response(null, { status: 202, headers: CORS_HEADERS });
           }
           const payload = Array.isArray(body) ? responses : responses[0];

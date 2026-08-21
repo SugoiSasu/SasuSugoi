@@ -13,17 +13,22 @@ interface DiscoverHeaderProps {
 }
 
 /**
- * "Odkrywaj" header — greeting, live search input and cuisine categories.
+ * "Odkrywaj" header - greeting, live search input and cuisine categories.
  * Search + category state is owned by the page so the lists below can filter.
  */
-export function DiscoverHeader({ query, onQueryChange, cuisine, onCuisineChange }: DiscoverHeaderProps) {
+export function DiscoverHeader({
+  query,
+  onQueryChange,
+  cuisine,
+  onCuisineChange,
+}: DiscoverHeaderProps) {
   const { data: profile } = useMyProfile();
   const { data: cuisines } = useCuisines();
   const name = profile?.display_name?.split(" ")[0] ?? profile?.username;
   const list = (cuisines ?? []).filter((c) => c.enabled !== false);
 
   return (
-    <section className="bg-background px-4 pb-6 pt-5 sm:px-6 lg:pt-8">
+    <section className="bg-background px-4 pb-9 pt-6 sm:px-6 sm:pb-10 lg:pt-8">
       <div className="mx-auto w-full max-w-5xl lg:max-w-7xl">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -37,7 +42,7 @@ export function DiscoverHeader({ query, onQueryChange, cuisine, onCuisineChange 
           </div>
         </div>
 
-        <div className="mt-4 flex items-center gap-2">
+        <div className="mt-5 flex items-center gap-2">
           <div className="relative flex-1">
             <Search
               size={16}
@@ -73,10 +78,13 @@ export function DiscoverHeader({ query, onQueryChange, cuisine, onCuisineChange 
         </div>
 
         {!!list.length && (
-          <div className="mt-6">
-            <div className="mb-3 flex items-baseline justify-between gap-3">
+          <div className="mt-8">
+            <div className="mb-4 flex items-baseline justify-between gap-3">
               <h2 className="font-display text-lg">Kategorie</h2>
-              <Link to="/mapa" className="pz-hit inline-flex items-center text-xs font-semibold text-tomato hover:underline">
+              <Link
+                to="/mapa"
+                className="pz-hit inline-flex items-center text-xs font-semibold text-tomato hover:underline"
+              >
                 Zobacz wszystkie
               </Link>
             </div>
@@ -89,7 +97,7 @@ export function DiscoverHeader({ query, onQueryChange, cuisine, onCuisineChange 
                 className="flex w-16 shrink-0 flex-col items-center gap-1.5 text-[11px] font-semibold sm:w-auto"
               >
                 <span
-                  className={`grid h-14 w-14 place-items-center rounded-xl border-2 bg-card shadow-sm transition active:scale-95 ${
+                  className={`grid h-14 w-14 place-items-center rounded-xl border-2 bg-card shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-105 hover:shadow-lg active:scale-95 active:duration-75 ${
                     cuisine ? "border-transparent" : "border-navy"
                   }`}
                 >
@@ -100,8 +108,10 @@ export function DiscoverHeader({ query, onQueryChange, cuisine, onCuisineChange 
 
               {list.map((c) => {
                 const active = cuisine === c.name;
-                const color = c.color ?? cuisineMeta(c.name).color;
-                const emoji = c.emoji ?? cuisineMeta(c.name).emoji;
+                const meta = cuisineMeta(c.name);
+                const color = c.color ?? meta.color;
+                const emoji = c.emoji ?? meta.emoji;
+                const bg = meta.chipBackground;
                 return (
                   <button
                     key={c.id}
@@ -111,15 +121,28 @@ export function DiscoverHeader({ query, onQueryChange, cuisine, onCuisineChange 
                     className="flex w-16 shrink-0 flex-col items-center gap-1.5 text-[11px] font-semibold sm:w-auto"
                   >
                     <span
-                      className={`grid h-14 w-14 place-items-center rounded-xl border-2 text-2xl shadow-sm transition active:scale-95 ${
+                      className={`relative grid h-14 w-14 place-items-center overflow-hidden rounded-xl border-2 text-2xl shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-105 hover:shadow-lg active:scale-95 active:duration-75 ${
                         active ? "border-navy" : "border-transparent"
                       }`}
-                      style={{ backgroundColor: color }}
+                      style={
+                        bg
+                          ? {
+                              backgroundImage: `url(${bg})`,
+                              backgroundSize: "cover",
+                              backgroundPosition: "center",
+                            }
+                          : { backgroundColor: color }
+                      }
                       aria-hidden
                     >
-                      {emoji}
+                      {bg && <span className="absolute inset-0 bg-navy/35" />}
+                      <span className="relative drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
+                        {emoji}
+                      </span>
                     </span>
-                    <span className="line-clamp-2 text-center leading-tight text-muted-foreground">{c.name}</span>
+                    <span className="line-clamp-2 text-center leading-tight text-muted-foreground">
+                      {c.name}
+                    </span>
                   </button>
                 );
               })}

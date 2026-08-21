@@ -10,7 +10,7 @@ export function isVipActive(
   return new Date(profile.vip_until).getTime() > Date.now();
 }
 
-/** Curated palette for the VIP nick-color picker — legible on both cream and navy backgrounds. */
+/** Curated palette for the VIP nick-color picker - legible on both cream and navy backgrounds. */
 export const VIP_NICK_COLORS = [
   "#E11D48", // rose
   "#F97316", // orange
@@ -24,7 +24,7 @@ export const VIP_NICK_COLORS = [
 
 type VipProfile = { is_vip: boolean; vip_until: string | null; vip_nick_color?: string | null };
 
-/** Inline style for a colored VIP nickname — spread onto whatever element already renders the name. */
+/** Inline style for a colored VIP nickname - spread onto whatever element already renders the name. */
 export function vipNameStyle(profile: VipProfile | null | undefined): CSSProperties | undefined {
   if (!isVipActive(profile) || !profile?.vip_nick_color) return undefined;
   return { color: profile.vip_nick_color };

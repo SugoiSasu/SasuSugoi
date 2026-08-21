@@ -35,7 +35,7 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
         </Section>
         <Hr style={brand.hr} />
         <Text style={brand.footer}>
-          Nie prosiłeś o ten kod? Zignoruj tę wiadomość — nikt nie uzyska
+          Nie prosiłeś o ten kod? Zignoruj tę wiadomość - nikt nie uzyska
           dostępu bez kodu.
           <br />
           poŻeramy · Poznań

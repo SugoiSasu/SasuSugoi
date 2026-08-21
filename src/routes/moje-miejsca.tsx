@@ -2,30 +2,28 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { Bookmark, Check, ChevronRight, Heart, Search, Star, Users } from "lucide-react";
+import { Bookmark, Check, ChevronRight, Heart, Search, Star } from "lucide-react";
 import { useUser } from "@/lib/use-auth";
 import { useUserVisitedPlaces, useUserFavoritePlaces, type VisitedPlace } from "@/lib/visits-api";
-import { useFriendProfiles } from "@/lib/friends-api";
 import { usePlaceRatingsMap } from "@/lib/places-api";
-import { UserAvatar } from "@/components/UserAvatar";
 import { useUserLocation, haversineKm, formatDistancePl } from "@/lib/geo";
 import { AuthGate } from "@/components/AuthGate";
 
 const searchSchema = z.object({
-  tab: z.enum(["want", "visited", "fav", "friends"]).catch("want").optional(),
+  tab: z.enum(["want", "visited", "fav"]).catch("want").optional(),
 });
 
 export const Route = createFileRoute("/moje-miejsca")({
   validateSearch: zodValidator(searchSchema),
   head: () => ({
     meta: [
-      { title: "Moje miejsca — poŻeramy" },
+      { title: "Moje miejsca - poŻeramy" },
       {
         name: "description",
         content:
           "Twoja lista knajp: do odwiedzenia, odwiedzone i ulubione. Wracaj do miejsc, które poŻarłeś.",
       },
-      { property: "og:title", content: "Moje miejsca — poŻeramy" },
+      { property: "og:title", content: "Moje miejsca - poŻeramy" },
       {
         property: "og:description",
         content: "Twoja lista knajp: do odwiedzenia, odwiedzone i ulubione.",
@@ -35,7 +33,7 @@ export const Route = createFileRoute("/moje-miejsca")({
   component: MyPlacesPage,
 });
 
-type Tab = "want" | "visited" | "fav" | "friends";
+type Tab = "want" | "visited" | "fav";
 type Sort = "recent" | "alpha" | "rating" | "near";
 
 function MyPlacesPage() {
@@ -47,7 +45,6 @@ function MyPlacesPage() {
   const { data: want, isLoading: loadingWant } = useUserVisitedPlaces(user?.id, "want");
   const { data: visited, isLoading: loadingVisited } = useUserVisitedPlaces(user?.id, "visited");
   const { data: favs, isLoading: loadingFavs } = useUserFavoritePlaces(user?.id);
-  const { data: friends, isLoading: loadingFriends } = useFriendProfiles(user?.id);
   const { data: ratings } = usePlaceRatingsMap();
   const userLoc = useUserLocation();
 
@@ -56,30 +53,16 @@ function MyPlacesPage() {
     return haversineKm(userLoc, { lat: p.lat, lng: p.lng });
   };
 
-  const loading =
-    tab === "want"
-      ? loadingWant
-      : tab === "visited"
-        ? loadingVisited
-        : tab === "fav"
-          ? loadingFavs
-          : loadingFriends;
+  const loading = tab === "want" ? loadingWant : tab === "visited" ? loadingVisited : loadingFavs;
 
   const tabs: { key: Tab; label: string; count: number }[] = [
     { key: "want", label: "Do odwiedzenia", count: want?.length ?? 0 },
     { key: "visited", label: "Odwiedzone", count: visited?.length ?? 0 },
     { key: "fav", label: "Ulubione", count: favs?.length ?? 0 },
-    { key: "friends", label: "Znajomi", count: friends?.length ?? 0 },
   ];
 
   const base: VisitedPlace[] =
-    tab === "want"
-      ? (want ?? [])
-      : tab === "visited"
-        ? (visited ?? [])
-        : tab === "fav"
-          ? (favs ?? [])
-          : [];
+    tab === "want" ? (want ?? []) : tab === "visited" ? (visited ?? []) : (favs ?? []);
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -102,23 +85,13 @@ function MyPlacesPage() {
     });
   }, [base, query, sort, ratings, userLoc]);
 
-  const filteredFriends = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return (friends ?? []).filter(
-      (f) =>
-        !q ||
-        (f.display_name ?? "").toLowerCase().includes(q) ||
-        (f.username ?? "").toLowerCase().includes(q),
-    );
-  }, [friends, query]);
-
   if (!user) {
     return (
       <main id="main-content" className="mx-auto max-w-2xl px-4 py-10 sm:py-16">
         <AuthGate
           icon={Bookmark}
           title="Zaloguj się, żeby zobaczyć swoje miejsca"
-          description="Zapisuj knajpy do odwiedzenia, oznaczaj odwiedzone i zbieraj ulubione — wszystko w jednym miejscu, razem ze znajomymi."
+          description="Zapisuj knajpy do odwiedzenia, oznaczaj odwiedzone i zbieraj ulubione - wszystko w jednym miejscu, razem ze znajomymi."
         />
       </main>
     );
@@ -155,36 +128,34 @@ function MyPlacesPage() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={tab === "friends" ? "Szukaj znajomego…" : "Szukaj na liście…"}
+            placeholder="Szukaj na liście…"
             aria-label="Szukaj na liście"
             className="h-11 w-full rounded-full border border-border bg-card pl-9 pr-4 text-sm outline-none focus:border-tomato"
           />
         </div>
-        {tab !== "friends" && (
-          <div className="flex gap-2">
-            {(
-              [
-                ["recent", "Ostatnio dodane"],
-                ["alpha", "A–Z"],
-                ["rating", "Ocena"],
-                ...(userLoc ? ([["near", "Najbliżej"]] as const) : []),
-              ] as [Sort, string][]
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setSort(key)}
-                className={`min-h-11 rounded-full border px-3 py-2 text-xs font-semibold transition ${
-                  sort === key
-                    ? "border-tomato bg-tomato/10 text-tomato"
-                    : "border-border bg-card hover:border-tomato"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="flex gap-2">
+          {(
+            [
+              ["recent", "Ostatnio dodane"],
+              ["alpha", "A–Z"],
+              ["rating", "Ocena"],
+              ...(userLoc ? ([["near", "Najbliżej"]] as const) : []),
+            ] as [Sort, string][]
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setSort(key)}
+              className={`min-h-11 rounded-full border px-3 py-2 text-xs font-semibold transition ${
+                sort === key
+                  ? "border-tomato bg-tomato/10 text-tomato"
+                  : "border-border bg-card hover:border-tomato"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
@@ -205,41 +176,6 @@ function MyPlacesPage() {
               </div>
             </li>
           ))}
-        </ul>
-      ) : tab === "friends" ? (
-        <ul
-          key="friends"
-          className="pz-fade-in mt-5 space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0 xl:grid-cols-3"
-        >
-          {filteredFriends.map((f) => (
-            <li key={f.id}>
-              <Link
-                to="/u/$username"
-                params={{ username: f.username ?? f.id }}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 transition hover:border-tomato"
-              >
-                <UserAvatar
-                  avatarUrl={f.avatar_url}
-                  displayName={f.display_name}
-                  username={f.username}
-                  size={44}
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{f.display_name || f.username}</p>
-                  {f.username && (
-                    <p className="truncate text-xs text-muted-foreground">@{f.username}</p>
-                  )}
-                </div>
-                <ChevronRight size={18} className="shrink-0 text-muted-foreground" />
-              </Link>
-            </li>
-          ))}
-          {filteredFriends.length === 0 && (
-            <EmptyState
-              icon={<Users size={20} />}
-              text={query ? "Nic nie pasuje do wyszukiwania." : "Nie masz jeszcze znajomych."}
-            />
-          )}
         </ul>
       ) : (
         <ul
@@ -308,7 +244,7 @@ function MyPlacesPage() {
               text={
                 query
                   ? "Nic nie pasuje do wyszukiwania."
-                  : "Tu jeszcze pusto — dodaj pierwszą knajpę z jej profilu."
+                  : "Tu jeszcze pusto - dodaj pierwszą knajpę z jej profilu."
               }
             />
           )}

@@ -5,13 +5,13 @@ import { TERMS_CONSENT_VERSION } from "@/lib/consent";
 export const Route = createFileRoute("/regulamin")({
   head: () => ({
     meta: [
-      { title: "Regulamin — poŻeramy" },
+      { title: "Regulamin - poŻeramy" },
       {
         name: "description",
         content:
-          "Regulamin korzystania z serwisu poŻeramy — zasady, prawa i obowiązki użytkowników.",
+          "Regulamin korzystania z serwisu poŻeramy - zasady, prawa i obowiązki użytkowników.",
       },
-      { property: "og:title", content: "Regulamin — poŻeramy" },
+      { property: "og:title", content: "Regulamin - poŻeramy" },
       {
         property: "og:description",
         content: "Zasady korzystania z serwisu poŻeramy.",
@@ -47,8 +47,7 @@ function TermsPage() {
             .
           </p>
           <p>
-            Korzystając z Serwisu — w tym przeglądając mapę i profile lokali bez zakładania konta
-            — akceptujesz warunki opisane w niniejszym Regulaminie. Założenie konta wymaga
+            Korzystając z Serwisu - w tym przeglądając mapę i profile lokali bez zakładania konta - akceptujesz warunki opisane w niniejszym Regulaminie. Założenie konta wymaga
             wyraźnej akceptacji Regulaminu i{" "}
             <a href="/polityka-prywatnosci" className="text-tomato underline">
               Polityki prywatności
@@ -66,7 +65,7 @@ function TermsPage() {
               funkcje społecznościowe: dodawanie znajomych, przeglądanie ich aktywności
               („Pożeralnia"), ranking punktowy,
             </li>
-            <li>system punktów PoŻarcia, odznak (achievementów) i rang — opisany w §5,</li>
+            <li>system punktów PoŻarcia, odznak (achievementów) i rang - opisany w §5,</li>
             <li>zgłaszanie właścicielom lokali statusu „zweryfikowany właściciel" i samodzielną edycję podstawowych danych lokalu,</li>
             <li>czytanie artykułów blogowych publikowanych przez redakcję Serwisu.</li>
           </ul>
@@ -74,8 +73,7 @@ function TermsPage() {
           <h2>3. Konto użytkownika</h2>
           <p>
             Rejestracja konta wymaga podania prawdziwego adresu e-mail i ustawienia hasła (lub
-            zalogowania się przez Google/Apple) oraz — przy rejestracji e-mail/hasłem —
-            potwierdzenia adresu przez link aktywacyjny. Jedno konto może należeć do jednej
+            zalogowania się przez Google/Apple) oraz - przy rejestracji e-mail/hasłem - potwierdzenia adresu przez link aktywacyjny. Jedno konto może należeć do jednej
             osoby fizycznej; zabronione jest udostępnianie konta osobom trzecim oraz zakładanie
             wielu kont w celu obejścia limitów lub manipulowania rankingiem punktowym.
           </p>
@@ -85,7 +83,7 @@ function TermsPage() {
             rodzica lub opiekuna prawnego.
           </p>
           <p>
-            Możesz w każdej chwili trwale usunąć swoje konto samodzielnie — opcja „Usuń konto"
+            Możesz w każdej chwili trwale usunąć swoje konto samodzielnie - opcja „Usuń konto"
             dostępna jest w Ustawieniach profilu. Usunięcie konta jest nieodwracalne i kasuje
             powiązane z nim recenzje, listy, znajomości i punkty, zgodnie z{" "}
             <a href="/polityka-prywatnosci" className="text-tomato underline">
@@ -118,7 +116,7 @@ function TermsPage() {
           <h2>5. Punkty PoŻarcia, odznaki i status VIP</h2>
           <p>
             Punkty PoŻarcia, odznaki (achievementy) i rangi (w tym status VIP) to elementy
-            grywalizacji Serwisu — mają charakter wyłącznie kosmetyczny/prestiżowy, nie
+            grywalizacji Serwisu - mają charakter wyłącznie kosmetyczny/prestiżowy, nie
             stanowią waluty, punktów lojalnościowych o wartości pieniężnej ani prawa majątkowego
             i nie podlegają wymianie na pieniądze, towary ani usługi. Administrator zastrzega
             sobie prawo do korekty liczby punktów, cofnięcia odznaki lub statusu VIP w przypadku
@@ -140,7 +138,7 @@ function TermsPage() {
           <p>
             Administrator dokłada starań, aby informacje o lokalach (godziny otwarcia, menu,
             dane kontaktowe) były aktualne, jednak w dużej mierze pochodzą one od użytkowników
-            i właścicieli lokali — Administrator nie gwarantuje ich pełnej aktualności ani
+            i właścicieli lokali - Administrator nie gwarantuje ich pełnej aktualności ani
             poprawności i zaleca każdorazową weryfikację przed wizytą. Administrator nie ponosi
             odpowiedzialności za Treści publikowane przez użytkowników ani za decyzje (w tym
             decyzje konsumenckie) podjęte na ich podstawie, z zastrzeżeniem bezwzględnie
@@ -161,7 +159,7 @@ function TermsPage() {
           <p>
             Administrator może zawiesić lub usunąć konto użytkownika w przypadku rażącego
             naruszenia Regulaminu, prób oszustwa, wielokrotnego naruszania zasad publikowania
-            treści (§4) lub działania na szkodę Serwisu lub innych użytkowników — po uprzednim
+            treści (§4) lub działania na szkodę Serwisu lub innych użytkowników - po uprzednim
             wezwaniu do zaprzestania naruszeń, chyba że charakter naruszenia uzasadnia
             natychmiastowe działanie (np. treści niezgodne z prawem).
           </p>

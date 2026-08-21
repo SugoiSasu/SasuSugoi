@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import {
   Compass,
   Map,
@@ -13,6 +14,7 @@ import {
   MapPinCheck,
   Heart,
   UserPlus2,
+  Layers,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,11 +26,14 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { levelInfo } from "@/components/LevelProgress";
 import { VipBadge, isVipActive, vipNameStyle } from "@/components/VipBadge";
 import { RandomPlaceCard } from "@/components/RandomPlaceCard";
+import { SidebarAdCard } from "@/components/SidebarAdCard";
+import { InviteFriendsModal } from "@/components/InviteFriendsModal";
 import logoDark from "@/assets/brand/po_zeramy-logo-dark.png.asset.json";
 
 const coreItems = [
   { to: "/", label: "Odkrywaj", icon: Compass, exact: true },
   { to: "/mapa", label: "Mapa", icon: Map },
+  { to: "/karty", label: "Karty", icon: Layers },
   { to: "/moje-miejsca", label: "Moje miejsca", icon: Bookmark },
 ] as const;
 
@@ -39,7 +44,7 @@ const socialItems = [
 ] as const;
 
 const linkBase =
-  "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-cream/75 transition-all duration-200 ease-out hover:translate-x-0.5 hover:bg-cream/10 hover:text-cream";
+  "group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-cream/75 transition-all duration-200 ease-out hover:translate-x-0.5 hover:bg-cream/10 hover:text-cream";
 const iconCls = "shrink-0 transition-transform duration-200 ease-out group-hover:scale-110";
 const activeCls = {
   className:
@@ -57,6 +62,8 @@ export function AppSidebar() {
   const inviteLink = useMyInviteLink(user?.id);
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
 
   async function signOut() {
     await qc.cancelQueries();
@@ -66,39 +73,23 @@ export function AppSidebar() {
   }
 
   async function inviteFriends() {
-    let token: string;
     try {
-      token = await inviteLink.ensure();
+      const token = await inviteLink.ensure();
+      setInviteUrl(`${window.location.origin}/i/${token}`);
+      setInviteOpen(true);
     } catch {
       toast.error("Nie udało się przygotować linku zaproszenia");
-      return;
-    }
-    const url = `${window.location.origin}/i/${token}`;
-    const text = "Dołącz do mnie na poŻeramy — znajdźmy razem najlepsze knajpy w Poznaniu!";
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: "poŻeramy", text, url });
-        return;
-      } catch {
-        /* user cancelled the share sheet — fall through to clipboard */
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success("Link zaproszenia skopiowany ✓");
-    } catch {
-      toast.error("Nie udało się skopiować linku");
     }
   }
 
   const level = profile ? levelInfo(profile.points_total ?? 0) : null;
 
   return (
-    <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-[236px] flex-col bg-[linear-gradient(180deg,oklch(0.35_0.14_268),oklch(0.31_0.14_268)_45%,oklch(0.25_0.13_268))] px-3 py-5 shadow-[6px_0_28px_-12px_rgba(0,0,0,0.45)]">
+    <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-[236px] flex-col bg-[linear-gradient(180deg,oklch(0.35_0.14_268),oklch(0.31_0.14_268)_45%,oklch(0.25_0.13_268))] px-3 py-3.5 shadow-[6px_0_28px_-12px_rgba(0,0,0,0.45)]">
       <Link
         to="/"
         className="mb-1 flex items-center gap-2 px-2 transition-transform duration-200 ease-out hover:scale-[1.02]"
-        aria-label="poŻeramy — strona główna"
+        aria-label="poŻeramy - strona główna"
       >
         <img
           src={logoDark.url}
@@ -114,13 +105,14 @@ export function AppSidebar() {
         <Link
           to="/u/$username"
           params={{ username: profile.username ?? user.id }}
-          className="group mb-4 mt-2 flex items-center gap-2.5 rounded-xl px-2 py-2 transition-all duration-200 ease-out hover:bg-cream/10"
+          className="group mb-2.5 mt-1.5 flex items-center gap-2.5 rounded-xl px-2 py-1.5 transition-all duration-200 ease-out hover:bg-cream/10"
         >
           <div className="transition-transform duration-200 ease-out group-hover:scale-105">
             <UserAvatar
               avatarUrl={profile.avatar_url}
               displayName={profile.display_name}
               username={profile.username}
+              gender={profile.gender}
               size={36}
             />
           </div>
@@ -134,16 +126,29 @@ export function AppSidebar() {
               </span>
               {isVipActive(profile) && <VipBadge />}
             </p>
-            {level && <p className="truncate text-[11px] text-cream/55">Poziom {level.level}</p>}
+            {level && (
+              <div className="mt-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-cream/55">Poziom {level.level}</span>
+                  <span className="text-[10px] text-cream/40">{level.xpToNext} XP dalej</span>
+                </div>
+                <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-cream/15">
+                  <div
+                    className="h-full rounded-full bg-tomato transition-all duration-500"
+                    style={{ width: `${level.pct}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </Link>
       ) : (
-        <p className="mb-4 mt-2 px-2 text-[11px] font-medium uppercase tracking-wide text-cream/40">
+        <p className="mb-2.5 mt-1.5 px-2 text-[11px] font-medium uppercase tracking-wide text-cream/40">
           Foodie z Poznania
         </p>
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col justify-between gap-3.5 overflow-y-auto">
+      <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto">
         <div>
           <nav className={sectionPanel}>
             {coreItems.map(({ to, label, icon: Icon, ...rest }) => (
@@ -160,7 +165,7 @@ export function AppSidebar() {
             ))}
           </nav>
 
-          <div className="my-3.5 flex items-center gap-2 px-1">
+          <div className="my-2.5 flex items-center gap-2 px-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-cream/35">
               Społeczność
             </span>
@@ -188,40 +193,31 @@ export function AppSidebar() {
           </nav>
         </div>
 
-        <div className="space-y-3.5">
-          {level && (
-            <Link
-              to="/osiagniecia"
-              className="pz-fade-in block rounded-2xl border border-cream/15 bg-cream/[0.06] p-3.5 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-cream/25 hover:bg-cream/10 hover:shadow-lg"
-            >
-              <div className="flex items-end justify-between gap-2">
-                <p className="font-display text-base font-extrabold text-cream">
-                  Poziom {level.level}
-                </p>
-                <p className="text-[11px] font-semibold text-cream/60">{level.xpToNext} XP dalej</p>
-              </div>
-              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-cream/15">
-                <div
-                  className="h-full rounded-full bg-tomato transition-all duration-500"
-                  style={{ width: `${level.pct}%` }}
-                />
-              </div>
-            </Link>
-          )}
-
+        <div className="space-y-2.5">
           {user && (
-            <div className="pz-fade-in grid grid-cols-3 gap-1.5 rounded-2xl border border-cream/15 bg-cream/[0.06] p-2.5">
+            <div className="pz-fade-in grid grid-cols-3 gap-1.5 rounded-2xl border border-cream/15 bg-cream/[0.06] p-2">
               <StatChip to="/moje-miejsca" search={{ tab: "visited" }} icon={MapPinCheck} value={visited?.length ?? 0} label="Odwiedzone" />
               <StatChip to="/moje-miejsca" search={{ tab: "fav" }} icon={Heart} value={favs?.length ?? 0} label="Ulubione" />
               <StatChip to="/friends" icon={Users} value={friends?.length ?? 0} label="Znajomi" />
             </div>
           )}
 
-          {user && <RandomPlaceCard userId={user.id} />}
+          {user && (
+            <div className="sidebar-random-card">
+              <RandomPlaceCard userId={user.id} />
+            </div>
+          )}
+          <div className="sidebar-ad-card">
+            <SidebarAdCard />
+          </div>
         </div>
+        <style>{`
+          @media (max-height: 780px) { .sidebar-ad-card { display: none; } }
+          @media (max-height: 680px) { .sidebar-random-card { display: none; } }
+        `}</style>
       </div>
 
-      <div className="mt-3.5 border-t border-cream/10 pt-3">
+      <div className="mt-2.5 border-t border-cream/10 pt-2">
         {user && (
           <button
             type="button"
@@ -249,6 +245,9 @@ export function AppSidebar() {
           </Link>
         )}
       </div>
+      {inviteUrl && (
+        <InviteFriendsModal open={inviteOpen} onClose={() => setInviteOpen(false)} url={inviteUrl} />
+      )}
     </aside>
   );
 }

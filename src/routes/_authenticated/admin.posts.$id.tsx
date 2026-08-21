@@ -1,4 +1,5 @@
 import { BackButton } from "@/components/BackButton";
+import { Field } from "@/components/admin/Field";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { usePostById, useSavePost, slugify, type PostInput, type PostStatus } from "@/lib/posts-api";
@@ -94,7 +95,7 @@ function EditPost() {
       const msg = err instanceof Error ? err.message : "Błąd zapisu";
       console.error("Save post error:", err);
       if (msg.includes("duplicate") || msg.includes("blog_posts_slug_key")) {
-        toast.error("Slug już istnieje — zmień adres URL wpisu.");
+        toast.error("Slug już istnieje - zmień adres URL wpisu.");
       } else {
         toast.error(msg);
       }
@@ -186,7 +187,7 @@ function EditPost() {
           <>
             <textarea
               value={form.excerpt ?? ""} onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
-              placeholder="Krótki opis (excerpt) — pokazuje się na liście i w social media" rows={2}
+              placeholder="Krótki opis (excerpt) - pokazuje się na liście i w social media" rows={2}
               className="w-full input"
             />
 
@@ -286,7 +287,7 @@ function EditPost() {
           </Field>
           <Field label="Powiązany lokal">
             <select value={form.place_id ?? ""} onChange={(e) => setForm({ ...form, place_id: e.target.value || null })} className="input">
-              <option value="">— brak —</option>
+              <option value=""> - brak - </option>
               {(places ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </Field>
@@ -320,11 +321,3 @@ function ToolbarBtn({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground mb-1 block">{label}</span>
-      {children}
-    </label>
-  );
-}

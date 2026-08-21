@@ -14,7 +14,7 @@ const schema = z.object({
   elapsed_ms: z.number().int().nonnegative(),
 });
 
-/** Public — anyone (incl. anonymous visitors) can submit a place suggestion,
+/** Public - anyone (incl. anonymous visitors) can submit a place suggestion,
  * same server-side anti-spam pattern as submitCollab (honeypot + timing). */
 export const submitPlaceSuggestion = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => schema.parse(data))
@@ -23,7 +23,7 @@ export const submitPlaceSuggestion = createServerFn({ method: "POST" })
       throw new Error("Wykryto bota.");
     }
     if (data.elapsed_ms < 2000) {
-      throw new Error("Zwolnij na chwilę — wyślij formularz po krótkim odczekaniu.");
+      throw new Error("Zwolnij na chwilę - wyślij formularz po krótkim odczekaniu.");
     }
     const linkCount = (data.notes.match(/https?:\/\//gi) ?? []).length;
     if (linkCount > 3) {

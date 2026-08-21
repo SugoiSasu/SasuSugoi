@@ -13,10 +13,11 @@ import { useRanks, useGrantRankToUser, useRevokeRankFromUser, useUserRanks } fro
 import { RankBadge } from "@/components/RankBadge";
 import { Crown, Search, Loader2, Shield, User as UserIcon, X, Award, ExternalLink, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
 import { deleteUserAccount } from "@/lib/admin-users.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/users")({
-  head: () => ({ meta: [{ title: "Użytkownicy — Panel admina" }] }),
+  head: () => ({ meta: [{ title: "Użytkownicy - Panel admina" }] }),
   component: AdminUsers,
 });
 
@@ -149,7 +150,7 @@ function AdminUsers() {
                   </td>
                   <td className="px-4 py-3">
                     {u.roles.length === 0 ? (
-                      <span className="text-xs text-muted-foreground">— user —</span>
+                      <span className="text-xs text-muted-foreground"> - user - </span>
                     ) : (
                       <div className="flex flex-wrap gap-1.5">
                         {u.roles.map((r) => (
@@ -262,14 +263,9 @@ function DeleteUserButton({ userId, label }: { userId: string; label: string }) 
   const callDelete = useServerFn(deleteUserAccount);
   const qc = useQueryClient();
   const [pending, setPending] = useState(false);
+  const [open, setOpen] = useState(false);
 
   async function onDelete() {
-    if (
-      !confirm(
-        `Na pewno usunąć konto „${label}”? Tej operacji nie można cofnąć — usunięte zostaną dane uwierzytelniania i powiązany profil.`,
-      )
-    )
-      return;
     setPending(true);
     try {
       await callDelete({ data: { userId } });
@@ -279,18 +275,29 @@ function DeleteUserButton({ userId, label }: { userId: string; label: string }) 
       toast.error(e instanceof Error ? e.message : "Błąd usuwania konta");
     } finally {
       setPending(false);
+      setOpen(false);
     }
   }
 
   return (
-    <button
-      onClick={onDelete}
-      disabled={pending}
-      className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-500/10 text-red-600 hover:bg-red-500/20 border border-red-500/30 transition disabled:opacity-50"
-    >
-      {pending ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
-      Usuń konto
-    </button>
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        disabled={pending}
+        className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-500/10 text-red-600 hover:bg-red-500/20 border border-red-500/30 transition disabled:opacity-50"
+      >
+        {pending ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+        Usuń konto
+      </button>
+      <ConfirmDeleteModal
+        open={open}
+        title="Usunąć konto?"
+        description={`Na pewno usunąć konto „${label}"? Tej operacji nie można cofnąć - usunięte zostaną dane uwierzytelniania i powiązany profil.`}
+        pending={pending}
+        onCancel={() => setOpen(false)}
+        onConfirm={onDelete}
+      />
+    </>
   );
 }
 
@@ -307,8 +314,8 @@ function BetaTesterToggle({ userId, value }: { userId: string; value: boolean })
             await setBeta.mutateAsync({ userId, value: e.target.checked });
             toast.success(
               e.target.checked
-                ? "Oznaczono jako beta tester — odznaki przeliczone"
-                : "Odznaczono beta tester — odznaki przeliczone",
+                ? "Oznaczono jako beta tester - odznaki przeliczone"
+                : "Odznaczono beta tester - odznaki przeliczone",
             );
           } catch (err) {
             toast.error(err instanceof Error ? err.message : "Błąd");

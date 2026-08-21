@@ -9,9 +9,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 export const Route = createFileRoute("/blog/")({
   head: () => ({
     meta: [
-      { title: "Blog — poŻeramy" },
-      { name: "description", content: "Recenzje, gastro-tripy i kulisy z Poznania — blog poŻeramy." },
-      { property: "og:title", content: "Blog — poŻeramy" },
+      { title: "Blog - poŻeramy" },
+      { name: "description", content: "Recenzje, gastro-tripy i kulisy z Poznania - blog poŻeramy." },
+      { property: "og:title", content: "Blog - poŻeramy" },
       { property: "og:description", content: "Recenzje, gastro-tripy i kulisy z Poznania." },
     ],
   }),

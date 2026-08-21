@@ -8,7 +8,7 @@ const ACCEPT = "image/jpeg,image/png,image/webp";
 /**
  * Small camera-icon button overlaid on a place's cover or avatar image.
  * Only rendered by the caller when the viewer is the verified owner or an
- * admin — this component itself does no permission checking.
+ * admin - this component itself does no permission checking.
  */
 export function EditableImageButton({
   placeId,

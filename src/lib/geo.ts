@@ -14,7 +14,7 @@ export function haversineKm(a: LatLng, b: LatLng): number {
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-/** "1,2 km" / "850 m" — Polish formatting. */
+/** "1,2 km" / "850 m" - Polish formatting. */
 export function formatDistancePl(km: number): string {
   if (km < 1) return `${Math.round(km * 1000)} m`;
   return `${km.toFixed(1).replace(".", ",")} km`;
@@ -35,7 +35,7 @@ export function useUserLocation(): LatLng | null {
         if (!cancelled) setLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
       },
       () => {
-        /* denied / unavailable / timeout — stay null, no console noise */
+        /* denied / unavailable / timeout - stay null, no console noise */
       },
       { timeout: 5000, maximumAge: 300000 },
     );

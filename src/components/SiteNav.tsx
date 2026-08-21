@@ -36,7 +36,7 @@ export function SiteNav() {
     <header className="pz-safe-top sticky top-0 z-40 backdrop-blur-md bg-background/85 border-b border-border/70 shadow-[0_1px_0_0_hsl(var(--border)/0.4)]">
       <AdBanner />
       <div className="mx-auto max-w-6xl flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 h-14">
-        <Link to="/" className="flex min-h-11 min-w-11 items-center gap-2" onClick={closeMobile} aria-label="poŻeramy — strona główna">
+        <Link to="/" className="flex min-h-11 min-w-11 items-center gap-2" onClick={closeMobile} aria-label="poŻeramy - strona główna">
           <img src={logoDark.url} alt="poŻeramy" width={36} height={36} className="h-9 w-9 shrink-0 rounded-xl object-cover ring-1 ring-border shadow-sm" />
         </Link>
         <nav className="hidden md:flex items-center gap-5 lg:gap-6 text-sm font-medium">

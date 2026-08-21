@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-/** Zwraca wartość opóźnioną o `delay` ms — chroni filtrowanie przed każdym keystroke. */
+/** Zwraca wartość opóźnioną o `delay` ms - chroni filtrowanie przed każdym keystroke. */
 export function useDebounced<T>(value: T, delay = 200): T {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {

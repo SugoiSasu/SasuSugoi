@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeIlikeTerm } from "@/lib/postgrest-filter";
 import type { AppRole } from "./use-auth";
 
 export interface UserWithRoles {
@@ -21,8 +22,9 @@ export function useAllUsersWithRoles(search: string) {
         .select("id, username, display_name, avatar_url, is_beta_tester")
         .order("created_at", { ascending: false })
         .limit(50);
-      if (search.trim()) {
-        const s = `%${search.trim()}%`;
+      const safeSearch = sanitizeIlikeTerm(search);
+      if (safeSearch) {
+        const s = `%${safeSearch}%`;
         q = q.or(`username.ilike.${s},display_name.ilike.${s}`);
       }
       const { data: profiles, error } = await q;
@@ -64,14 +66,15 @@ export function useSetBetaTester() {
 }
 
 
+/** Goes through admin_grant_role (SECURITY DEFINER) instead of a direct table
+ * insert so the grant and its audit_log entry happen atomically - see
+ * 20260820110000_admin_audit_log.sql. */
 export function useGrantRole() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
-      const { error } = await supabase
-        .from("user_roles")
-        .insert({ user_id: userId, role });
-      if (error && !error.message.includes("duplicate")) throw error;
+      const { error } = await supabase.rpc("admin_grant_role", { _user_id: userId, _role: role });
+      if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["users-with-roles"] }),
   });
@@ -81,11 +84,7 @@ export function useRevokeRole() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
-      const { error } = await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", userId)
-        .eq("role", role);
+      const { error } = await supabase.rpc("admin_revoke_role", { _user_id: userId, _role: role });
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["users-with-roles"] }),

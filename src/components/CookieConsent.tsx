@@ -14,14 +14,14 @@ import { supabase } from "@/integrations/supabase/client";
  *
  * functionality_storage / security_storage pozostają "granted" (niezbędne).
  * Domyślny stan ("denied" dla wszystkich reklamowo-analitycznych sygnałów)
- * ustawiany jest w <head> jeszcze przed hydratacją — patrz __root.tsx.
+ * ustawiany jest w <head> jeszcze przed hydratacją - patrz __root.tsx.
  */
 
 const STORAGE_KEY = "pz_cookie_consent_v1";
 const ANON_ID_KEY = "pz_cookie_consent_anon_id";
 const CONSENT_LOG_VERSION = "1";
 
-// Random per-browser id, unrelated to any account — lets us prove what a
+// Random per-browser id, unrelated to any account - lets us prove what a
 // given (anonymous) session consented to and when, without identifying
 // anyone. Never sent anywhere except our own consent log.
 function getOrCreateAnonId(): string {
@@ -362,7 +362,7 @@ function GADebugPanel({ analyticsGranted }: { analyticsGranted: boolean }) {
 
   const sendTest = () => {
     trackEvent("pz_debug_test", { source: "cookie_settings", ts: Date.now() });
-    setTestStatus(consented ? "Wysłano zdarzenie testowe do GA4." : "Zgoda na analitykę wyłączona — zdarzenie zbuforowane, nic nie wysłano.");
+    setTestStatus(consented ? "Wysłano zdarzenie testowe do GA4." : "Zgoda na analitykę wyłączona - zdarzenie zbuforowane, nic nie wysłano.");
     setTimeout(() => setTick((t) => t + 1), 50);
   };
   const refresh = () => setTick((t) => t + 1);
@@ -380,7 +380,7 @@ function GADebugPanel({ analyticsGranted }: { analyticsGranted: boolean }) {
       </div>
       {last && (
         <div className="pt-1 border-t border-cream/10">
-          <div>Ostatnie zdarzenie: <span className="font-mono">{last.name}</span> — {last.sent ? "wysłane" : "zbuforowane (brak zgody)"}</div>
+          <div>Ostatnie zdarzenie: <span className="font-mono">{last.name}</span> - {last.sent ? "wysłane" : "zbuforowane (brak zgody)"}</div>
         </div>
       )}
       <div className="flex flex-wrap gap-2 pt-1">

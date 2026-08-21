@@ -3,7 +3,7 @@ import { Store, Loader2, ChevronRight } from "lucide-react";
 import { useMyOwnedPlaces } from "@/lib/owners-api";
 
 export const Route = createFileRoute("/_authenticated/owner")({
-  head: () => ({ meta: [{ title: "Panel właściciela — poŻeramy" }] }),
+  head: () => ({ meta: [{ title: "Panel właściciela - poŻeramy" }] }),
   component: OwnerLayout,
 });
 

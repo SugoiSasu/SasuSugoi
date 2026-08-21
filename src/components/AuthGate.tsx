@@ -4,7 +4,7 @@ import { LogIn, type LucideIcon } from "lucide-react";
 /**
  * Shared "please log in" prompt for public routes that need a session for
  * their real content. Route-level `_authenticated` layouts redirect instead
- * of rendering this — use it only where the route itself stays public.
+ * of rendering this - use it only where the route itself stays public.
  */
 export function AuthGate({
   icon: Icon,

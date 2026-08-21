@@ -9,8 +9,8 @@ export const Route = createFileRoute("/i/$token")({
   head: ({ params }) => ({
     meta: [
       { title: "Zaproszenie do poŻeramy" },
-      { name: "description", content: "Ktoś zaprosił Cię do poŻeramy — dołącz i zostańcie znajomymi." },
-      { property: "og:title", content: "Zaproszenie do znajomych — poŻeramy" },
+      { name: "description", content: "Ktoś zaprosił Cię do poŻeramy - dołącz i zostańcie znajomymi." },
+      { property: "og:title", content: "Zaproszenie do znajomych - poŻeramy" },
       { property: "og:description", content: `Token: ${params.token.slice(0, 6)}…` },
     ],
   }),

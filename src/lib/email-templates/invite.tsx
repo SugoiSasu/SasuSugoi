@@ -27,7 +27,7 @@ export const InviteEmail = ({
 }: InviteEmailProps) => (
   <Html lang="pl" dir="ltr">
     <Head />
-    <Preview>Zaproszenie do {siteName} — dołącz do żarcia.</Preview>
+    <Preview>Zaproszenie do {siteName} - dołącz do żarcia.</Preview>
     <Body style={brand.main}>
       <Container style={brand.container}>
         <Text style={brand.brandBar}>
@@ -38,8 +38,7 @@ export const InviteEmail = ({
           Ktoś chce, żebyś dołączył(a) do{' '}
           <Link href={siteUrl} style={brand.link}>
             <strong>{siteName}</strong>
-          </Link>{' '}
-          — społeczności, która ocenia knajpy w Poznaniu i nie tylko. Załóż konto
+          </Link>{' '} - społeczności, która ocenia knajpy w Poznaniu i nie tylko. Załóż konto
           jednym kliknięciem.
         </Text>
         <Section style={{ textAlign: 'center', margin: '8px 0 28px' }}>

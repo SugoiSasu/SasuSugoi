@@ -12,7 +12,7 @@ export const PLATFORM_LABEL: Record<SocialPlatform, string> = {
   facebook: "Facebook",
 };
 
-/** Public — anyone can read active social accounts (safe-column view). */
+/** Public - anyone can read active social accounts (safe-column view). */
 export function useActiveSocialAccounts() {
   return useQuery({
     queryKey: ["social-accounts", "active"],
@@ -29,7 +29,7 @@ export function useActiveSocialAccounts() {
 }
 
 
-/** Admin — all accounts (incl. inactive) for management page. */
+/** Admin - all accounts (incl. inactive) for management page. */
 export function useAllSocialAccounts() {
   return useQuery({
     queryKey: ["social-accounts", "all"],
@@ -86,7 +86,7 @@ export function useDeleteSocialAccount() {
   });
 }
 
-/** Manually override followers_count (and optionally posts_count) — useful when API token expired. */
+/** Manually override followers_count (and optionally posts_count) - useful when API token expired. */
 export function useSetManualMetrics() {
   const qc = useQueryClient();
   return useMutation({
@@ -119,7 +119,7 @@ export function isStale(account: SocialAccount): boolean {
 }
 
 export function formatCount(n: number | null | undefined): string {
-  if (n == null) return "—";
+  if (n == null) return " - ";
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(".0", "")}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(".0", "")}k`;
   return String(n);

@@ -65,7 +65,7 @@ export function PlaceReviewsSection({ placeId }: { placeId: string }) {
           <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-4 sm:gap-6 items-center">
             <div className="text-center sm:text-left sm:border-r sm:border-border sm:pr-6">
               <div className="font-display text-5xl leading-none text-navy">
-                {avg?.toFixed(1) ?? "—"}
+                {avg?.toFixed(1) ?? " - "}
               </div>
               <div className="inline-flex items-center gap-0.5 mt-1.5" aria-hidden>
                 {[1, 2, 3, 4, 5].map((i) => (
@@ -169,12 +169,12 @@ export function PlaceReviewsSection({ placeId }: { placeId: string }) {
             );
           }
           // count === 0 is already covered by the "Bądź pierwszą osobą…" header
-          // subtitle and the login/write-review prompt above — a second empty
+          // subtitle and the login/write-review prompt above - a second empty
           // state here would just repeat the same message a third time.
           if (count === 0) return null;
           return (
             <div className="bg-card border border-dashed border-border rounded-2xl p-8 text-center text-sm text-muted-foreground">
-              Jak na razie tylko Twoja recenzja — zaproś znajomych, niech też ocenią 🍽️
+              Jak na razie tylko Twoja recenzja - zaproś znajomych, niech też ocenią 🍽️
             </div>
           );
         })()

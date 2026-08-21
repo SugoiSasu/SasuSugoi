@@ -20,16 +20,17 @@ export interface UserAchievement {
   unlocked_at: string;
 }
 
-export type CriteriaType = "reviews_count" | "unique_places" | "points_total" | "friends_count";
+export type CriteriaType = "reviews_count" | "unique_places" | "points_total" | "friends_count" | "referrals_count";
 
 export const CRITERIA_LABELS: Record<CriteriaType, { unit: string; verb: string }> = {
   reviews_count: { unit: "recenzji", verb: "Dodaj" },
   unique_places: { unit: "unikalnych lokali", verb: "Odwiedź" },
   points_total: { unit: "punktów PoŻarcia", verb: "Zdobądź" },
   friends_count: { unit: "znajomych", verb: "Dodaj" },
+  referrals_count: { unit: "zaproszonych znajomych", verb: "Zaproś" },
 };
 
-/** Shared achievement-progress formula — keep this the single source of truth
+/** Shared achievement-progress formula - keep this the single source of truth
  * so /osiagniecia and /u/$username never drift apart. */
 export function computeProgress(
   a: Achievement,
@@ -55,7 +56,7 @@ export function useAchievements() {
     queryFn: async (): Promise<Achievement[]> => {
       const { data, error } = await supabase
         .from("achievements")
-        .select("*")
+        .select("id, slug, name, description, icon_url, criteria, sort_order, enabled")
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return (data ?? []) as Achievement[];
@@ -70,7 +71,7 @@ export function useUserAchievements(userId: string | null | undefined) {
     queryFn: async (): Promise<UserAchievement[]> => {
       const { data, error } = await supabase
         .from("user_achievements")
-        .select("*")
+        .select("id, user_id, achievement_id, unlocked_at")
         .eq("user_id", userId!);
       if (error) throw error;
       return (data ?? []) as UserAchievement[];
