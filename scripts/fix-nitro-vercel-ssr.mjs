@@ -5,9 +5,13 @@
 //   1. ssr.mjs re-exports a local binding `ssr_exports` that was never
 //      defined/imported, crashing every request at import time with
 //      "SyntaxError: Export 'ssr_exports' is not defined in module".
-//   2. ssr2.mjs imports `createMiddleware` back from ssr.mjs, but that
-//      binding never resolves to the real function, crashing CSRF
-//      middleware setup with "createMiddleware is not a function".
+//   2. ssr2.mjs calls a middleware-factory function imported back from
+//      ssr.mjs (originally `createMiddleware`, later renamed upstream to
+//      `createCsrfMiddleware`) at its own top level, while ssr.mjs is still
+//      mid-evaluation importing ssr2.mjs -- that eager call sees an
+//      unresolved binding and crashes with "<name> is not a function".
+//      The fix defers the call to first use instead of hardcoding the
+//      current function name, since that name has already drifted once.
 //
 // Both are upstream bundler bugs (reproduced across nitro 3.0.260522-beta,
 // 3.0.260603-beta and 3.0.260610-beta) in generated output, not in our
@@ -51,47 +55,44 @@ function patchSsrExports() {
 
 function patchCircularCreateMiddleware() {
   let content = readFileSync(SSR2_PATH, "utf-8");
-  if (content.includes('var createMiddleware = (options, __opts) => {')) {
+  const lazyMarker = "function __lazyDefaultCsrfMiddleware()";
+  if (content.includes(lazyMarker)) {
     console.log("[fix-nitro-vercel-ssr] ssr2.mjs already patched");
     return;
   }
-  const brokenImport = 'import { o as createMiddleware } from "./ssr.mjs";\n';
-  if (!content.includes(brokenImport)) {
+  // Structural pattern, not a hardcoded function name: `defaultCsrfMiddleware`
+  // is TanStack Start's own stable variable name for this singleton; the
+  // factory function it calls (2nd capture group) is whatever this build's
+  // circular import resolved to -- that's the part that already drifted
+  // once (createMiddleware -> createCsrfMiddleware) and will likely drift
+  // again on a future upstream bump.
+  const eagerInitRegex = /var defaultCsrfMiddleware = (\w+)\(([^;]*)\);\n/;
+  const match = content.match(eagerInitRegex);
+  if (!match) {
     throw new Error(
-      "[fix-nitro-vercel-ssr] expected circular createMiddleware import not found in _ssr/ssr2.mjs -- " +
+      "[fix-nitro-vercel-ssr] expected eager 'defaultCsrfMiddleware' top-level init not found in _ssr/ssr2.mjs -- " +
       "nitro output shape changed, review this script (may mean the upstream bug is fixed).",
     );
   }
-  const inlineImpl = `var createMiddleware = (options, __opts) => {
-	const resolvedOptions = {
-		type: "request",
-		...__opts || options
-	};
-	const setValidator = (validator) => {
-		return createMiddleware({}, Object.assign(resolvedOptions, {
-			validator,
-			inputValidator: validator
-		}));
-	};
-	return {
-		options: resolvedOptions,
-		middleware: (middleware) => {
-			return createMiddleware({}, Object.assign(resolvedOptions, { middleware }));
-		},
-		validator: setValidator,
-		inputValidator: setValidator,
-		client: (client) => {
-			return createMiddleware({}, Object.assign(resolvedOptions, { client }));
-		},
-		server: (server) => {
-			return createMiddleware({}, Object.assign(resolvedOptions, { server }));
-		}
-	};
-};
-`;
-  content = content.replace(brokenImport, inlineImpl);
+  const [fullMatch, factoryFnName, args] = match;
+  const lazyInit =
+    `let __defaultCsrfMiddlewareCache;\n` +
+    `${lazyMarker} { return __defaultCsrfMiddlewareCache ??= ${factoryFnName}(${args}); }\n`;
+  content = content.replace(fullMatch, lazyInit);
+
+  const usage = "[defaultCsrfMiddleware]";
+  if (!content.includes(usage)) {
+    throw new Error(
+      "[fix-nitro-vercel-ssr] expected 'defaultCsrfMiddleware' usage site not found in _ssr/ssr2.mjs -- " +
+      "nitro output shape changed, review this script (may mean the upstream bug is fixed).",
+    );
+  }
+  content = content.replace(usage, "[__lazyDefaultCsrfMiddleware()]");
+
   writeFileSync(SSR2_PATH, content, "utf-8");
-  console.log("[fix-nitro-vercel-ssr] broke circular createMiddleware import in ssr2.mjs (inlined instead)");
+  console.log(
+    `[fix-nitro-vercel-ssr] deferred eager circular ${factoryFnName}() call to first use in ssr2.mjs`,
+  );
 }
 
 patchSsrExports();
