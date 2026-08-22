@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Menu, Newspaper, Users, X } from "lucide-react";
+import { Handshake, Menu, Newspaper, Users, X } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { NotificationBell } from "@/components/NotificationBell";
 import { AdBanner } from "@/components/AdBanner";
@@ -26,9 +26,19 @@ export function SiteNav() {
       ? "flex min-h-11 items-center py-2 text-base font-medium hover:text-tomato"
       : "hover:text-tomato transition-colors";
     return onHome ? (
-      <a key={hash} href={`#${hash}`} onClick={mobile ? closeMobile : undefined} className={cls}>{label}</a>
+      <a key={hash} href={`#${hash}`} onClick={mobile ? closeMobile : undefined} className={cls}>
+        {label}
+      </a>
     ) : (
-      <Link key={hash} to="/" hash={hash} onClick={mobile ? closeMobile : undefined} className={cls}>{label}</Link>
+      <Link
+        key={hash}
+        to="/"
+        hash={hash}
+        onClick={mobile ? closeMobile : undefined}
+        className={cls}
+      >
+        {label}
+      </Link>
     );
   };
 
@@ -36,20 +46,45 @@ export function SiteNav() {
     <header className="pz-safe-top sticky top-0 z-40 backdrop-blur-md bg-background/85 border-b border-border/70 shadow-[0_1px_0_0_hsl(var(--border)/0.4)]">
       <AdBanner />
       <div className="mx-auto max-w-6xl flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 h-14">
-        <Link to="/" className="flex min-h-11 min-w-11 items-center gap-2" onClick={closeMobile} aria-label="poŻeramy - strona główna">
-          <img src={logoDark.url} alt="poŻeramy" width={36} height={36} className="h-9 w-9 shrink-0 rounded-xl object-cover ring-1 ring-border shadow-sm" />
+        <Link
+          to="/"
+          className="flex min-h-11 min-w-11 items-center gap-2"
+          onClick={closeMobile}
+          aria-label="poŻeramy - strona główna"
+        >
+          <img
+            src={logoDark.url}
+            alt="poŻeramy"
+            width={36}
+            height={36}
+            className="h-9 w-9 shrink-0 rounded-xl object-cover ring-1 ring-border shadow-sm"
+          />
         </Link>
         <nav className="hidden md:flex items-center gap-5 lg:gap-6 text-sm font-medium">
           {hashLink("mapa", "Mapa")}
           {hashLink("miejscowki", "Miejscówki")}
-          <Link to="/u" className="hover:text-tomato transition-colors" activeProps={{ className: "text-tomato" }}>Ranking</Link>
+          <Link
+            to="/u"
+            className="hover:text-tomato transition-colors"
+            activeProps={{ className: "text-tomato" }}
+          >
+            Ranking
+          </Link>
           {user && (
-            <Link to="/wall" className="inline-flex items-center gap-1.5 hover:text-tomato transition-colors" activeProps={{ className: "text-tomato" }}>
+            <Link
+              to="/wall"
+              className="inline-flex items-center gap-1.5 hover:text-tomato transition-colors"
+              activeProps={{ className: "text-tomato" }}
+            >
               <Newspaper size={14} /> Pożeralnia
             </Link>
           )}
           {user && (
-            <Link to="/friends" className="relative inline-flex items-center gap-1.5 hover:text-tomato transition-colors" activeProps={{ className: "text-tomato" }}>
+            <Link
+              to="/friends"
+              className="relative inline-flex items-center gap-1.5 hover:text-tomato transition-colors"
+              activeProps={{ className: "text-tomato" }}
+            >
               <Users size={14} /> Znajomi
               {pendingFriends > 0 && (
                 <span className="absolute -top-1 -right-3 min-w-[16px] h-4 px-1 rounded-full bg-tomato text-cream text-[10px] font-bold grid place-items-center">
@@ -58,6 +93,13 @@ export function SiteNav() {
               )}
             </Link>
           )}
+          <Link
+            to="/wspolpraca"
+            className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-tomato transition-colors"
+            activeProps={{ className: "text-tomato" }}
+          >
+            <Handshake size={14} /> Współpraca
+          </Link>
         </nav>
         <div className="flex items-center gap-0.5 sm:gap-1.5 shrink-0">
           <NotificationBell />
@@ -78,14 +120,28 @@ export function SiteNav() {
           <div className="mx-auto max-w-6xl px-4 sm:px-6 py-3 flex flex-col divide-y divide-border/40">
             {hashLink("mapa", "Mapa", true)}
             {hashLink("miejscowki", "Miejscówki", true)}
-            <Link to="/u" onClick={closeMobile} className="flex min-h-11 items-center py-2 text-base font-medium hover:text-tomato">Ranking</Link>
+            <Link
+              to="/u"
+              onClick={closeMobile}
+              className="flex min-h-11 items-center py-2 text-base font-medium hover:text-tomato"
+            >
+              Ranking
+            </Link>
             {user && (
-              <Link to="/wall" onClick={closeMobile} className="min-h-11 py-2 text-base font-medium hover:text-tomato inline-flex items-center gap-2">
+              <Link
+                to="/wall"
+                onClick={closeMobile}
+                className="min-h-11 py-2 text-base font-medium hover:text-tomato inline-flex items-center gap-2"
+              >
                 <Newspaper size={16} /> Pożeralnia
               </Link>
             )}
             {user && (
-              <Link to="/friends" onClick={closeMobile} className="min-h-11 py-2 text-base font-medium hover:text-tomato inline-flex items-center gap-2">
+              <Link
+                to="/friends"
+                onClick={closeMobile}
+                className="min-h-11 py-2 text-base font-medium hover:text-tomato inline-flex items-center gap-2"
+              >
                 <Users size={16} /> Znajomi
                 {pendingFriends > 0 && (
                   <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-tomato text-cream text-[10px] font-bold grid place-items-center">
@@ -94,6 +150,13 @@ export function SiteNav() {
                 )}
               </Link>
             )}
+            <Link
+              to="/wspolpraca"
+              onClick={closeMobile}
+              className="min-h-11 py-2 text-base font-medium text-muted-foreground hover:text-tomato inline-flex items-center gap-2"
+            >
+              <Handshake size={16} /> Współpraca
+            </Link>
           </div>
         </nav>
       )}

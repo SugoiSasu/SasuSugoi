@@ -41,6 +41,7 @@ function emptyPlace(defaultCuisine: string): PlaceInput {
     reel_url: "",
     cover_image_url: "",
     avatar_url: "",
+    avatar_cutout_enabled: true,
     menu_url: "",
     menu_image_url: "",
     promo_label: "",
@@ -102,6 +103,7 @@ function EditPlace() {
         reel_url: place.reel_url ?? "",
         cover_image_url: place.cover_image_url ?? "",
         avatar_url: place.avatar_url ?? "",
+        avatar_cutout_enabled: place.avatar_cutout_enabled ?? true,
         menu_url: place.menu_url ?? "",
         menu_image_url: place.menu_image_url ?? "",
         promo_label: place.promo_label ?? "",
@@ -389,6 +391,15 @@ function EditPlace() {
           fallbackName={form.name}
           onChange={(url) => setForm({ ...form, avatar_url: url })}
         />
+        <label className="inline-flex items-center gap-2 cursor-pointer text-sm -mt-2">
+          <input
+            type="checkbox"
+            checked={form.avatar_cutout_enabled ?? true}
+            onChange={(e) => setForm({ ...form, avatar_cutout_enabled: e.target.checked })}
+          />
+          ✂️ Automatycznie wytnij tło loga na kartach (działa dobrze przy jednolitym tle; wyłącz,
+          jeśli logo ma zdjęcie/gradient w tle)
+        </label>
 
         {/* Cover (file upload) */}
         <ImageUploader

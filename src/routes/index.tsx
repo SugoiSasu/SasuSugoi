@@ -15,6 +15,7 @@ import { useFriendRecommendations } from "@/lib/friends-api";
 import { useActiveAds, type Ad } from "@/lib/ads-api";
 import { SponsoredDiscoverCard } from "@/components/SponsoredDiscoverCard";
 import { pickSeeded } from "@/lib/seeded-pick";
+import { useCutoutLogo } from "@/lib/chroma-cutout";
 import logoDark from "@/assets/brand/po_zeramy-logo-dark.png.asset.json";
 
 export const Route = createFileRoute("/")({
@@ -206,6 +207,12 @@ function Index() {
           >
             Regulamin
           </Link>
+          <Link
+            to="/wspolpraca"
+            className="pz-hit inline-flex items-center hover:text-tomato hover:underline"
+          >
+            Współpraca
+          </Link>
           <a
             href="mailto:kontakt@pozeramy.live"
             className="pz-hit inline-flex items-center gap-1 hover:text-tomato hover:underline"
@@ -282,6 +289,7 @@ function PlaceRail({
 /* ------------------------------- card ------------------------------- */
 function DiscoverCard({ place, stat }: { place: Place; stat?: { avg: number; count: number } }) {
   const meta = cuisineMeta(place.cuisine);
+  const cutoutLogo = useCutoutLogo(place.avatar_cutout_enabled !== false ? place.avatar_url : null);
   const { user } = useUser();
   const isFav = useIsFavorite(place.id);
   const toggle = useToggleFavorite();
@@ -311,8 +319,10 @@ function DiscoverCard({ place, stat }: { place: Place; stat?: { avg: number; cou
         disabled={toggle.isPending}
         aria-label={isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
         aria-pressed={isFav}
-        className={`absolute right-3 top-3 z-10 pz-hit grid h-9 w-9 place-items-center rounded-full shadow-sm transition active:scale-95 ${
-          isFav ? "bg-tomato text-cream" : "bg-cream/90 text-navy hover:bg-cream"
+        className={`absolute right-3 top-3 z-10 pz-hit grid h-9 w-9 place-items-center rounded-full border shadow-sm transition active:scale-95 ${
+          isFav
+            ? "border-tomato bg-tomato text-cream"
+            : "border-border bg-cream/90 text-navy hover:bg-cream"
         } disabled:opacity-60`}
       >
         <Heart size={16} className={isFav ? "fill-cream" : ""} />
@@ -321,26 +331,28 @@ function DiscoverCard({ place, stat }: { place: Place; stat?: { avg: number; cou
       <Link to="/k/$id" params={{ id: place.slug ?? place.id }} className="block">
         <div
           className="relative aspect-[5/4] overflow-hidden"
-          style={{ backgroundColor: meta.color }}
+          style={{ backgroundColor: place.avatar_url ? "#ffffff" : meta.color }}
         >
-          {place.cover_image_url ? (
+          {place.avatar_url ? (
+            <img
+              src={cutoutLogo ?? place.avatar_url}
+              alt={place.name}
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-contain p-6 transition duration-500 group-hover:scale-[1.04]"
+            />
+          ) : place.cover_image_url ? (
             <img
               src={place.cover_image_url}
               alt={place.name}
               loading="lazy"
               className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
             />
-          ) : place.avatar_url ? (
-            <img
-              src={place.avatar_url}
-              alt={place.name}
-              loading="lazy"
-              className="absolute inset-0 h-full w-full object-contain p-10 transition duration-500 group-hover:scale-[1.04]"
-            />
           ) : (
             <div className="absolute inset-0 grid place-items-center text-5xl">{meta.emoji}</div>
           )}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-navy/45 via-transparent to-transparent" />
+          {!place.avatar_url && (
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-navy/45 via-transparent to-transparent" />
+          )}
           <span className="absolute bottom-3 left-3 chip bg-cream text-navy">
             {meta.emoji} {place.cuisine}
           </span>

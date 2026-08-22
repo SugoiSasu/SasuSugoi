@@ -97,7 +97,7 @@ export function DiscoverHeader({
                 className="flex w-16 shrink-0 flex-col items-center gap-1.5 text-[11px] font-semibold sm:w-auto"
               >
                 <span
-                  className={`grid h-14 w-14 place-items-center rounded-xl border-2 bg-card shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-105 hover:shadow-lg active:scale-95 active:duration-75 ${
+                  className={`grid h-14 w-14 transform-gpu place-items-center rounded-xl border-2 bg-card shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-105 hover:shadow-lg active:scale-95 active:duration-75 ${
                     cuisine ? "border-transparent" : "border-navy"
                   }`}
                 >
@@ -121,7 +121,7 @@ export function DiscoverHeader({
                     className="flex w-16 shrink-0 flex-col items-center gap-1.5 text-[11px] font-semibold sm:w-auto"
                   >
                     <span
-                      className={`relative grid h-14 w-14 place-items-center overflow-hidden rounded-xl border-2 text-2xl shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-105 hover:shadow-lg active:scale-95 active:duration-75 ${
+                      className={`relative grid h-14 w-14 transform-gpu place-items-center overflow-hidden rounded-xl border-2 text-2xl shadow-sm transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-105 hover:shadow-lg active:scale-95 active:duration-75 ${
                         active ? "border-navy" : "border-transparent"
                       }`}
                       style={
