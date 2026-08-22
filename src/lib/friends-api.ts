@@ -478,7 +478,7 @@ const ACCEPT_INVITE_ERROR_MESSAGES: Record<string, string> = {
   invite_not_found: "Nie znaleźliśmy tego zaproszenia. Może link jest niepoprawny?",
   invite_used: "To zaproszenie zostało już wykorzystane.",
   invite_expired: "To zaproszenie już wygasło.",
-  cannot_invite_self: "To Twój własny link zaproszenia — wyślij go znajomym!",
+  cannot_invite_self: "To Twój własny link zaproszenia - wyślij go znajomym!",
   blocked: "Nie można dołączyć do znajomych w tym przypadku.",
 };
 
@@ -510,7 +510,7 @@ export interface InvitePreview {
   expired: boolean;
 }
 
-/** Public preview of an invite (inviter identity + status) — safe to show
+/** Public preview of an invite (inviter identity + status) - safe to show
  * before the visitor logs in, so they know who invited them. */
 export function useInvitePreview(token: string | undefined) {
   return useQuery({
@@ -524,8 +524,7 @@ export function useInvitePreview(token: string | undefined) {
   });
 }
 
-/** Get-or-create the caller's active (pending, non-expired) invite link —
- * reuses an existing one from useMyInvites rather than minting a new token
+/** Get-or-create the caller's active (pending, non-expired) invite link - * reuses an existing one from useMyInvites rather than minting a new token
  * every time the sidebar share button is opened. */
 export function useMyInviteLink(userId: string | null | undefined) {
   const invites = useMyInvites(!!userId);
@@ -560,7 +559,7 @@ export interface InviteStats {
 }
 
 /** Stats for the invites I've sent: how many, how many accepted, points earned,
- * and who joined via my link — surfaced on /friends so invites feel tracked. */
+ * and who joined via my link - surfaced on /friends so invites feel tracked. */
 export function useInviteStats() {
   return useQuery({
     queryKey: ["invite-stats"],

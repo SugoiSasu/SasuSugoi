@@ -7,6 +7,7 @@ export interface Ad {
   id: string;
   image_url: string;
   message: string;
+  cta_label: string | null;
   link_url: string | null;
   place_id: string | null;
   active: boolean;
@@ -16,9 +17,12 @@ export interface Ad {
   updated_at: string;
 }
 
+export const DEFAULT_AD_CTA = "Zobacz więcej";
+
 export interface AdInput {
   image_url: string;
   message: string;
+  cta_label?: string | null;
   link_url?: string | null;
   place_id?: string | null;
   active?: boolean;
@@ -39,7 +43,7 @@ export function useActiveAds() {
     queryFn: async (): Promise<Ad[]> => {
       const { data, error } = await supabase
         .from("ads")
-        .select("*")
+        .select("id, image_url, message, cta_label, link_url, place_id, active, starts_at, ends_at, created_at, updated_at")
         .eq("active", true)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -71,6 +75,7 @@ export function useUpsertAd() {
         id: input.id,
         image_url: input.image_url,
         message: input.message,
+        cta_label: input.cta_label ?? null,
         link_url: input.link_url ?? null,
         place_id: input.place_id ?? null,
         active: input.active ?? true,
@@ -105,6 +110,8 @@ export interface AdStats {
   clicks: number;
   impressions_7d: number;
   clicks_7d: number;
+  unique_users: number;
+  sessions: number;
 }
 
 export function useAdStats() {
@@ -135,27 +142,20 @@ export function useDuplicateAd() {
   });
 }
 
-/** Best-effort fire-and-forget tracking. Failures are silent. */
-function getSessionKey(): string {
-  if (typeof window === "undefined") return "";
-  try {
-    let k = localStorage.getItem("ad_session_key");
-    if (!k) {
-      k = Math.random().toString(36).slice(2) + Date.now().toString(36);
-      localStorage.setItem("ad_session_key", k);
-    }
-    return k;
-  } catch {
-    return "";
-  }
+/** Best-effort fire-and-forget tracking, logged-in users only - anonymous
+ * visitors are never recorded (no user to attribute the event to, and RLS
+ * would reject the insert anyway since `ad_events` now requires
+ * user_id = auth.uid()). session_key is intentionally omitted so repeat
+ * visits from the same user each get their own row; ad_stats() buckets them
+ * into 30-minute sessions at query time instead of write-time dedup. */
+export function trackAdImpression(adId: string, userId: string | null | undefined) {
+  if (!userId) return;
+  void supabase.from("ad_events").insert({ ad_id: adId, kind: "impression", user_id: userId });
 }
 
-export function trackAdImpression(adId: string) {
-  void supabase.from("ad_events").insert({ ad_id: adId, kind: "impression", session_key: getSessionKey() });
-}
-
-export function trackAdClick(adId: string) {
-  void supabase.from("ad_events").insert({ ad_id: adId, kind: "click", session_key: getSessionKey() });
+export function trackAdClick(adId: string, userId: string | null | undefined) {
+  if (!userId) return;
+  void supabase.from("ad_events").insert({ ad_id: adId, kind: "click", user_id: userId });
 }
 
 export type LiveAdStatus = "active" | "scheduled" | "expired" | "disabled";

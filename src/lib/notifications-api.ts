@@ -149,7 +149,7 @@ export function useNotifications(limit = 30) {
     const t = setTimeout(() => {
       if (realtimeStatus !== "connected") {
         setRealtimeStatus("error");
-        logNotifEvent("warn", "realtime did not connect within 8s — using polling fallback", {
+        logNotifEvent("warn", "realtime did not connect within 8s - using polling fallback", {
           userId: user.id,
         });
       }

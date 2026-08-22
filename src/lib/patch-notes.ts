@@ -5,7 +5,7 @@ export interface PatchNote {
   items: { icon: string; text: string }[];
 }
 
-/** Newest first. Bump `version` whenever this list grows — that's also
+/** Newest first. Bump `version` whenever this list grows - that's also
  * what drives the "unseen" dot on the "Co nowego?" menu item. */
 export const PATCH_NOTES: PatchNote[] = [
   {
@@ -13,7 +13,7 @@ export const PATCH_NOTES: PatchNote[] = [
     date: "2026-08-19",
     title: "Losowe poleajki i nagrody za zaproszenia",
     items: [
-      { icon: "🎲", text: "Losowa poleajka w bocznym menu — miejsce, w którym jeszcze nie byłeś." },
+      { icon: "🎲", text: "Losowa polecajka w bocznym menu - miejsce, w którym jeszcze nie byłeś." },
       { icon: "🎁", text: "Punkty PoŻarcia za zaproszenie znajomego, który dołączy do appki." },
       { icon: "📊", text: "Podgląd na /Znajomi: ile zaprosiłeś, kto dołączył i ile punktów zdobyłeś." },
       { icon: "🔗", text: "Więcej klikalnych linków do profili w bocznym menu." },
@@ -28,7 +28,7 @@ export const PATCH_NOTES: PatchNote[] = [
       { icon: "👥", text: "Nowy, prostszy system zaproszeń znajomych z podglądem linku." },
       { icon: "👑", text: "Status VIP w nagrodę za zaproszenie 10 znajomych do poŻeramy." },
       { icon: "🖼️", text: "Możliwość wgrania własnego zdjęcia profilowego." },
-      { icon: "📱", text: "Przeprojektowane boczne menu — więcej informacji na pierwszy rzut oka." },
+      { icon: "📱", text: "Przeprojektowane boczne menu - więcej informacji na pierwszy rzut oka." },
       { icon: "📄", text: "Zaktualizowany regulamin i polityka prywatności." },
     ],
   },
@@ -38,7 +38,7 @@ export const PATCH_NOTES: PatchNote[] = [
     title: "Poprawki i porządki",
     items: [
       { icon: "🍕", text: "Nowa grafika na stronie błędu 404." },
-      { icon: "📍", text: "Zakładki w „Moje miejsca” — czytelniejszy wybór aktywnej." },
+      { icon: "📍", text: "Zakładki w „Moje miejsca” - czytelniejszy wybór aktywnej." },
       { icon: "🐛", text: "Drobne poprawki stabilności." },
     ],
   },

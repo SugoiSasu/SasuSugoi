@@ -5,9 +5,10 @@ import { toast } from "sonner";
 import { Crown, Loader2, ShieldCheck, Search, Trash2, ExternalLink, Copy, Archive, Reply, Eye, Inbox, MessageSquare, Send, Phone, StickyNote, MoreHorizontal } from "lucide-react";
 import { useIsSuperAdmin, useUser } from "@/lib/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
 
 export const Route = createFileRoute("/_authenticated/admin/collab")({
-  head: () => ({ meta: [{ title: "Współpraca — Panel admina" }] }),
+  head: () => ({ meta: [{ title: "Współpraca - Panel admina" }] }),
   component: AdminCollab,
 });
 
@@ -41,6 +42,7 @@ function AdminCollab() {
   const [filter, setFilter] = useState<"all" | CollabStatus>("all");
   const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin", "collab_submissions"],
@@ -122,7 +124,7 @@ function AdminCollab() {
       <div className="bg-card border border-border rounded-2xl p-8 text-center">
         <Crown className="mx-auto text-tomato mb-3" size={32} />
         <h2 className="font-display text-xl mb-1">Tylko dla super admina</h2>
-        <p className="text-sm text-muted-foreground">Wiadomości zawierają dane osobowe — dostęp ograniczony.</p>
+        <p className="text-sm text-muted-foreground">Wiadomości zawierają dane osobowe - dostęp ograniczony.</p>
       </div>
     );
   }
@@ -134,7 +136,7 @@ function AdminCollab() {
       <header className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="font-display text-3xl flex items-center gap-2">
-            <Inbox className="text-tomato" size={28} /> Wiadomości — Współpraca
+            <Inbox className="text-tomato" size={28} /> Wiadomości - Współpraca
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Zgłoszenia z formularza wraz z dowodem zgody RODO (wersja klauzuli + dokładny czas akceptacji).
@@ -235,13 +237,19 @@ function AdminCollab() {
           onClose={() => setOpenId(null)}
           onStatus={(status) => updateStatus.mutate({ id: open.id, status })}
           onSaveNotes={(notes) => saveNotes.mutate({ id: open.id, notes })}
-          onDelete={() => {
-            if (confirm("Usunąć zgłoszenie bezpowrotnie? Razem z dowodem zgody.")) {
-              removeOne.mutate(open.id);
-            }
-          }}
+          onDelete={() => setDeleteConfirmId(open.id)}
         />
       )}
+      <ConfirmDeleteModal
+        open={!!deleteConfirmId}
+        title="Usunąć zgłoszenie?"
+        description="Bezpowrotnie, razem z dowodem zgody RODO."
+        pending={removeOne.isPending}
+        onCancel={() => setDeleteConfirmId(null)}
+        onConfirm={() => {
+          if (deleteConfirmId) removeOne.mutate(deleteConfirmId, { onSuccess: () => setDeleteConfirmId(null) });
+        }}
+      />
     </div>
   );
 }
@@ -261,11 +269,11 @@ function DetailModal({
 }) {
   const [notes, setNotes] = useState(submission.admin_notes ?? "");
   const mailto = `mailto:${submission.email}?subject=${encodeURIComponent(
-    `Re: Współpraca — ${submission.brand}`,
-  )}&body=${encodeURIComponent(`Cześć!\n\nDzięki za wiadomość.\n\n— poŻeramy`)}`;
+    `Re: Współpraca - ${submission.brand}`,
+  )}&body=${encodeURIComponent(`Cześć!\n\nDzięki za wiadomość.\n\n - poŻeramy`)}`;
 
   function copyProof() {
-    const text = `Dowód zgody RODO\nMarka: ${submission.brand}\nEmail: ${submission.email}\nWersja klauzuli: ${submission.consent_version}\nData akceptacji: ${new Date(submission.consent_accepted_at).toISOString()}\nUser agent: ${submission.user_agent ?? "—"}\nWysłano: ${new Date(submission.created_at).toISOString()}\nID zgłoszenia: ${submission.id}`;
+    const text = `Dowód zgody RODO\nMarka: ${submission.brand}\nEmail: ${submission.email}\nWersja klauzuli: ${submission.consent_version}\nData akceptacji: ${new Date(submission.consent_accepted_at).toISOString()}\nUser agent: ${submission.user_agent ?? " - "}\nWysłano: ${new Date(submission.created_at).toISOString()}\nID zgłoszenia: ${submission.id}`;
     navigator.clipboard.writeText(text);
     toast.success("Dowód zgody skopiowany do schowka");
   }
@@ -342,7 +350,7 @@ function DetailModal({
                 <code className="text-[10px]">{new Date(submission.consent_accepted_at).toISOString()}</code>
               </Detail>
               <Detail label="User agent">
-                <span className="text-[10px] break-all">{submission.user_agent ?? "—"}</span>
+                <span className="text-[10px] break-all">{submission.user_agent ?? " - "}</span>
               </Detail>
             </div>
           </div>
@@ -522,8 +530,9 @@ function RepliesSection({ submissionId, brand, email }: { submissionId: string; 
     },
     onError: (e: Error) => toast.error(e.message),
   });
+  const [deleteReplyId, setDeleteReplyId] = useState<string | null>(null);
 
-  const mailto = `mailto:${email}?subject=${encodeURIComponent(`Re: Współpraca — ${brand}`)}`;
+  const mailto = `mailto:${email}?subject=${encodeURIComponent(`Re: Współpraca - ${brand}`)}`;
 
   return (
     <div className="rounded-xl bg-muted/30 border border-border p-4">
@@ -546,7 +555,7 @@ function RepliesSection({ submissionId, brand, email }: { submissionId: string; 
         <ol className="space-y-2.5 mb-4">
           {replies.map((r) => {
             const meta = CHANNEL_META[r.channel];
-            const author = r.author_id ? (authors?.[r.author_id] ?? "Admin") : "—";
+            const author = r.author_id ? (authors?.[r.author_id] ?? "Admin") : " - ";
             return (
               <li key={r.id} className="rounded-lg bg-card border border-border p-3">
                 <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
@@ -561,9 +570,7 @@ function RepliesSection({ submissionId, brand, email }: { submissionId: string; 
                     <span className="text-xs font-semibold">{author}</span>
                   </div>
                   <button
-                    onClick={() => {
-                      if (confirm("Usunąć ten wpis z historii?")) removeReply.mutate(r.id);
-                    }}
+                    onClick={() => setDeleteReplyId(r.id)}
                     className="text-muted-foreground hover:text-tomato"
                     aria-label="Usuń wpis"
                   >
@@ -624,6 +631,16 @@ function RepliesSection({ submissionId, brand, email }: { submissionId: string; 
           </a>
         </div>
       </div>
+      <ConfirmDeleteModal
+        open={!!deleteReplyId}
+        title="Usunąć wpis?"
+        description="Ten wpis zniknie z historii korespondencji."
+        pending={removeReply.isPending}
+        onCancel={() => setDeleteReplyId(null)}
+        onConfirm={() => {
+          if (deleteReplyId) removeReply.mutate(deleteReplyId, { onSuccess: () => setDeleteReplyId(null) });
+        }}
+      />
     </div>
   );
 }

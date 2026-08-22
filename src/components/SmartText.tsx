@@ -7,12 +7,12 @@ export function hasPolishChars(text: string): boolean {
   return POLISH_RE.test(text);
 }
 
-/** Bricolage Grotesque supports Polish natively — no-op kept for API compat. */
+/** Bricolage Grotesque supports Polish natively - no-op kept for API compat. */
 export function stripPolish(text: string): string {
   return text;
 }
 
-/** Display font everywhere — Bricolage Grotesque. */
+/** Display font everywhere - Bricolage Grotesque. */
 export function fontForText(_text: string): string {
   return "font-display";
 }

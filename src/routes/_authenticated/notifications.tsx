@@ -22,7 +22,7 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/_authenticated/notifications")({
-  head: () => ({ meta: [{ title: "Powiadomienia — poŻeramy" }] }),
+  head: () => ({ meta: [{ title: "Powiadomienia - poŻeramy" }] }),
   validateSearch: zodValidator(searchSchema),
   component: NotificationsPage,
 });

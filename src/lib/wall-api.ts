@@ -1,8 +1,20 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/use-auth";
 
-export type WallItemKind = "review" | "favorite" | "achievement" | "place_post";
+export type WallItemKind =
+  | "review"
+  | "favorite"
+  | "achievement_group"
+  | "place_post"
+  | "post"
+  | "list"
+  | "challenge_complete";
+
+export interface WallAchievement {
+  id: string;
+  name: string;
+}
 
 export interface WallAuthor {
   id: string;
@@ -20,6 +32,8 @@ export interface WallPlace {
   slug: string | null;
   name: string;
   cuisine: string | null;
+  avatar_url?: string | null;
+  cover_image_url?: string | null;
 }
 
 export interface WallItem {
@@ -36,6 +50,16 @@ export interface WallItem {
   image_url?: string | null;
   /** Achievement name when kind === 'achievement'. */
   meta?: string | null;
+  /** Achievements in this cluster when kind === 'achievement_group'. */
+  achievements?: WallAchievement[];
+  /** Stable key for wall_reactions/wall_comments (kind, ref_id). Absent for 'review'/'place_post', which use their own dedicated social tables. */
+  socialRefId?: string;
+  /** Preview places when kind === 'list'. */
+  listPlaces?: WallPlace[];
+  /** Total place count when kind === 'list' (may exceed listPlaces.length). */
+  listItemCount?: number;
+  /** Emoji icon when kind === 'challenge_complete'. */
+  challengeIcon?: string | null;
 }
 
 /** Wall feed: activity from accepted friends + posts from places I favorited. */
@@ -121,11 +145,13 @@ export function useWallFeed() {
             created_at: f.created_at,
             author: { id: f.user_id } as WallAuthor,
             place: { id: f.place_id } as WallPlace,
+            socialRefId: f.id,
           });
         });
       }
 
-      // 5) friend achievements
+      // 5) friend achievements - grouped into one card per (user, day) so a
+      // multi-badge unlock doesn't flood the feed with repeat cards.
       if (feedUserIds.length) {
         const { data: uas } = await supabase
           .from("user_achievements")
@@ -143,18 +169,126 @@ export function useWallFeed() {
             .in("id", achIds);
           (achs ?? []).forEach((a) => achMap.set(a.id, a.name));
         }
+        const groups = new Map<
+          string,
+          { userId: string; day: string; latest: string; achievements: WallAchievement[] }
+        >();
         (uas ?? []).forEach((u) => {
+          const day = u.unlocked_at.slice(0, 10);
+          const key = `${u.user_id}:${day}`;
+          const g = groups.get(key) ?? {
+            userId: u.user_id,
+            day,
+            latest: u.unlocked_at,
+            achievements: [],
+          };
+          g.achievements.push({
+            id: u.achievement_id,
+            name: achMap.get(u.achievement_id) ?? "Nowe osiągnięcie",
+          });
+          if (u.unlocked_at > g.latest) g.latest = u.unlocked_at;
+          groups.set(key, g);
+        });
+        groups.forEach((g, key) => {
           items.push({
-            id: `ach-${u.id}`,
-            kind: "achievement",
-            created_at: u.unlocked_at,
-            author: { id: u.user_id } as WallAuthor,
-            meta: achMap.get(u.achievement_id) ?? "Nowe osiągnięcie",
+            id: `achg-${key}`,
+            kind: "achievement_group",
+            created_at: g.latest,
+            author: { id: g.userId } as WallAuthor,
+            achievements: g.achievements,
+            socialRefId: key,
           });
         });
       }
 
-      // 6) posts only from places the user follows (owners also see their own)
+      // 6) my own quick posts + friends' quick posts ("co dziś jadłeś?")
+      if (feedUserIds.length) {
+        const { data: wps } = await supabase
+          .from("wall_posts")
+          .select("id, user_id, place_id, body, image_url, created_at")
+          .in("user_id", feedUserIds)
+          .gte("created_at", sinceIso)
+          .order("created_at", { ascending: false })
+          .limit(50);
+        (wps ?? []).forEach((w) => {
+          if (w.place_id) placeIdsToFetch.add(w.place_id);
+          items.push({
+            id: `wp-${w.id}`,
+            kind: "post",
+            created_at: w.created_at,
+            author: { id: w.user_id } as WallAuthor,
+            place: w.place_id ? ({ id: w.place_id } as WallPlace) : null,
+            text: w.body,
+            image_url: w.image_url,
+            socialRefId: w.id,
+          });
+        });
+      }
+
+      // 7) friend-curated lists ("najlepszy street food w Poznaniu")
+      if (feedUserIds.length) {
+        const { data: lists } = await supabase
+          .from("place_lists")
+          .select("id, user_id, title, description, created_at")
+          .in("user_id", feedUserIds)
+          .gte("created_at", sinceIso)
+          .order("created_at", { ascending: false })
+          .limit(30);
+        const listIds = (lists ?? []).map((l) => l.id);
+        const itemsByList = new Map<string, { placeId: string }[]>();
+        if (listIds.length) {
+          const { data: listItems } = await supabase
+            .from("place_list_items")
+            .select("list_id, place_id, sort_order")
+            .in("list_id", listIds)
+            .order("sort_order", { ascending: true });
+          (listItems ?? []).forEach((li) => {
+            placeIdsToFetch.add(li.place_id);
+            const arr = itemsByList.get(li.list_id) ?? [];
+            arr.push({ placeId: li.place_id });
+            itemsByList.set(li.list_id, arr);
+          });
+        }
+        (lists ?? []).forEach((l) => {
+          const placeIds = (itemsByList.get(l.id) ?? []).map((i) => i.placeId);
+          items.push({
+            id: `list-${l.id}`,
+            kind: "list",
+            created_at: l.created_at,
+            author: { id: l.user_id } as WallAuthor,
+            meta: l.title,
+            text: l.description,
+            listPlaces: placeIds.slice(0, 4).map((id) => ({ id }) as WallPlace),
+            listItemCount: placeIds.length,
+            socialRefId: l.id,
+          });
+        });
+      }
+
+      // 8) friend challenge completions ("tydzień kebabu ukończony")
+      if (feedUserIds.length) {
+        const { data: completions } = await supabase
+          .from("user_challenge_completions")
+          .select("id, user_id, completed_at, challenge:challenges(title, icon)")
+          .in("user_id", feedUserIds)
+          .gte("completed_at", sinceIso)
+          .order("completed_at", { ascending: false })
+          .limit(30);
+        (completions ?? []).forEach((c) => {
+          const challenge = c.challenge as unknown as { title: string; icon: string | null } | null;
+          items.push({
+            id: `chg-${c.id}`,
+            kind: "challenge_complete",
+            created_at: c.completed_at,
+            author: { id: c.user_id } as WallAuthor,
+            meta: challenge?.title ?? "Wyzwanie",
+            challengeIcon: challenge?.icon ?? "🏆",
+            socialRefId: c.id,
+          });
+        });
+      }
+
+      // 9) posts only from places the user follows (owners also see their own)
       const postsPlaceIds = Array.from(
         new Set([
           ...(follows ?? []).map((r) => r.place_id),
@@ -182,7 +316,7 @@ export function useWallFeed() {
         });
       }
 
-      // 7) hydrate profiles and places
+      // 10) hydrate profiles and places
       if (profileIdsToFetch.size) {
         const { data: profs } = await supabase
           .from("profiles")
@@ -198,7 +332,7 @@ export function useWallFeed() {
       if (placeIdsToFetch.size) {
         const { data: pls } = await supabase
           .from("places")
-          .select("id, slug, name, cuisine")
+          .select("id, slug, name, cuisine, avatar_url, cover_image_url")
           .in("id", Array.from(placeIdsToFetch));
         const map = new Map(
           (pls ?? []).map((p) => [
@@ -208,17 +342,176 @@ export function useWallFeed() {
               slug: p.slug ?? null,
               name: p.name,
               cuisine: p.cuisine ?? null,
+              avatar_url: p.avatar_url,
+              cover_image_url: p.cover_image_url,
             } as WallPlace,
           ]),
         );
         items.forEach((it) => {
           if (it.place?.id) it.place = map.get(it.place.id) ?? it.place;
+          if (it.listPlaces?.length) {
+            it.listPlaces = it.listPlaces.map((p) => map.get(p.id) ?? p);
+          }
         });
       }
 
       items.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
       return items.slice(0, 80);
     },
+  });
+}
+
+/**
+ * "Dla Ciebie" tab: discovery feed of reviews/posts about places matching
+ * the user's favorite cuisines and/or home district (profiles.favorite_cuisines
+ * / profiles.district) - from ANY user, not just friends. Places the user
+ * already favorited are excluded (already-discovered).
+ */
+export function useForYouFeed() {
+  const { user } = useUser();
+  return useQuery({
+    queryKey: ["wall-for-you", user?.id ?? null],
+    enabled: !!user,
+    queryFn: async (): Promise<WallItem[]> => {
+      const me = user!.id;
+      const [{ data: profile }, { data: myFavs }] = await Promise.all([
+        supabase.from("profiles").select("favorite_cuisines, district").eq("id", me).maybeSingle(),
+        supabase.from("place_favorites").select("place_id").eq("user_id", me),
+      ]);
+      const cuisines = profile?.favorite_cuisines ?? [];
+      const district = profile?.district ?? null;
+      const excludeIds = new Set((myFavs ?? []).map((f) => f.place_id));
+
+      const placeCols = "id, slug, name, cuisine, avatar_url, cover_image_url, district, rating";
+      const queries = [];
+      if (cuisines.length) {
+        queries.push(
+          supabase
+            .from("places")
+            .select(placeCols)
+            .eq("is_published", true)
+            .in("cuisine", cuisines)
+            .order("rating", { ascending: false })
+            .limit(40),
+        );
+      }
+      if (district) {
+        queries.push(
+          supabase
+            .from("places")
+            .select(placeCols)
+            .eq("is_published", true)
+            .eq("district", district)
+            .order("rating", { ascending: false })
+            .limit(40),
+        );
+      }
+      if (!queries.length) {
+        queries.push(
+          supabase
+            .from("places")
+            .select(placeCols)
+            .eq("is_published", true)
+            .order("rating", { ascending: false })
+            .limit(40),
+        );
+      }
+      const results = await Promise.all(queries);
+      const placeMap = new Map<string, WallPlace & { rating?: number | null }>();
+      results.forEach(({ data }) => {
+        (data ?? []).forEach((p) => {
+          if (!excludeIds.has(p.id))
+            placeMap.set(p.id, p as WallPlace & { rating?: number | null });
+        });
+      });
+      const placeIds = Array.from(placeMap.keys());
+      if (!placeIds.length) return [];
+
+      const sinceIso = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString();
+      const items: WallItem[] = [];
+      const profileIdsToFetch = new Set<string>();
+
+      const { data: rvs } = await supabase
+        .from("reviews")
+        .select("id, user_id, place_id, body, rating, photo_url, created_at")
+        .in("place_id", placeIds)
+        .neq("user_id", me)
+        .gte("created_at", sinceIso)
+        .order("created_at", { ascending: false })
+        .limit(30);
+      (rvs ?? []).forEach((r) => {
+        profileIdsToFetch.add(r.user_id);
+        items.push({
+          id: `fy-review-${r.id}`,
+          kind: "review",
+          created_at: r.created_at,
+          author: { id: r.user_id } as WallAuthor,
+          place: placeMap.get(r.place_id) ?? null,
+          text: r.body,
+          rating: r.rating,
+          image_url: r.photo_url,
+        });
+      });
+
+      const { data: pps } = await supabase
+        .from("place_posts")
+        .select("id, place_id, title, body, image_url, created_at")
+        .in("place_id", placeIds)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      (pps ?? []).forEach((p) => {
+        items.push({
+          id: `fy-pp-${p.id}`,
+          kind: "place_post",
+          created_at: p.created_at,
+          place: placeMap.get(p.place_id) ?? null,
+          text: p.body,
+          image_url: p.image_url,
+          meta: p.title,
+        });
+      });
+
+      if (profileIdsToFetch.size) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select(
+            "id, username, display_name, avatar_url, avatar_source, is_vip, vip_until, vip_nick_color",
+          )
+          .in("id", Array.from(profileIdsToFetch));
+        const map = new Map((profs ?? []).map((p) => [p.id, p as WallAuthor]));
+        items.forEach((it) => {
+          if (it.author?.id) it.author = map.get(it.author.id) ?? it.author;
+        });
+      }
+
+      items.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
+      return items.slice(0, 40);
+    },
+  });
+}
+
+export interface CreateWallPostInput {
+  body: string;
+  placeId?: string | null;
+  imageUrl?: string | null;
+}
+
+/** The quick-post bar at the top of the wall ("co dziś jadłeś?"). */
+export function useCreateWallPost() {
+  const qc = useQueryClient();
+  const { user } = useUser();
+  return useMutation({
+    mutationFn: async ({ body, placeId, imageUrl }: CreateWallPostInput) => {
+      if (!user) throw new Error("Zaloguj się");
+      const { error } = await supabase.from("wall_posts").insert({
+        user_id: user.id,
+        body,
+        place_id: placeId || null,
+        image_url: imageUrl || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["wall-feed"] }),
   });
 }
 

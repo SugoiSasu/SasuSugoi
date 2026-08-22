@@ -12,17 +12,17 @@ import logoDark from "@/assets/brand/po_zeramy-logo-dark.png.asset.json";
 export const Route = createFileRoute("/wspolpraca")({
   head: () => ({
     meta: [
-      { title: "Współpraca i wysyłka produktów — poŻeramy" },
+      { title: "Współpraca i wysyłka produktów - poŻeramy" },
       {
         name: "description",
         content:
-          "Chcesz podjąć współpracę z poŻeramy albo wysłać produkt do recenzji? Sprawdź, jak to zrobić i wyślij zgłoszenie — trafi ono bezpośrednio do naszego panelu.",
+          "Chcesz podjąć współpracę z poŻeramy albo wysłać produkt do recenzji? Sprawdź, jak to zrobić i wyślij zgłoszenie - trafi ono bezpośrednio do naszego panelu.",
       },
       { property: "og:title", content: "Współpraca z poŻeramy" },
       {
         property: "og:description",
         content:
-          "Rolki, recenzje, wysyłka produktów, eventy. Napisz do nas — odpowiadamy w 48h.",
+          "Rolki, recenzje, wysyłka produktów, eventy. Napisz do nas - odpowiadamy w 48h.",
       },
       { property: "og:image", content: logoDark.url },
     ],
@@ -49,7 +49,7 @@ function WspolpracaPage() {
             <p className="text-muted-foreground text-lg leading-relaxed mb-8">
               Tworzymy rolki, posty i recenzje oglądane przez lokalnych foodies w Poznaniu.
               Działamy długofalowo, a nie „raz i znikam". Możesz umówić się na wizytę
-              albo wysłać nam produkt do recenzji — poniższy formularz trafia
+              albo wysłać nam produkt do recenzji - poniższy formularz trafia
               bezpośrednio do naszego panelu.
             </p>
 
@@ -88,7 +88,7 @@ function WspolpracaPage() {
               </div>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Chcesz podesłać nam próbkę, menu w pudełku albo nowy produkt? Napisz
-                w formularzu obok — po ustaleniu szczegółów odeślemy adres do wysyłki.
+                w formularzu obok - po ustaleniu szczegółów odeślemy adres do wysyłki.
                 Wszystkie zgłoszenia trafiają do naszego panelu, więc żadne nie zginie.
               </p>
             </div>
@@ -131,7 +131,7 @@ function CollabForm() {
     }
     if (honey) { setError("Wykryto bota. Spróbuj ponownie."); return; }
     if (elapsed < 3000) {
-      setError("Zwolnij na chwilę — wyślij formularz po krótkim odczekaniu.");
+      setError("Zwolnij na chwilę - wyślij formularz po krótkim odczekaniu.");
       return;
     }
     if (brand.length < 2 || brand.length > 100) {
@@ -275,7 +275,7 @@ function CollabForm() {
             <label htmlFor="contact_consent" className="block text-sm text-cream/95 leading-relaxed cursor-pointer">
               Chcę otrzymać e-mailowe potwierdzenie zgłoszenia na podany adres.
               <span className="block text-[11px] text-cream/55 mt-1">
-                Opcjonalne. Jeden e-mail z podsumowaniem — możesz się wypisać w każdej chwili linkiem w stopce wiadomości.
+                Opcjonalne. Jeden e-mail z podsumowaniem - możesz się wypisać w każdej chwili linkiem w stopce wiadomości.
               </span>
             </label>
           </div>

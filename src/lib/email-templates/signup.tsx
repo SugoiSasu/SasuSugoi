@@ -29,7 +29,7 @@ export const SignupEmail = ({
 }: SignupEmailProps) => (
   <Html lang="pl" dir="ltr">
     <Head />
-    <Preview>Aktywuj swoje konto w {siteName} — kliknij w link.</Preview>
+    <Preview>Aktywuj swoje konto w {siteName} - kliknij w link.</Preview>
     <Body style={brand.main}>
       <Container style={brand.container}>
         <Text style={brand.brandBar}>
@@ -41,7 +41,7 @@ export const SignupEmail = ({
           <Link href={siteUrl} style={brand.link}>
             <strong>{siteName}</strong>
           </Link>
-          . Zostało już tylko jedno kliknięcie — potwierdź, że ten adres ({recipient})
+          . Zostało już tylko jedno kliknięcie - potwierdź, że ten adres ({recipient})
           należy do Ciebie i ruszamy.
         </Text>
         <Section style={{ textAlign: 'center', margin: '8px 0 28px' }}>
@@ -59,7 +59,7 @@ export const SignupEmail = ({
         </Text>
         <Hr style={brand.hr} />
         <Text style={brand.footer}>
-          Tego maila nie zamawiałeś? Po prostu go zignoruj — nie utworzymy
+          Tego maila nie zamawiałeś? Po prostu go zignoruj - nie utworzymy
           konta bez potwierdzenia.
           <br />
           poŻeramy · Poznań

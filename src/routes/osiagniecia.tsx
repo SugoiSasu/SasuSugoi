@@ -4,7 +4,7 @@ import { Lock, Trophy } from "lucide-react";
 import { useUser } from "@/lib/use-auth";
 import { useMyProfile } from "@/lib/profile-api";
 import { useAchievements, useUserAchievements, computeProgress, type CriteriaType } from "@/lib/achievements-api";
-import { useFriendLeaderboard, useFriendsCount } from "@/lib/friends-api";
+import { useFriendLeaderboard, useFriendsCount, useInviteStats } from "@/lib/friends-api";
 import { useUserReviewStats } from "@/lib/reviews-api";
 import { UserAvatar } from "@/components/UserAvatar";
 import { LevelProgressCard } from "@/components/LevelProgress";
@@ -12,9 +12,9 @@ import { LevelProgressCard } from "@/components/LevelProgress";
 export const Route = createFileRoute("/osiagniecia")({
   head: () => ({
     meta: [
-      { title: "Osiągnięcia — poŻeramy" },
+      { title: "Osiągnięcia - poŻeramy" },
       { name: "description", content: "Zdobywaj odznaki poŻeracza, awansuj poziomy i rywalizuj ze znajomymi w Poznaniu." },
-      { property: "og:title", content: "Osiągnięcia — poŻeramy" },
+      { property: "og:title", content: "Osiągnięcia - poŻeramy" },
       { property: "og:description", content: "Zdobywaj odznaki, awansuj poziomy i rywalizuj ze znajomymi." },
     ],
   }),
@@ -39,6 +39,7 @@ function AchievementsPage() {
   const { data: leaders, isLoading: loadingLeaders } = useFriendLeaderboard();
   const { data: reviewStats } = useUserReviewStats(user?.id);
   const { data: friendsCount } = useFriendsCount(user?.id);
+  const { data: inviteStats } = useInviteStats();
   const [filter, setFilter] = useState<Filter>("all");
 
   const points = profile?.points_total ?? 0;
@@ -48,6 +49,7 @@ function AchievementsPage() {
     unique_places: reviewStats?.uniquePlaces ?? 0,
     points_total: points,
     friends_count: friendsCount ?? 0,
+    referrals_count: inviteStats?.accepted ?? 0,
   };
 
   const enabled = useMemo(() => (all ?? []).filter((a) => a.enabled !== false), [all]);
@@ -116,7 +118,7 @@ function AchievementsPage() {
             const progress = has ? null : computeProgress(a, userStats);
             const inProgress = !!progress && progress.pct > 0;
             const title = inProgress
-              ? `${a.description ?? a.name} — ${progress!.current}/${progress!.threshold || "?"}`
+              ? `${a.description ?? a.name} - ${progress!.current}/${progress!.threshold || "?"}`
               : (a.description ?? a.name);
             return (
               <li key={a.id} className="text-center" title={title}>

@@ -1,25 +1,36 @@
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Compass, Map, Bookmark, User as UserIcon, Plus, Star, Store, Camera, X } from "lucide-react";
+import { Compass, Map, Layers, Bookmark, Users, User as UserIcon, Plus, Star, Store, Camera, X } from "lucide-react";
 import { useMyProfile } from "@/lib/profile-api";
+import { useMyFriendships } from "@/lib/friends-api";
+import { useUser } from "@/lib/use-auth";
 import { toast } from "sonner";
 
-// Only these two go left of the center FAB — "Moje miejsca" and "Profil"
-// are rendered explicitly on the right since "Profil" needs conditional auth logic.
+// Three tabs on each side of the center FAB, for visual balance. "Moje miejsca"
+// and "Profil" are rendered explicitly on the right since "Profil" needs
+// conditional auth logic and "Znajomi" carries a pending-request badge.
 const leftTabs = [
   { to: "/", label: "Odkrywaj", icon: Compass, exact: true },
   { to: "/mapa", label: "Mapa", icon: Map, exact: false },
+  { to: "/karty", label: "Karty", icon: Layers, exact: false },
 ] as const;
 
 /** Mobile bottom tab bar with a central coral FAB. */
 export function BottomTabBar() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const { data: profile } = useMyProfile();
+  const { user } = useUser();
+  const { data: friendships } = useMyFriendships();
+  const pendingFriends = (friendships ?? []).filter(
+    (f) => f.status === "pending" && f.addressee_id === user?.id,
+  ).length;
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isActive = (to: string, exact: boolean) => (exact ? pathname === to : pathname.startsWith(to));
 
+  // Six items either side of the FAB can't all carry full-width text labels on a
+  // phone screen - only the active tab shows its label; the rest stay icon-only.
   const itemCls = (active: boolean) =>
-    `flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-semibold transition-colors ${
+    `flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold transition-colors ${
       active ? "text-tomato" : "text-muted-foreground"
     }`;
 
@@ -107,12 +118,15 @@ export function BottomTabBar() {
         className="pz-safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur-md lg:hidden"
       >
         <div className="mx-auto flex max-w-md items-stretch">
-          {leftTabs.map(({ to, label, icon: Icon, exact }) => (
-            <Link key={to} to={to} className={itemCls(isActive(to, exact))}>
-              <Icon size={20} />
-              <span className="truncate">{label}</span>
-            </Link>
-          ))}
+          {leftTabs.map(({ to, label, icon: Icon, exact }) => {
+            const active = isActive(to, exact);
+            return (
+              <Link key={to} to={to} className={itemCls(active)} aria-label={label}>
+                <Icon size={20} />
+                {active && <span className="max-w-full truncate">{label}</span>}
+              </Link>
+            );
+          })}
 
           <div className="flex w-16 shrink-0 items-start justify-center">
             <button
@@ -125,9 +139,27 @@ export function BottomTabBar() {
             </button>
           </div>
 
-          <Link to="/moje-miejsca" className={itemCls(isActive("/moje-miejsca", false))}>
+          <Link to="/friends" className={itemCls(isActive("/friends", false))} aria-label="Znajomi">
+            <span className="relative">
+              <Users size={20} />
+              {pendingFriends > 0 && (
+                <span className="absolute -right-2 -top-1.5 min-w-[15px] h-[15px] px-0.5 rounded-full bg-tomato text-cream text-[9px] font-bold grid place-items-center">
+                  {pendingFriends > 9 ? "9+" : pendingFriends}
+                </span>
+              )}
+            </span>
+            {isActive("/friends", false) && <span className="max-w-full truncate">Znajomi</span>}
+          </Link>
+
+          <Link
+            to="/moje-miejsca"
+            className={itemCls(isActive("/moje-miejsca", false))}
+            aria-label="Moje miejsca"
+          >
             <Bookmark size={20} />
-            <span className="truncate">Moje miejsca</span>
+            {isActive("/moje-miejsca", false) && (
+              <span className="max-w-full truncate">Moje miejsca</span>
+            )}
           </Link>
 
           {profile?.username ? (
@@ -135,14 +167,19 @@ export function BottomTabBar() {
               to="/u/$username"
               params={{ username: profile.username }}
               className={itemCls(pathname.startsWith("/u/"))}
+              aria-label="Profil"
             >
               <UserIcon size={20} />
-              <span className="truncate">Profil</span>
+              {pathname.startsWith("/u/") && <span className="max-w-full truncate">Profil</span>}
             </Link>
           ) : (
-            <Link to="/auth" className={itemCls(pathname.startsWith("/auth"))}>
+            <Link
+              to="/auth"
+              className={itemCls(pathname.startsWith("/auth"))}
+              aria-label="Profil"
+            >
               <UserIcon size={20} />
-              <span className="truncate">Profil</span>
+              {pathname.startsWith("/auth") && <span className="max-w-full truncate">Profil</span>}
             </Link>
           )}
         </div>

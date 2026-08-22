@@ -1,24 +1,30 @@
 import { BackButton } from "@/components/BackButton";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Mail, ArrowLeft, Apple, Eye, EyeOff } from "lucide-react";
 import { TERMS_CONSENT_VERSION } from "@/lib/consent";
+import { passwordStrengthError } from "@/lib/password";
+import { requestPasswordReset } from "@/lib/password-reset.functions";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
-export const Route = createFileRoute("/auth")({
+export const Route = createFileRoute("/auth/")({
   head: () => ({
     meta: [
-      { title: "Zaloguj się — poŻeramy" },
+      { title: "Zaloguj się - poŻeramy" },
       { name: "description", content: "Zaloguj się do poŻeramy lub załóż konto, by zapisywać miejscówki i tworzyć swój wall." },
     ],
   }),
   component: AuthPage,
 });
 
+const captchaRequired = Boolean(import.meta.env.VITE_TURNSTILE_SITE_KEY);
+
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -26,8 +32,13 @@ function AuthPage() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [gender, setGender] = useState<"M" | "K" | null>(null);
+  const [resetSent, setResetSent] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
+  const doRequestPasswordReset = useServerFn(requestPasswordReset);
 
-  // Optional ?redirect=/some/path — e.g. an invite link sends the visitor
+  // Optional ?redirect=/some/path - e.g. an invite link sends the visitor
   // here to log in first, then wants them back on /i/$token.
   const redirectTo = (() => {
     const raw = new URLSearchParams(window.location.search).get("redirect");
@@ -47,31 +58,86 @@ function AuthPage() {
       toast.error("Zaakceptuj Regulamin i Politykę prywatności, żeby założyć konto.");
       return;
     }
+    if (mode === "signup") {
+      const strengthError = passwordStrengthError(password);
+      if (strengthError) {
+        setPasswordError(strengthError);
+        toast.error(strengthError);
+        return;
+      }
+    }
     setLoading(true);
     try {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin + redirectTo },
+          options: {
+            emailRedirectTo: window.location.origin + redirectTo,
+            captchaToken: captchaToken ?? undefined,
+          },
         });
-        if (error) throw error;
-        // Record consent on the account itself (auth.users.raw_user_meta_data) —
-        // proof of which terms version was accepted and when.
+        // Supabase itself already stays silent about pre-existing *confirmed*
+        // emails on signUp (returns no error, an empty identities[]). This
+        // extends the same courtesy to the cases where it DOES surface an
+        // "already registered"-style error - same wording either way, so a
+        // stranger can't use this form to test which emails are in use here.
+        if (error && !/already registered|already exists|already in use/i.test(error.message)) {
+          throw error;
+        }
+        // Record consent on the account itself (auth.users.raw_user_meta_data) - // proof of which terms version was accepted and when. No-op/harmless
+        // if this was actually an existing-email no-op signup.
         await supabase.auth.updateUser({
           data: { terms_accepted_at: new Date().toISOString(), terms_version: TERMS_CONSENT_VERSION },
         }).catch(() => {
           // Non-fatal: account is already created; consent metadata is best-effort.
         });
+        // Purely cosmetic (picks the default-avatar color) - best-effort,
+        // never blocks signup if it fails.
+        if (gender) {
+          const { data: sess } = await supabase.auth.getUser();
+          if (sess.user) {
+            await supabase.from("profiles").update({ gender }).eq("id", sess.user.id).then(
+              () => {},
+              () => {},
+            );
+          }
+        }
         toast.success("Konto utworzone! Sprawdź email aby potwierdzić.");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+          options: { captchaToken: captchaToken ?? undefined },
+        });
         if (error) throw error;
         navigate({ to: redirectTo });
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Coś poszło nie tak";
       toast.error(msg);
+    } finally {
+      setLoading(false);
+      // Turnstile tokens are single-use - force a fresh one for the next attempt.
+      setCaptchaToken(null);
+      setCaptchaResetKey((k) => k + 1);
+    }
+  }
+
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailError("Podaj poprawny adres email");
+      return;
+    }
+    setLoading(true);
+    try {
+      await doRequestPasswordReset({ data: { email } });
+      setResetSent(true);
+    } catch (err) {
+      // Don't reveal whether the email exists - same message either way.
+      const msg = err instanceof Error ? err.message : "Nie udało się wysłać linku";
+      toast.error(msg.toLowerCase().includes("rate") ? "Spróbuj ponownie za chwilę." : msg);
     } finally {
       setLoading(false);
     }
@@ -103,13 +169,95 @@ function AuthPage() {
       <div className="absolute top-6 left-6"><BackButton to="/" label="Strona główna" /></div>
       <div className="w-full max-w-md bg-cream text-navy rounded-3xl p-8 shadow-2xl">
         <h1 className="font-display text-3xl mb-1">
-          {mode === "signin" ? "Witaj poŻeraczu!" : "Dołącz do poŻeramy"}
+          {mode === "signin" ? "Witaj poŻeraczu!" : mode === "signup" ? "Dołącz do poŻeramy" : "Zresetuj hasło"}
         </h1>
         <p className="text-sm text-muted-foreground mb-6">
           {mode === "signin"
             ? "Zaloguj się i wracaj do swojej listy miejscówek."
-            : "Załóż konto, twórz swój wall i zapisuj ulubione miejsca."}
+            : mode === "signup"
+              ? "Załóż konto, twórz swój wall i zapisuj ulubione miejsca."
+              : "Podaj email konta, a wyślemy Ci link do ustawienia nowego hasła."}
         </p>
+
+        {mode === "forgot" ? (
+          resetSent ? (
+            <div className="rounded-2xl border-2 border-border bg-background p-5 text-center">
+              <Mail className="mx-auto mb-3 text-tomato" size={28} aria-hidden />
+              <p className="text-sm">
+                Jeśli konto <strong>{email}</strong> istnieje, wysłaliśmy na nie link do resetu hasła. Sprawdź skrzynkę (też SPAM).
+              </p>
+              <button
+                type="button"
+                onClick={() => { setMode("signin"); setResetSent(false); }}
+                className="mt-4 inline-flex items-center justify-center gap-2 rounded-full bg-tomato text-cream px-6 py-3 font-semibold hover:bg-tomato/90 transition min-h-11"
+              >
+                <ArrowLeft size={16} aria-hidden /> Wróć do logowania
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleForgotPassword} className="space-y-3" noValidate>
+              <div>
+                <label htmlFor="auth-forgot-email" className="sr-only">Email</label>
+                <input
+                  id="auth-forgot-email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  inputMode="email"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(null); }}
+                  aria-invalid={!!emailError}
+                  aria-describedby={emailError ? "auth-forgot-email-err" : undefined}
+                  placeholder="Email"
+                  className={`w-full rounded-xl border-2 px-4 py-3 outline-none focus:border-tomato ${emailError ? "border-destructive" : "border-border"}`}
+                />
+                {emailError && (
+                  <p id="auth-forgot-email-err" className="text-xs text-destructive mt-1">{emailError}</p>
+                )}
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-tomato text-cream py-3 font-semibold hover:bg-tomato/90 transition disabled:opacity-50 min-h-11"
+              >
+                {loading ? <Loader2 className="animate-spin" size={18} aria-hidden /> : <Mail size={18} aria-hidden />}
+                {loading ? "Wysyłam…" : "Wyślij link resetujący"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("signin")}
+                className="w-full text-sm text-muted-foreground hover:text-tomato min-h-11"
+              >
+                <ArrowLeft size={14} className="inline mr-1" aria-hidden /> Wróć do logowania
+              </button>
+            </form>
+          )
+        ) : (
+        <>
+        {mode === "signup" && (
+          <div className="mb-4">
+            <p className="mb-1.5 text-xs font-semibold text-muted-foreground">Płeć (opcjonalnie - tylko dobiera kolor domyślnego awatara)</p>
+            <div className="flex gap-2">
+              {([
+                ["M", "Mężczyzna"],
+                ["K", "Kobieta"],
+                [null, "Wolę nie podawać"],
+              ] as const).map(([value, label]) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setGender(value)}
+                  aria-pressed={gender === value}
+                  className={`flex-1 rounded-xl border-2 px-2 py-2 text-xs font-semibold transition ${
+                    gender === value ? "border-navy bg-navy text-cream" : "border-border bg-card text-foreground hover:border-tomato"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {mode === "signup" && (
           <label className="flex items-start gap-2.5 mb-4 text-xs text-muted-foreground cursor-pointer">
@@ -190,14 +338,14 @@ function AuthPage() {
                 id="auth-password"
                 type={showPassword ? "text" : "password"}
                 required
-                minLength={6}
+                minLength={mode === "signup" ? 8 : undefined}
                 autoComplete={mode === "signup" ? "new-password" : "current-password"}
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); if (passwordError) setPasswordError(null); }}
-                onBlur={() => setPasswordError(password && password.length < 6 ? "Hasło musi mieć min. 6 znaków" : null)}
+                onBlur={() => setPasswordError(mode === "signup" ? passwordStrengthError(password) : null)}
                 aria-invalid={!!passwordError}
                 aria-describedby={passwordError ? "auth-password-err" : undefined}
-                placeholder="Hasło (min. 6 znaków)"
+                placeholder={mode === "signup" ? "Hasło (min. 8 znaków, litera i cyfra)" : "Hasło"}
                 className={`w-full rounded-xl border-2 px-4 py-3 pr-12 outline-none focus:border-tomato ${passwordError ? "border-destructive" : "border-border"}`}
               />
               <button
@@ -213,10 +361,24 @@ function AuthPage() {
             {passwordError && (
               <p id="auth-password-err" className="text-xs text-destructive mt-1">{passwordError}</p>
             )}
+            {mode === "signin" && (
+              <button
+                type="button"
+                onClick={() => { setMode("forgot"); setPasswordError(null); }}
+                className="mt-1.5 text-xs font-semibold text-muted-foreground hover:text-tomato"
+              >
+                Zapomniałeś hasła?
+              </button>
+            )}
           </div>
+          <TurnstileWidget
+            onVerify={setCaptchaToken}
+            onExpire={() => setCaptchaToken(null)}
+            resetKey={captchaResetKey}
+          />
           <button
             type="submit"
-            disabled={loading || (mode === "signup" && !termsAccepted)}
+            disabled={loading || (mode === "signup" && !termsAccepted) || (captchaRequired && !captchaToken)}
             className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-tomato text-cream py-3 font-semibold hover:bg-tomato/90 transition disabled:opacity-50 min-h-11"
           >
             {loading ? <Loader2 className="animate-spin" size={18} aria-hidden /> : <Mail size={18} aria-hidden />}
@@ -233,6 +395,8 @@ function AuthPage() {
         >
           {mode === "signin" ? "Nie masz konta? Zarejestruj się" : "Masz już konto? Zaloguj się"}
         </button>
+        </>
+        )}
       </div>
     </main>
   );

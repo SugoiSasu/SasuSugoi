@@ -9,6 +9,7 @@ import {
   type VisitedPlace,
 } from "@/lib/visits-api";
 import { cuisineMeta } from "@/data/places";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
 interface VisitStatusButtonProps {
   placeId: string;
@@ -17,15 +18,25 @@ interface VisitStatusButtonProps {
   className?: string;
 }
 
-const META: Record<VisitStatus, { icon: typeof Bookmark; on: string; off: string; toastOn: string; toastOff: string; activeClass: string; fillIconOnActive: boolean }> = {
+const META: Record<
+  VisitStatus,
+  {
+    icon: typeof Bookmark;
+    on: string;
+    off: string;
+    toastOn: string;
+    toastOff: string;
+    activeClass: string;
+    fillIconOnActive: boolean;
+  }
+> = {
   want: {
     icon: Bookmark,
     on: "Chcę odwiedzić",
     off: "Chcę odwiedzić",
     toastOn: "Dodano do „Chcę odwiedzić”",
     toastOff: "Usunięto z „Chcę odwiedzić”",
-    // Stays an outline (never a solid fill) even when active, per the KV mockup —
-    // only "Byłem tutaj" and "Ulubione" get a filled active state.
+    // Stays an outline (never a solid fill) even when active, per the KV mockup - // only "Byłem tutaj" and "Ulubione" get a filled active state.
     activeClass: "border-2 border-navy bg-navy/10 text-navy hover:bg-navy/15",
     fillIconOnActive: false,
   },
@@ -40,7 +51,12 @@ const META: Record<VisitStatus, { icon: typeof Bookmark; on: string; off: string
   },
 };
 
-export function VisitStatusButton({ placeId, status, variant = "pill", className = "" }: VisitStatusButtonProps) {
+export function VisitStatusButton({
+  placeId,
+  status,
+  variant = "pill",
+  className = "",
+}: VisitStatusButtonProps) {
   const { user } = useUser();
   const active = useMyVisitStatus(placeId, status);
   const toggle = useToggleVisit();
@@ -91,7 +107,11 @@ export function VisitStatusButton({ placeId, status, variant = "pill", className
         active ? m.activeClass : "border-2 border-navy text-navy hover:bg-navy hover:text-cream"
       } ${className}`}
     >
-      {toggle.isPending ? <Loader2 size={16} className="animate-spin" /> : <Icon size={16} className={active && m.fillIconOnActive ? "fill-cream" : ""} />}
+      {toggle.isPending ? (
+        <Loader2 size={16} className="animate-spin" />
+      ) : (
+        <Icon size={16} className={active && m.fillIconOnActive ? "fill-cream" : ""} />
+      )}
       {active ? m.on : m.off}
     </button>
   );
@@ -102,7 +122,12 @@ interface PlaceListGridProps {
   emptyText: string;
 }
 
-export function PlaceListGrid({ places, emptyText, variant = "list", className = "" }: PlaceListGridProps & { variant?: "list" | "icons"; className?: string }) {
+export function PlaceListGrid({
+  places,
+  emptyText,
+  variant = "list",
+  className = "",
+}: PlaceListGridProps & { variant?: "list" | "icons"; className?: string }) {
   if (!places || places.length === 0) {
     return (
       <p className="text-sm text-muted-foreground rounded-2xl border border-dashed border-border px-4 py-6 text-center">
@@ -112,29 +137,44 @@ export function PlaceListGrid({ places, emptyText, variant = "list", className =
   }
   if (variant === "icons") {
     return (
-      <ul className={`grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2 ${className}`}>
-        {places.map((p) => {
-          const meta = cuisineMeta(p.cuisine);
-          return (
-            <li key={p.id}>
-              <Link
-                to="/k/$id"
-                params={{ id: p.slug ?? p.id }}
-                title={`${p.name} · ${p.cuisine}`}
-                aria-label={`${p.name} — ${p.cuisine}`}
-                className="block aspect-square rounded-xl overflow-hidden ring-1 ring-border bg-background hover:ring-2 hover:ring-tomato hover:-translate-y-0.5 transition-all"
-                style={{ backgroundColor: meta.color }}
-              >
-                {p.cover_image_url ? (
-                  <img src={p.cover_image_url} alt={p.name} loading="lazy" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="w-full h-full grid place-items-center text-xl">{meta.emoji}</span>
-                )}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+      <TooltipProvider delayDuration={200}>
+        <ul className={`grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2 ${className}`}>
+          {places.map((p) => {
+            const meta = cuisineMeta(p.cuisine);
+            return (
+              <li key={p.id}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link
+                      to="/k/$id"
+                      params={{ id: p.slug ?? p.id }}
+                      aria-label={`${p.name} - ${p.cuisine}`}
+                      className="block aspect-square rounded-xl overflow-hidden ring-1 ring-border bg-background hover:ring-2 hover:ring-tomato hover:-translate-y-0.5 transition-all"
+                      style={{ backgroundColor: meta.color }}
+                    >
+                      {p.cover_image_url ? (
+                        <img
+                          src={p.cover_image_url}
+                          alt={p.name}
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="w-full h-full grid place-items-center text-xl">
+                          {meta.emoji}
+                        </span>
+                      )}
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    {p.name} · {p.cuisine}
+                  </TooltipContent>
+                </Tooltip>
+              </li>
+            );
+          })}
+        </ul>
+      </TooltipProvider>
     );
   }
   return (
@@ -160,7 +200,9 @@ export function PlaceListGrid({ places, emptyText, variant = "list", className =
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block font-semibold truncate">{p.name}</span>
-                <span className="block text-xs text-muted-foreground truncate">{p.cuisine} · {p.address}</span>
+                <span className="block text-xs text-muted-foreground truncate">
+                  {p.cuisine} · {p.address}
+                </span>
               </span>
             </Link>
           </li>
@@ -169,7 +211,6 @@ export function PlaceListGrid({ places, emptyText, variant = "list", className =
     </ul>
   );
 }
-
 
 import { useEffect } from "react";
 import { useMyVisitStatuses } from "@/lib/visits-api";
@@ -191,11 +232,16 @@ export function VisitEventListener() {
       toggle.mutate(
         { placeId, status, on: next },
         {
-          onSuccess: () => toast.success(
-            status === "want"
-              ? (next ? "Dodano do „Chcę odwiedzić”" : "Usunięto z „Chcę odwiedzić”")
-              : (next ? "Oznaczono jako odwiedzone" : "Cofnięto oznaczenie"),
-          ),
+          onSuccess: () =>
+            toast.success(
+              status === "want"
+                ? next
+                  ? "Dodano do „Chcę odwiedzić”"
+                  : "Usunięto z „Chcę odwiedzić”"
+                : next
+                  ? "Oznaczono jako odwiedzone"
+                  : "Cofnięto oznaczenie",
+            ),
           onError: (err) => toast.error((err as Error).message),
         },
       );

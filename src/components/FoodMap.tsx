@@ -17,7 +17,7 @@ interface Props {
   variant?: "full" | "mini";
   /** Real aggregated review ratings per place id. */
   ratings?: Map<string, { avg: number; count: number }>;
-  /** Visitor's browser geolocation, if granted — shown as a pulsing "you are here" dot. */
+  /** Visitor's browser geolocation, if granted - shown as a pulsing "you are here" dot. */
   userLocation?: { lat: number; lng: number } | null;
 }
 
@@ -177,8 +177,7 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
             const pinEl = el?.querySelector(".pz-pin") as HTMLElement | null;
             if (pinEl) { void pinEl.offsetWidth; pinEl.classList.add("pz-pin--active"); }
             // When a parent owns the "selected place" UI (mapa.tsx's SelectedCard),
-            // hand off to it directly instead of also opening our own popup —
-            // showing both at once duplicated the same info (see PROJECT_BRIEF.md 1a).
+            // hand off to it directly instead of also opening our own popup - // showing both at once duplicated the same info (see PROJECT_BRIEF.md 1a).
             if (selectRef.current) selectRef.current(p);
           });
 
@@ -191,7 +190,7 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
             );
           } else if (!selectRef.current) {
             // Only bind the rich popup when there's no parent-owned "selected place"
-            // UI — otherwise the marker click handler above hands off to it directly
+            // UI - otherwise the marker click handler above hands off to it directly
             // and this would just be a second, duplicate info panel on top of it.
             const subtitle = pin.label
               ? `<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:${color};font-weight:700;margin-bottom:.25rem">${highlightHtml(pin.label, query)}</div>`
@@ -249,7 +248,7 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
     const openAndPulse = () => {
       map.flyTo(latlng, Math.max(map.getZoom(), 15), { duration: 0.6 });
       // Parent owns the "selected place" UI when onSelect is wired (see marker
-      // click handler above) — don't also pop our own duplicate info bubble.
+      // click handler above) - don't also pop our own duplicate info bubble.
       if (!selectRef.current) marker.openPopup();
       const el = marker._icon as HTMLElement | undefined;
       const pin = el?.querySelector(".pz-pin") as HTMLElement | null;

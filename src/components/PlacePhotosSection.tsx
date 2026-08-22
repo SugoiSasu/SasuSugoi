@@ -93,7 +93,7 @@ export function PlacePhotosSection({ placeId, canManage }: { placeId: string; ca
 
       {photos.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Brak zdjęć. {canManage && "Dodaj pierwsze — pokażą się na profilu i karcie lokalu."}
+          Brak zdjęć. {canManage && "Dodaj pierwsze - pokażą się na profilu i karcie lokalu."}
         </p>
       ) : (
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">

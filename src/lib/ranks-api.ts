@@ -26,7 +26,7 @@ export function useRanks() {
     queryFn: async (): Promise<Rank[]> => {
       const { data, error } = await supabase
         .from("ranks")
-        .select("*")
+        .select("id, slug, name, color, icon, description, sort_order, is_system")
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return (data ?? []) as Rank[];

@@ -50,7 +50,7 @@ export const RecoveryEmail = ({
         </Text>
         <Hr style={brand.hr} />
         <Text style={brand.footer}>
-          Nie prosiłeś o reset? Zignoruj tę wiadomość — Twoje hasło pozostanie
+          Nie prosiłeś o reset? Zignoruj tę wiadomość - Twoje hasło pozostanie
           bez zmian.
           <br />
           poŻeramy · Poznań

@@ -59,7 +59,16 @@ export function useApproveSuggestion() {
           name: s.name,
           cuisine: s.cuisine || "Inna",
           address: s.address || "",
-          description: s.notes || "",
+          // Deliberately NOT auto-copying s.notes here: it's unmoderated free
+          // text from an anonymous public form, and places.description is
+          // public-facing (shown on the profile and returned verbatim by the
+          // MCP get_place/search_places tools to external AI agents). Auto-
+          // promoting it would let anyone plant prompt-injection text that
+          // ships the moment an admin rubber-stamps the suggestion. The admin
+          // still sees s.notes in this list and can paste/rewrite it into the
+          // place's real description during the draft-editing step before
+          // publishing - that's the actual editorial review, not this insert.
+          description: "",
           website: s.website || null,
           instagram: s.instagram || null,
           lat: 52.4082,

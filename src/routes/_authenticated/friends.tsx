@@ -27,6 +27,7 @@ import {
   Share2,
   Home,
   User as UserIcon,
+  MoreVertical,
 } from "lucide-react";
 import { useUser } from "@/lib/use-auth";
 import { useMyProfile } from "@/lib/profile-api";
@@ -62,6 +63,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { UserAvatar } from "@/components/UserAvatar";
 import { AsyncState, runWithToast } from "@/components/AsyncState";
 import { VipBadge, isVipActive, vipNameStyle } from "@/components/VipBadge";
+import { VipReferralProgress } from "@/components/VipReferralProgress";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 const TAB_KEYS = ["friends", "requests", "find", "groups", "leaderboard", "blocked"] as const;
 type TabKey = (typeof TAB_KEYS)[number];
@@ -74,7 +83,7 @@ export const Route = createFileRoute("/_authenticated/friends")({
   validateSearch: zodValidator(searchSchema),
   head: () => ({
     meta: [
-      { title: "Znajomi — poŻeramy" },
+      { title: "Znajomi - poŻeramy" },
       { name: "description", content: "Twoi znajomi, zaproszenia, grupy i ranking w poŻeramy." },
     ],
   }),
@@ -152,7 +161,7 @@ function FriendsPage() {
 }
 
 /* ============================================================
- * QUICK BAR — liczniki + akcje
+ * QUICK BAR - liczniki + akcje
  * ============================================================ */
 function QuickBar({ onTab }: { onTab: (t: TabKey) => void }) {
   const { user } = useUser();
@@ -212,7 +221,7 @@ function Stat({
 }
 
 /* ============================================================
- * SEARCH BAR — zawsze widoczna, przechodzi do "find" z zapytaniem
+ * SEARCH BAR - zawsze widoczna, przechodzi do "find" z zapytaniem
  * ============================================================ */
 function SearchBar({ myId }: { myId: string }) {
   const [q, setQ] = useState("");
@@ -472,7 +481,7 @@ function FriendRow({
 
   return (
     <li className="bg-card border border-border rounded-2xl p-3">
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-center gap-2.5">
         <FriendAvatar profile={profile} size={40} />
         <div className="flex-1 min-w-0">
           <div className="font-semibold truncate">
@@ -494,83 +503,74 @@ function FriendRow({
                 : "Nie udało się dodać do ulubionych",
             })
           }
-          className={`p-2 rounded-full border disabled:opacity-50 ${isFavorite ? "bg-yellow-400/15 border-yellow-500/40 text-yellow-500" : "bg-card border-border hover:border-tomato"}`}
+          className={`shrink-0 p-2 rounded-full border disabled:opacity-50 ${isFavorite ? "bg-yellow-400/15 border-yellow-500/40 text-yellow-500" : "bg-card border-border hover:border-tomato"}`}
         >
           <Star size={14} fill={isFavorite ? "currentColor" : "none"} />
-        </button>
-
-        <button
-          type="button"
-          title="Grupy"
-          onClick={() => setOpenLists((v) => !v)}
-          className="p-2 rounded-full border bg-card border-border hover:border-tomato"
-        >
-          <Folder size={14} />
-        </button>
-
-        <button
-          type="button"
-          title="Notatka"
-          onClick={() => setOpenNote((v) => !v)}
-          className="p-2 rounded-full border bg-card border-border hover:border-tomato"
-        >
-          <StickyNote size={14} />
         </button>
 
         {profile.username && (
           <Link
             to="/u/$username"
             params={{ username: profile.username }}
-            className="chip bg-card border border-border hover:border-tomato"
+            title="Profil"
+            className="shrink-0 grid h-[34px] w-[34px] place-items-center rounded-full border border-border bg-card hover:border-tomato"
           >
-            Profil
+            <UserIcon size={14} />
           </Link>
         )}
 
-        {friendshipId && (
-          <button
-            type="button"
-            title="Usuń znajomego"
-            disabled={remove.isPending}
-            onClick={() => {
-              if (!confirm("Usunąć z grona znajomych?")) return;
-              runWithToast(() => remove.mutateAsync(friendshipId), {
-                loading: "Usuwanie…",
-                success: "Usunięto z grona znajomych",
-                error: "Nie udało się usunąć znajomego",
-              });
-            }}
-            className="p-2 rounded-full border bg-card border-border hover:border-destructive hover:text-destructive disabled:opacity-50"
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            aria-label="Więcej opcji"
+            className="shrink-0 grid h-[34px] w-[34px] place-items-center rounded-full border border-border bg-card hover:border-tomato outline-none"
           >
-            {remove.isPending ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <Trash2 size={14} />
+            <MoreVertical size={14} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setOpenLists((v) => !v)} className="cursor-pointer">
+              <Folder size={14} className="mr-2" /> Grupy
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setOpenNote((v) => !v)} className="cursor-pointer">
+              <StickyNote size={14} className="mr-2" /> Notatka
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {friendshipId && (
+              <DropdownMenuItem
+                disabled={remove.isPending}
+                onClick={() => {
+                  if (!confirm("Usunąć z grona znajomych?")) return;
+                  runWithToast(() => remove.mutateAsync(friendshipId), {
+                    loading: "Usuwanie…",
+                    success: "Usunięto z grona znajomych",
+                    error: "Nie udało się usunąć znajomego",
+                  });
+                }}
+                className="cursor-pointer"
+              >
+                <Trash2 size={14} className="mr-2" /> Usuń znajomego
+              </DropdownMenuItem>
             )}
-          </button>
-        )}
-
-        <button
-          type="button"
-          title="Zablokuj"
-          disabled={block.isPending}
-          onClick={() => {
-            if (
-              !confirm(
-                `Zablokować ${profile.display_name || profile.username}? Znajomość zostanie usunięta.`,
-              )
-            )
-              return;
-            runWithToast(() => block.mutateAsync(profile.id), {
-              loading: "Blokowanie…",
-              success: "Zablokowano użytkownika",
-              error: "Nie udało się zablokować",
-            });
-          }}
-          className="p-2 rounded-full border bg-card border-border hover:border-destructive hover:text-destructive disabled:opacity-50"
-        >
-          {block.isPending ? <Loader2 size={14} className="animate-spin" /> : <Ban size={14} />}
-        </button>
+            <DropdownMenuItem
+              disabled={block.isPending}
+              onClick={() => {
+                if (
+                  !confirm(
+                    `Zablokować ${profile.display_name || profile.username}? Znajomość zostanie usunięta.`,
+                  )
+                )
+                  return;
+                runWithToast(() => block.mutateAsync(profile.id), {
+                  loading: "Blokowanie…",
+                  success: "Zablokowano użytkownika",
+                  error: "Nie udało się zablokować",
+                });
+              }}
+              className="cursor-pointer text-destructive focus:text-destructive"
+            >
+              <Ban size={14} className="mr-2" /> Zablokuj
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {openNote && <NoteEditor friendId={profile.id} />}
@@ -925,7 +925,7 @@ function SuggestionsBlock() {
   const suggQ = useFriendSuggestions();
   const send = useSendFriendRequest();
   const sugg = suggQ.data;
-  // Nic nie pokazuj jeśli pusto lub błąd — to blok pomocniczy
+  // Nic nie pokazuj jeśli pusto lub błąd - to blok pomocniczy
   if (suggQ.isLoading) {
     return (
       <section className="mt-8">
@@ -1053,6 +1053,10 @@ function InviteBlock() {
           </div>
         </div>
       )}
+
+      <div className="mb-3">
+        <VipReferralProgress />
+      </div>
 
       <div className="bg-card border border-border rounded-2xl p-4 space-y-3">
         <button
@@ -1270,7 +1274,7 @@ function GroupsTab() {
         </ul>
       </AsyncState>
       <p className="text-xs text-muted-foreground mt-4">
-        Dodajesz znajomych do grup w zakładce „Znajomi" — kliknij ikonę folderu obok znajomego.
+        Dodajesz znajomych do grup w zakładce „Znajomi" - kliknij ikonę folderu obok znajomego.
       </p>
     </section>
   );

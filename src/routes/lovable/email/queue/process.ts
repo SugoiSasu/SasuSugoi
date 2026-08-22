@@ -17,7 +17,7 @@ const DEFAULT_AUTH_TTL_MINUTES = 15
 const DEFAULT_TRANSACTIONAL_TTL_MINUTES = 60
 const ROOT_DOMAIN = 'pozeramy.live'
 
-// Resend's Node SDK returns { data, error } instead of throwing — the error
+// Resend's Node SDK returns { data, error } instead of throwing - the error
 // object mirrors their REST API error shape: { name, message, statusCode }.
 // See https://resend.com/docs/api-reference/errors
 function isRateLimited(error: unknown): boolean {
@@ -27,7 +27,7 @@ function isRateLimited(error: unknown): boolean {
   return false
 }
 
-// 403s (invalid API key, unverified domain) are permanent — retrying won't help.
+// 403s (invalid API key, unverified domain) are permanent - retrying won't help.
 function isForbidden(error: unknown): boolean {
   if (error && typeof error === 'object' && 'statusCode' in error) {
     return (error as { statusCode: number }).statusCode === 403
@@ -227,7 +227,7 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
               }
             }
 
-            // Suppression re-check at dispatch time — user may have unsubscribed
+            // Suppression re-check at dispatch time - user may have unsubscribed
             // AFTER the message was enqueued. Fail-closed: don't send.
             if (payload.to && typeof payload.to === 'string') {
               const normalized = payload.to.toLowerCase()
@@ -344,7 +344,7 @@ export const Route = createFileRoute("/lovable/email/queue/process")({
                   })
                   .eq('id', 1)
 
-                // Stop processing — remaining messages stay in queue (VT expires, retried next cycle)
+                // Stop processing - remaining messages stay in queue (VT expires, retried next cycle)
                 return Response.json({ processed: totalProcessed, stopped: 'rate_limited' })
               }
 

@@ -18,7 +18,9 @@ export function usePlaceRatingsMap() {
         acc.set(r.place_id, cur);
       }
       const out = new Map<string, { avg: number; count: number }>();
-      acc.forEach((v, k) => out.set(k, { avg: Math.round((v.sum / v.count) * 10) / 10, count: v.count }));
+      acc.forEach((v, k) =>
+        out.set(k, { avg: Math.round((v.sum / v.count) * 10) / 10, count: v.count }),
+      );
       return out;
     },
   });
@@ -42,10 +44,12 @@ export type PlaceLocationInput = {
   lng: number;
 };
 
-export type OpeningHours = Partial<Record<
-  "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun",
-  { open: string; close: string } | null
->>;
+export type OpeningHours = Partial<
+  Record<
+    "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun",
+    { open: string; close: string } | null
+  >
+>;
 
 export type MenuItem = { name: string; price?: string | null; description?: string | null };
 export type MenuCategory = { category: string; items: MenuItem[] };
@@ -63,6 +67,7 @@ export interface Place {
   reel_url: string | null;
   cover_image_url: string | null;
   avatar_url: string | null;
+  avatar_cutout_enabled: boolean;
   menu_url: string | null;
   menu_image_url: string | null;
   promo_label: string | null;
@@ -176,7 +181,9 @@ export function usePlaceRatingBreakdown(placeId: string) {
     queryKey: ["place-rating-breakdown", placeId],
     queryFn: async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any).rpc("place_rating_breakdown", { _place_id: placeId });
+      const { data, error } = await (supabase as any).rpc("place_rating_breakdown", {
+        _place_id: placeId,
+      });
       if (error) throw error;
       return (data ?? []) as { rating: number; count: number }[];
     },
@@ -187,7 +194,10 @@ export function usePlaceRatingBreakdown(placeId: string) {
 const DAY_ORDER = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
 /** True when the place's opening_hours cover the current local day/time (handles past-midnight closing). */
-export function isPlaceOpenNow(hours: OpeningHours | null | undefined, now: Date = new Date()): boolean {
+export function isPlaceOpenNow(
+  hours: OpeningHours | null | undefined,
+  now: Date = new Date(),
+): boolean {
   if (!hours) return false;
   const cur = now.getHours() * 60 + now.getMinutes();
 

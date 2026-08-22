@@ -11,7 +11,7 @@ import {
 
 /**
  * Przenosi jedno zdjęcie lokalu z hotlinkowanego CDN-a do Supabase Storage.
- * Serwerowo — fetch z CDN-ów Instagrama/Facebooka jest blokowany przez CORS w przeglądarce.
+ * Serwerowo - fetch z CDN-ów Instagrama/Facebooka jest blokowany przez CORS w przeglądarce.
  */
 export const migratePlaceImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

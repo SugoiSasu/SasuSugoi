@@ -9,7 +9,7 @@ import type { JSONRPCMessage } from "@modelcontextprotocol/sdk/types.js";
  * route handlers don't expose. Rather than shim Node's HTTP types, this
  * implements the SDK's transport-agnostic `Transport` interface directly:
  * feed in the incoming JSON-RPC message(s) via `dispatch()`, get back
- * whatever the server sent in response. No SSE, no sessions — matches the
+ * whatever the server sent in response. No SSE, no sessions - matches the
  * SDK's own documented "stateless" pattern (fresh server+transport per
  * request, `sessionIdGenerator: undefined` equivalent).
  */

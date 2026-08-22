@@ -25,10 +25,20 @@ export const deleteUserAccount = createServerFn({ method: "POST" })
     const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
     if (delErr) throw new Error(delErr.message);
 
+    // Log before the row can vanish under an FK cascade from some future
+    // schema change - target_user_id is ON DELETE SET NULL, but the details
+    // blob keeps the id regardless.
+    await supabaseAdmin.from("admin_audit_log").insert({
+      actor_id: callerId,
+      action: "delete_user_account",
+      target_user_id: data.userId,
+      details: { userId: data.userId },
+    });
+
     return { ok: true };
   });
 
-/** Self-service account deletion (GDPR Art. 17) — any authenticated user may
+/** Self-service account deletion (GDPR Art. 17) - any authenticated user may
  * delete their own account. Deleting the auth.users row cascades through
  * every table with an ON DELETE CASCADE user_id FK (reviews, friendships,
  * favorites, notifications, etc.). */

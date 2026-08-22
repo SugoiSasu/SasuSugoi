@@ -12,13 +12,13 @@ import { cuisineMeta } from "@/data/places";
 export const Route = createFileRoute("/mapa")({
   head: () => ({
     meta: [
-      { title: "Mapa knajp w Poznaniu — poŻeramy" },
+      { title: "Mapa knajp w Poznaniu - poŻeramy" },
       {
         name: "description",
         content:
           "Interaktywna mapa poznańskich knajp: filtruj po kuchni i ocenie, sprawdź co jest w pobliżu.",
       },
-      { property: "og:title", content: "Mapa knajp w Poznaniu — poŻeramy" },
+      { property: "og:title", content: "Mapa knajp w Poznaniu - poŻeramy" },
       {
         property: "og:description",
         content: "Interaktywna mapa poznańskich knajp: filtruj po kuchni i ocenie.",
@@ -73,10 +73,10 @@ function MapaPage() {
   ];
 
   const trigger = (active: boolean) =>
-    `flex h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition sm:flex-none sm:px-4 ${
+    `flex h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-all duration-200 ease-out hover:-translate-y-0.5 sm:flex-none sm:px-4 ${
       active
-        ? "border-navy bg-navy text-cream"
-        : "border-border bg-card text-foreground hover:border-tomato"
+        ? "border-navy bg-gradient-to-br from-navy to-[oklch(0.3_0.13_268)] text-cream shadow-md shadow-navy/30"
+        : "border-border bg-card text-foreground shadow-sm hover:border-tomato hover:shadow-md"
     }`;
 
   const optionRow = (active: boolean) =>
@@ -86,7 +86,13 @@ function MapaPage() {
 
   return (
     <div className="relative flex h-[calc(100dvh-8.5rem)] min-h-[520px] flex-col lg:h-dvh">
-      <div className="border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
+      <div
+        className="relative overflow-hidden border-b border-border px-4 py-3 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.12)] backdrop-blur"
+        style={{
+          backgroundImage:
+            "radial-gradient(120% 100% at 0% 0%, hsl(var(--tomato) / 0.10), transparent 55%), radial-gradient(120% 100% at 100% 0%, hsl(var(--navy) / 0.10), transparent 55%)",
+        }}
+      >
         <div className="relative mb-3">
           <Search
             size={16}
@@ -96,7 +102,7 @@ function MapaPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Szukaj restauracji, kuchni, miejsca…"
-            className="h-11 w-full rounded-full border border-border bg-card pl-9 pr-4 text-sm outline-none focus:border-tomato"
+            className="h-11 w-full rounded-full border border-border bg-card pl-9 pr-4 text-sm shadow-sm outline-none transition-shadow duration-200 focus:border-tomato focus:shadow-[0_0_0_4px_hsl(var(--tomato)/0.15)]"
           />
         </div>
 

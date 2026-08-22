@@ -14,7 +14,7 @@ const STEPS: Step[] = [
   {
     icon: Sparkles,
     title: "Cześć, poŻeraczu! 👋",
-    body: "Krótko pokażemy Ci, co można robić w poŻeramy — zajmie to góra 30 sekund.",
+    body: "Krótko pokażemy Ci, co można robić w poŻeramy - zajmie to góra 30 sekund.",
     accent: "bg-tomato",
   },
   {
@@ -32,7 +32,7 @@ const STEPS: Step[] = [
   {
     icon: Trophy,
     title: "Zdobywaj odznaki i awansuj",
-    body: "70 achievementów do odblokowania — od pierwszej recenzji po tytuł Legendy poŻeramy.",
+    body: "70 achievementów do odblokowania - od pierwszej recenzji po tytuł Legendy poŻeramy.",
     accent: "bg-navy",
   },
   {

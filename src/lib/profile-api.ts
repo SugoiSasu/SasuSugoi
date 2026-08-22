@@ -24,6 +24,7 @@ export interface Profile {
   is_vip: boolean;
   vip_until: string | null;
   vip_nick_color: string | null;
+  gender: "M" | "K" | null;
 }
 
 export const POZNAN_DISTRICTS = [
@@ -67,7 +68,12 @@ export function useProfileByUsername(usernameOrId: string) {
   return useQuery({
     queryKey: ["profile-by-username", usernameOrId.toLowerCase()],
     queryFn: async (): Promise<Profile | null> => {
-      const q = supabase.from("profiles").select("*");
+      // Explicit columns (not "*") — this is the public-profile lookup, reachable
+      // by anon visitors; keeps internal-only columns like is_beta_tester and
+      // returned_after_break_at from ever leaking into the response payload.
+      const q = supabase.from("profiles").select(
+        "id, username, display_name, avatar_url, avatar_source, bio, district, favorite_cuisines, is_public, points_total, created_at, instagram_url, tiktok_url, youtube_url, facebook_url, x_url, is_vip, vip_until, vip_nick_color, gender",
+      );
       const { data, error } = UUID_RE.test(usernameOrId)
         ? await q.eq("id", usernameOrId).maybeSingle()
         : await q.ilike("username", usernameOrId).maybeSingle();
@@ -92,10 +98,11 @@ export interface ProfileUpdate {
   facebook_url?: string | null;
   x_url?: string | null;
   vip_nick_color?: string | null;
+  gender?: "M" | "K" | null;
 }
 
 /**
- * Upsert by id — guarantees the row exists even if the auth trigger missed it
+ * Upsert by id - guarantees the row exists even if the auth trigger missed it
  * (e.g. preview accounts created before the trigger was installed).
  */
 export function useUpdateProfile() {

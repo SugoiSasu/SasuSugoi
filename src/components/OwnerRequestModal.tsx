@@ -72,7 +72,7 @@ export function OwnerRequestModal({
             Zgłoś się jako właściciel
           </h2>
           <p className="text-sm text-navy/70 mb-5">
-            <strong>{placeName}</strong> — zweryfikujemy zgłoszenie i skontaktujemy się
+            <strong>{placeName}</strong> - zweryfikujemy zgłoszenie i skontaktujemy się
             mailowo.
           </p>
 
@@ -81,8 +81,7 @@ export function OwnerRequestModal({
               Aby wysłać zgłoszenie,{" "}
               <Link to="/auth" className="font-bold text-tomato hover:underline">
                 zaloguj się
-              </Link>{" "}
-              — powiążemy zgłoszenie z Twoim kontem.
+              </Link>{" "} - powiążemy zgłoszenie z Twoim kontem.
             </div>
           ) : alreadyApproved ? (
             <div className="rounded-2xl border-2 border-emerald-500/40 bg-emerald-500/10 p-4 text-sm text-navy inline-flex items-center gap-2">

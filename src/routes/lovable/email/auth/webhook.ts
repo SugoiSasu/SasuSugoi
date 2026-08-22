@@ -11,12 +11,12 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Potwierdź swój email — poŻeramy',
+  signup: 'Potwierdź swój email - poŻeramy',
   invite: 'Zaproszenie do poŻeramy',
-  magiclink: 'Twój link logowania — poŻeramy',
-  recovery: 'Zresetuj hasło — poŻeramy',
-  email_change: 'Potwierdź nowy adres email — poŻeramy',
-  reauthentication: 'Twój kod weryfikacyjny — poŻeramy',
+  magiclink: 'Twój link logowania - poŻeramy',
+  recovery: 'Zresetuj hasło - poŻeramy',
+  email_change: 'Potwierdź nowy adres email - poŻeramy',
+  reauthentication: 'Twój kod weryfikacyjny - poŻeramy',
 }
 
 const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
@@ -40,7 +40,7 @@ function redactEmail(email: string | null | undefined): string {
 
 // Builds the link the user clicks in the email. It points at our own
 // /auth/confirm page (client-side route), which calls supabase.auth.verifyOtp
-// with the token_hash — this app uses client-held sessions (localStorage), so
+// with the token_hash - this app uses client-held sessions (localStorage), so
 // the OTP exchange has to happen in the browser, not in this server handler.
 function buildConfirmationUrl(siteUrl: string, tokenHash: string, type: string, redirectTo: string): string {
   const url = new URL('/auth/confirm', siteUrl)
@@ -116,8 +116,7 @@ export const Route = createFileRoute('/lovable/email/auth/webhook')({
         }
 
         // Standard Webhooks verification (Supabase Auth Hooks spec).
-        // Secret is generated in the Supabase Dashboard as "v1,whsec_<base64>" —
-        // the "v1,whsec_" prefix must be stripped before handing it to the Webhook class.
+        // Secret is generated in the Supabase Dashboard as "v1,whsec_<base64>" - // the "v1,whsec_" prefix must be stripped before handing it to the Webhook class.
         const rawBody = await request.text()
         const headers = Object.fromEntries(request.headers)
 

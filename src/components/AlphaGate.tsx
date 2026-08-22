@@ -70,7 +70,7 @@ export function AlphaGate({ children }: { children: React.ReactNode }) {
           <div className="mx-auto w-12 h-12 rounded-full bg-tomato/10 grid place-items-center text-tomato mb-3">
             <Lock size={20} />
           </div>
-          <h1 className="font-display text-2xl mb-1">poŻeramy — wersja alpha</h1>
+          <h1 className="font-display text-2xl mb-1">poŻeramy - wersja alpha</h1>
           <p className="text-sm text-muted-foreground mb-5">Strona jest w fazie alpha. Wpisz hasło dostępu, aby kontynuować.</p>
           <input
             type="password"

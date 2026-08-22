@@ -26,7 +26,7 @@ export function placeHaystack(p: Place): string {
   );
 }
 
-/** Levenshtein z wczesnym wyjściem — lekka lokalna implementacja. */
+/** Levenshtein z wczesnym wyjściem - lekka lokalna implementacja. */
 export function editDistance(a: string, b: string, max: number): number {
   if (Math.abs(a.length - b.length) > max) return max + 1;
   let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
@@ -61,7 +61,7 @@ export function matchesFuzzy(haystack: string, tokens: string[]): boolean {
 }
 
 /**
- * Filtruje lokale: najpierw dokładnie, a gdy zero wyników — z tolerancją literówek.
+ * Filtruje lokale: najpierw dokładnie, a gdy zero wyników - z tolerancją literówek.
  * Zwraca też flagę `fuzzy`, żeby UI mógł to zakomunikować.
  */
 export function searchPlaces<T extends Place>(places: T[], query: string): { results: T[]; fuzzy: boolean } {

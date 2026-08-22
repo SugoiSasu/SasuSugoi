@@ -1,4 +1,4 @@
-import { createStart, createMiddleware } from "@tanstack/react-start";
+import { createStart, createMiddleware, createCsrfMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
@@ -18,7 +18,14 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
   }
 });
 
+// Rejects cross-site requests to server functions (same-origin/Sec-Fetch-Site
+// check) - webhook routes under src/routes/api/ are plain request handlers,
+// not server functions, so their own bearer-token auth is unaffected.
+const csrfMiddleware = createCsrfMiddleware({
+  filter: (ctx) => ctx.handlerType === "serverFn",
+});
+
 export const startInstance = createStart(() => ({
   functionMiddleware: [attachSupabaseAuth],
-  requestMiddleware: [errorMiddleware],
+  requestMiddleware: [csrfMiddleware, errorMiddleware],
 }));

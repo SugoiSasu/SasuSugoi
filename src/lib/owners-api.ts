@@ -31,7 +31,7 @@ export interface OwnerRequest {
   place?: { id: string; name: string; slug: string } | null;
 }
 
-/** Verified owner (jeżeli jest) dla knajpy — publiczne, na odznakę. */
+/** Verified owner (jeżeli jest) dla knajpy - publiczne, na odznakę. */
 export function usePlaceOwner(placeId: string) {
   return useQuery({
     queryKey: ["place-owner", placeId],
@@ -91,7 +91,7 @@ export function useMyOwnedPlaces() {
   });
 }
 
-/** Ostatnie zgłoszenie właściciela tego użytkownika dla knajpy — do stanu formularza. */
+/** Ostatnie zgłoszenie właściciela tego użytkownika dla knajpy - do stanu formularza. */
 export function useMyOwnerRequestFor(placeId: string) {
   const { user } = useUser();
   return useQuery({

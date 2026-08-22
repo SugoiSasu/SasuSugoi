@@ -23,7 +23,7 @@ export const submitCollab = createServerFn({ method: "POST" })
       throw new Error("Wykryto bota.");
     }
     if (data.elapsed_ms < 3000) {
-      throw new Error("Zwolnij na chwilę — wyślij formularz po krótkim odczekaniu.");
+      throw new Error("Zwolnij na chwilę - wyślij formularz po krótkim odczekaniu.");
     }
     if (data.consent_version !== COLLAB_CONSENT_VERSION) {
       throw new Error(
@@ -59,7 +59,7 @@ export const submitCollab = createServerFn({ method: "POST" })
 
     // Wyślij potwierdzenie tylko przy jawnej zgodzie na kontakt e-mailowy.
     if (data.contact_consent) {
-      // Fire-and-forget confirmation email — never block or fail the submission.
+      // Fire-and-forget confirmation email - never block or fail the submission.
       try {
         const { enqueueTransactionalEmailInternal } = await import(
           "./email/enqueue-internal.server"

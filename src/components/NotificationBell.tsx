@@ -94,7 +94,7 @@ export function NotificationBell() {
         )}
         {offline && (
           <span
-            title="Realtime offline — odpytujemy co 15 s"
+            title="Realtime offline - odpytujemy co 15 s"
             className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-background"
             aria-hidden
           />
@@ -108,7 +108,7 @@ export function NotificationBell() {
               Powiadomienia
               {offline && (
                 <span
-                  title="Realtime niedostępne — używamy odpytywania co 15 s"
+                  title="Realtime niedostępne - używamy odpytywania co 15 s"
                   className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-full px-2 py-0.5"
                 >
                   <WifiOff size={10} /> offline

@@ -7,11 +7,27 @@
 // A MutationObserver re-runs on DOM changes so React updates are covered.
 
 const MAP: Record<string, string> = {
-  ą: "a", ć: "c", ę: "e", ł: "l", ń: "n", ó: "o", ś: "s", ź: "z", ż: "z",
-  Ą: "A", Ć: "C", Ę: "E", Ł: "L", Ń: "N", Ó: "O", Ś: "S", Ź: "Z", Ż: "Z",
+  ą: "a",
+  ć: "c",
+  ę: "e",
+  ł: "l",
+  ń: "n",
+  ó: "o",
+  ś: "s",
+  ź: "z",
+  ż: "z",
+  Ą: "A",
+  Ć: "C",
+  Ę: "E",
+  Ł: "L",
+  Ń: "N",
+  Ó: "O",
+  Ś: "S",
+  Ź: "Z",
+  Ż: "Z",
 };
 const RE = /[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g;
-const DISPLAY_SELECTOR = "h1, h2, h3, h4, .font-display, .font-brand";
+const DISPLAY_SELECTOR = "h1, h2, h3, h4, .font-display, .font-brand, .font-persona";
 
 function strip(s: string): string {
   return s.replace(RE, (ch) => MAP[ch] ?? ch);
@@ -69,7 +85,7 @@ export function installPolishStripper() {
       } else if (m.type === "childList") {
         m.addedNodes.forEach((n) => processNode(n));
       } else if (m.type === "attributes" && m.target.nodeType === Node.ELEMENT_NODE) {
-        // class change may add font-display — reprocess subtree.
+        // class change may add font-display - reprocess subtree.
         processNode(m.target);
       }
     }

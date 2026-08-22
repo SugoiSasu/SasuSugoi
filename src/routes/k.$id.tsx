@@ -8,7 +8,7 @@ import type { Place, OpeningHours } from "@/lib/places-api";
 
 import { cuisineMeta, CUISINES } from "@/data/places";
 import {
-  ArrowLeft, Star, MapPin, Instagram, Loader2, BookOpen, ExternalLink, Home,
+  ArrowLeft, Star, MapPin, Loader2, BookOpen, ExternalLink, Home,
   Map as MapIcon, Heart, Play, Navigation, Phone, Globe, Clock, Wallet,
   ShoppingBag, Accessibility, Copy, Share2, ChevronDown,
 } from "lucide-react";
@@ -25,6 +25,7 @@ import { OwnerRequestModal } from "@/components/OwnerRequestModal";
 import { EditableImageButton } from "@/components/EditableImageButton";
 import { Bell, BellOff, ShieldCheck } from "lucide-react";
 import { VisitStatusButton } from "@/components/VisitStatus";
+import { InstagramReelPoster } from "@/components/InstagramReelEmbed";
 import sadPizza from "@/assets/brand/sad-pizza-404.png";
 
 const FoodMap = lazy(() => import("@/components/FoodMap"));
@@ -46,12 +47,12 @@ export const Route = createFileRoute("/k/$id")({
   },
   head: ({ params, loaderData }) => {
     const place = loaderData?.place ?? null;
-    const fallbackDesc = `Profil lokalu na poŻeramy — adres, menu, recenzje i opinie poznańskich foodies.`;
+    const fallbackDesc = `Profil lokalu na poŻeramy - adres, menu, recenzje i opinie poznańskich foodies.`;
     const name = place?.name ?? "Profil knajpy";
-    const title = clamp(`${name} — poŻeramy Poznań`, 60);
+    const title = clamp(`${name} - poŻeramy Poznań`, 60);
     const description = clamp(
       place?.description?.trim() ||
-        (place ? `${name} w Poznaniu — ${place.cuisine ?? "kuchnia"}, ${place.address ?? "Poznań"}. Recenzje, menu i ocena na poŻeramy.` : fallbackDesc),
+        (place ? `${name} w Poznaniu - ${place.cuisine ?? "kuchnia"}, ${place.address ?? "Poznań"}. Recenzje, menu i ocena na poŻeramy.` : fallbackDesc),
       160,
     );
     const url = `https://pozeramy.live/k/${params.id}`;
@@ -299,7 +300,6 @@ function PlaceProfile() {
   if (!place) return null;
 
   const meta = cuisineMeta(place.cuisine);
-  const embedUrl = igEmbedUrl(place.reel_url);
   const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.address)}`;
   const openInfo = isOpenNow(place.opening_hours);
   const showPromo = !!place.promo_active && !!place.promo_label?.trim();
@@ -523,7 +523,7 @@ function PlaceProfile() {
           </Collapsible>
         )}
 
-        {/* MINI-MAP — collapsible */}
+        {/* MINI-MAP - collapsible */}
         <Collapsible
           title="Mapa i dojazd"
           icon={<MapIcon size={18} />}
@@ -552,14 +552,19 @@ function PlaceProfile() {
             </button>
           </div>
           {(place.locations?.length ?? 0) > 0 && (
-            <ul className="mt-3 grid sm:grid-cols-2 gap-2 text-sm">
-              {place.locations!.map((l) => (
-                <li key={l.id} className="rounded-xl border border-border bg-card px-3 py-2">
-                  {l.label && <div className="text-xs uppercase tracking-wider font-bold text-navy/70">{l.label}</div>}
-                  <div>{l.address}</div>
-                </li>
-              ))}
-            </ul>
+            <>
+              <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-navy/60">
+                Inne lokalizacje {place.name}
+              </p>
+              <ul className="mt-1.5 grid sm:grid-cols-2 gap-2 text-sm">
+                {place.locations!.map((l) => (
+                  <li key={l.id} className="rounded-xl border border-border bg-card px-3 py-2">
+                    {l.label && <div className="text-xs uppercase tracking-wider font-bold text-navy/70">{l.label}</div>}
+                    <div>{l.address}</div>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </Collapsible>
       </div>
@@ -567,32 +572,21 @@ function PlaceProfile() {
       <div className="lg:col-start-1 lg:row-start-2">
         <FriendsFavoritedNotice placeId={place.id} placeName={place.name} />
 
-        {/* MENU — collapsible */}
+        {/* MENU - collapsible */}
         <MenuSection place={place} />
 
-        {/* IG reel — collapsible, lazy */}
-        {embedUrl && (
+        {/* IG reel - branded poster; real embed loads only once opened */}
+        {place.reel_url && (
           <Collapsible
             title="Rolka z Instagrama"
             icon={<Play size={18} />}
             defaultOpen={false}
           >
-            <div className="bg-card border border-border rounded-2xl overflow-hidden mx-auto w-full max-w-md">
-              <iframe
-                src={embedUrl}
-                title={`Rolka ${place.name}`}
-                className="w-full"
-                style={{ aspectRatio: "9/16", border: 0, maxHeight: 720 }}
-                allow="encrypted-media"
-                loading="lazy"
-              />
-            </div>
-            {place.reel_url && (
-              <a href={place.reel_url} target="_blank" rel="noreferrer"
-                 className="mt-3 inline-flex items-center gap-2 rounded-full bg-navy text-cream px-5 py-2.5 font-semibold hover:bg-tomato transition">
-                <Instagram size={16} /> Otwórz na Instagramie
-              </a>
-            )}
+            <InstagramReelPoster
+              reelUrl={place.reel_url}
+              cuisine={place.cuisine}
+              placeName={place.name}
+            />
           </Collapsible>
         )}
 
@@ -1006,15 +1000,4 @@ function FriendsFavoritedNotice({ placeId, placeName }: { placeId: string; place
 }
 
 
-function igEmbedUrl(url: string | null): string | null {
-  if (!url) return null;
-  try {
-    const u = new URL(url);
-    if (!u.hostname.includes("instagram.com")) return null;
-    const path = u.pathname.endsWith("/") ? u.pathname : u.pathname + "/";
-    return `https://www.instagram.com${path}embed/`;
-  } catch {
-    return null;
-  }
-}
 

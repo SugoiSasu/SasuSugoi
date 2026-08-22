@@ -36,7 +36,7 @@ export function usePlaceReviews(placeId: string | undefined) {
     queryFn: async (): Promise<Review[]> => {
       const { data: rows, error } = await supabase
         .from("reviews")
-        .select("*")
+        .select("id, place_id, user_id, rating, body, photo_url, created_at, updated_at")
         .eq("place_id", placeId!)
         .order("created_at", { ascending: false });
       if (error) throw error;

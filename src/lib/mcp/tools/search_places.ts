@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { sanitizeIlikeTerm } from "@/lib/postgrest-filter";
 
 export const searchPlacesTool = {
   name: "search_places",
@@ -13,7 +14,7 @@ export const searchPlacesTool = {
         .trim()
         .min(1)
         .describe(
-          "Free-text query — restaurant name, cuisine (e.g. 'ramen', 'włoska'), district, or address.",
+          "Free-text query - restaurant name, cuisine (e.g. 'ramen', 'włoska'), district, or address.",
         ),
       limit: z
         .number()
@@ -38,7 +39,7 @@ export const searchPlacesTool = {
       auth: { persistSession: false, autoRefreshToken: false },
     });
     const max = limit ?? 10;
-    const like = `%${query}%`;
+    const like = `%${sanitizeIlikeTerm(query)}%`;
     const { data, error } = await supabase
       .from("places")
       .select("slug, name, cuisine, address, district, rating, cover_image_url")

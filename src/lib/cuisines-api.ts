@@ -19,7 +19,7 @@ export function useCuisines() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
         .from("cuisines")
-        .select("*")
+        .select("id, name, emoji, color, sort_order, enabled")
         .order("sort_order", { ascending: true })
         .order("name", { ascending: true });
       if (error) throw error;

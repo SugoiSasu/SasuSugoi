@@ -28,10 +28,10 @@ function mapEventToStatus(type: string): 'bounced' | 'complained' | null {
 
 function mapEventToMessage(type: string, bounce?: { message?: string }): string {
   if (type === 'email.bounced') {
-    return bounce?.message ?? 'Permanent bounce — email address is invalid or rejected'
+    return bounce?.message ?? 'Permanent bounce - email address is invalid or rejected'
   }
   if (type === 'email.complained') {
-    return 'Spam complaint — recipient marked email as spam'
+    return 'Spam complaint - recipient marked email as spam'
   }
   return 'Email suppressed'
 }
@@ -64,7 +64,7 @@ export const Route = createFileRoute('/lovable/email/suppression')({
         }
 
         // Our own /email/unsubscribe route (linked via the List-Unsubscribe header
-        // we send) handles unsubscribes directly — no webhook round-trip needed for
+        // we send) handles unsubscribes directly - no webhook round-trip needed for
         // that path. This endpoint only tracks bounces and spam complaints.
         const status = mapEventToStatus(payload.type)
         if (!status) {
@@ -80,7 +80,7 @@ export const Route = createFileRoute('/lovable/email/suppression')({
         const supabase = createClient(supabaseUrl, supabaseServiceKey)
         const normalizedEmail = recipient.toLowerCase()
 
-        // 1. Upsert to suppressed_emails (idempotent — safe for webhook retries)
+        // 1. Upsert to suppressed_emails (idempotent - safe for webhook retries)
         const { error: suppressError } = await supabase.from('suppressed_emails').upsert(
           {
             email: normalizedEmail,
@@ -108,7 +108,7 @@ export const Route = createFileRoute('/lovable/email/suppression')({
         })
 
         if (insertError) {
-          // Non-fatal — log and continue. The suppression was already recorded.
+          // Non-fatal - log and continue. The suppression was already recorded.
           console.warn('Failed to insert email_send_log', { error: insertError })
         }
 

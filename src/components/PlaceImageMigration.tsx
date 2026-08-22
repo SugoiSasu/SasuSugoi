@@ -49,7 +49,7 @@ export function MigratePlaceImagesButton({
     }
     setBusy(false);
     await qc.invalidateQueries({ queryKey: ["places"] });
-    if (errors.length) toast.error(`Migracja z błędami — ${errors.join(" · ")}`);
+    if (errors.length) toast.error(`Migracja z błędami - ${errors.join(" · ")}`);
     else if (migrated === 0) toast.info("Wszystkie zdjęcia są już w Storage");
     else toast.success(`Zmigrowano ${migrated} ${migrated === 1 ? "zdjęcie" : "zdjęcia"} ✓`);
   }
@@ -127,7 +127,7 @@ export function MigrateAllPlacesButton({ places }: { places: Place[] }) {
               <ul className="text-xs text-muted-foreground space-y-0.5 max-h-40 overflow-y-auto">
                 {summary.failed.map((f, i) => (
                   <li key={i}>
-                    <strong className="text-foreground">{f.place}</strong> — {FIELD_LABEL[f.field]}: {f.message}
+                    <strong className="text-foreground">{f.place}</strong> - {FIELD_LABEL[f.field]}: {f.message}
                   </li>
                 ))}
               </ul>

@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
 
 export const Route = createFileRoute("/_authenticated/admin/social")({
-  head: () => ({ meta: [{ title: "Social media — Panel admina" }] }),
+  head: () => ({ meta: [{ title: "Social media - Panel admina" }] }),
   component: AdminSocial,
 });
 
@@ -76,8 +76,8 @@ function AdminSocial() {
           <div className="rounded-xl border border-border p-3">
             <div className="flex items-center gap-2 font-semibold mb-1"><Instagram size={14}/> Instagram</div>
             <ul className="text-xs text-muted-foreground space-y-0.5">
-              <li><code>INSTAGRAM_ACCESS_TOKEN</code> — long-lived token (Meta Graph API)</li>
-              <li><code>INSTAGRAM_USER_ID</code> — ID konta IG Business</li>
+              <li><code>INSTAGRAM_ACCESS_TOKEN</code> - long-lived token (Meta Graph API)</li>
+              <li><code>INSTAGRAM_USER_ID</code> - ID konta IG Business</li>
             </ul>
             <p className="text-[11px] text-muted-foreground mt-2">Wymaga konta IG przełączonego na Business i połączonego z Page FB.</p>
           </div>
@@ -91,7 +91,7 @@ function AdminSocial() {
           <div className="rounded-xl border border-border p-3">
             <div className="flex items-center gap-2 font-semibold mb-1"><Youtube size={14}/> YouTube</div>
             <ul className="text-xs text-muted-foreground space-y-0.5">
-              <li><code>YOUTUBE_API_KEY</code> — Google Cloud Console, YouTube Data API v3</li>
+              <li><code>YOUTUBE_API_KEY</code> - Google Cloud Console, YouTube Data API v3</li>
             </ul>
           </div>
         </div>
@@ -253,7 +253,7 @@ function PlatformCard({
             Ręcznie ustaw liczbę obserwujących
           </label>
           <p className="text-[11px] text-muted-foreground mb-2">
-            Użyj gdy token Graph API wygasł — wartość zostanie wpisana „na sztywno" do następnego udanego syncu.
+            Użyj gdy token Graph API wygasł - wartość zostanie wpisana „na sztywno" do następnego udanego syncu.
           </p>
           <div className="flex gap-2">
             <input
