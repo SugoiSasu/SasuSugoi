@@ -28,6 +28,7 @@ import { VipBadge, isVipActive, vipNameStyle } from "@/components/VipBadge";
 import { RandomPlaceCard } from "@/components/RandomPlaceCard";
 import { SidebarAdCard } from "@/components/SidebarAdCard";
 import { InviteFriendsModal } from "@/components/InviteFriendsModal";
+import { useCurrentAwardsEvent } from "@/lib/awards-api";
 import logoDark from "@/assets/brand/po_zeramy-logo-dark.png.asset.json";
 
 const coreItems = [
@@ -59,6 +60,7 @@ export function AppSidebar() {
   const { data: visited } = useUserVisitedPlaces(user?.id, "visited");
   const { data: favs } = useUserFavoritePlaces(user?.id);
   const { data: friends } = useFriendProfiles(user?.id);
+  const { data: awardsEvent } = useCurrentAwardsEvent();
   const inviteLink = useMyInviteLink(user?.id);
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -179,6 +181,12 @@ export function AppSidebar() {
                 <span className="truncate">{label}</span>
               </Link>
             ))}
+            {awardsEvent && (
+              <Link to="/warte-pozarcia" className={linkBase} activeProps={activeCls}>
+                <Trophy size={18} className={iconCls} />
+                <span className="truncate">Warte poŻarcia</span>
+              </Link>
+            )}
             {profile?.username ? (
               <Link
                 to="/u/$username"

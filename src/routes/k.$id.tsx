@@ -23,7 +23,8 @@ import { useIsFollowing, useToggleFollow, useFollowCount } from "@/lib/follows-a
 import { usePlaceOwner, useIsOwnerOf } from "@/lib/owners-api";
 import { OwnerRequestModal } from "@/components/OwnerRequestModal";
 import { EditableImageButton } from "@/components/EditableImageButton";
-import { Bell, BellOff, ShieldCheck } from "lucide-react";
+import { Bell, BellOff, ShieldCheck, Trophy } from "lucide-react";
+import { usePlaceAwardWins } from "@/lib/awards-api";
 import { VisitStatusButton } from "@/components/VisitStatus";
 import { InstagramReelPoster } from "@/components/InstagramReelEmbed";
 import sadPizza from "@/assets/brand/sad-pizza-404.png";
@@ -289,6 +290,7 @@ function PlaceProfile() {
   const { id } = Route.useParams();
   const { data: place, isLoading } = usePlace(id);
   const { data: verifiedOwner } = usePlaceOwner((place as Place | undefined)?.id ?? "");
+  const { data: awardWins } = usePlaceAwardWins((place as Place | undefined)?.id);
   const reviewStats = usePlaceReviewStats((place as Place | undefined)?.id);
   const { data: isOwnerOfPlace } = useIsOwnerOf((place as Place | undefined)?.id ?? "");
   const { data: isAdmin } = useIsAdmin();
@@ -399,6 +401,15 @@ function PlaceProfile() {
                       <ShieldCheck size={12} /> Zweryfikowany właściciel
                     </span>
                   )}
+                  {(awardWins ?? []).map((w) => (
+                    <span
+                      key={w.id}
+                      className="chip bg-mustard text-navy text-xs inline-flex items-center gap-1"
+                      title={`${w.vote_count} głosów`}
+                    >
+                      <Trophy size={12} /> {w.event?.name ?? "Warte poŻarcia"} - {w.cuisine?.name}
+                    </span>
+                  ))}
                 </div>
                 <div className="flex items-center gap-3 text-sm flex-wrap">
                   {reviewStats.count > 0 && reviewStats.avg !== null ? (

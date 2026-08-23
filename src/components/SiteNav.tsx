@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Handshake, Menu, Newspaper, Users, X } from "lucide-react";
+import { Handshake, Menu, Newspaper, Trophy, Users, X } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { NotificationBell } from "@/components/NotificationBell";
 import { AdBanner } from "@/components/AdBanner";
 import { useUser } from "@/lib/use-auth";
 import { useMyFriendships } from "@/lib/friends-api";
+import { useCurrentAwardsEvent } from "@/lib/awards-api";
 import logoDark from "@/assets/brand/po_zeramy-logo-dark.png.asset.json";
 
 /** Global top nav. Hash links jump to sections on home; from other pages they navigate to "/#anchor". */
@@ -17,6 +18,7 @@ export function SiteNav() {
   const pendingFriends = (friendships ?? []).filter(
     (f) => f.status === "pending" && f.addressee_id === user?.id,
   ).length;
+  const { data: awardsEvent } = useCurrentAwardsEvent();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const closeMobile = () => setMobileOpen(false);
@@ -93,6 +95,15 @@ export function SiteNav() {
               )}
             </Link>
           )}
+          {awardsEvent && (
+            <Link
+              to="/warte-pozarcia"
+              className="inline-flex items-center gap-1.5 hover:text-tomato transition-colors"
+              activeProps={{ className: "text-tomato" }}
+            >
+              <Trophy size={14} /> Warte poŻarcia
+            </Link>
+          )}
           <Link
             to="/wspolpraca"
             className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-tomato transition-colors"
@@ -148,6 +159,15 @@ export function SiteNav() {
                     {pendingFriends > 9 ? "9+" : pendingFriends}
                   </span>
                 )}
+              </Link>
+            )}
+            {awardsEvent && (
+              <Link
+                to="/warte-pozarcia"
+                onClick={closeMobile}
+                className="min-h-11 py-2 text-base font-medium hover:text-tomato inline-flex items-center gap-2"
+              >
+                <Trophy size={16} /> Warte poŻarcia
               </Link>
             )}
             <Link

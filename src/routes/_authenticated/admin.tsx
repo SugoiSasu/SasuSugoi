@@ -20,6 +20,7 @@ import {
   Settings2,
   ChevronDown,
   Sparkle,
+  Trophy,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -60,6 +61,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
       { to: "/admin/social", icon: <Share2 size={14} />, label: "Social", superOnly: true },
       { to: "/admin/ads", icon: <Megaphone size={14} />, label: "Reklamy", superOnly: true },
       { to: "/admin/collab", icon: <Inbox size={14} />, label: "Współpraca", superOnly: true },
+      { to: "/admin/nagrody", icon: <Trophy size={14} />, label: "Nagrody", superOnly: true },
       { to: "/admin/users", icon: <Users size={14} />, label: "Użytkownicy", superOnly: true },
       {
         to: "/admin/ustawienia",
