@@ -25,6 +25,7 @@ import { OwnerRequestModal } from "@/components/OwnerRequestModal";
 import { EditableImageButton } from "@/components/EditableImageButton";
 import { Bell, BellOff, ShieldCheck, Trophy } from "lucide-react";
 import { usePlaceAwardWins } from "@/lib/awards-api";
+import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import { VisitStatusButton } from "@/components/VisitStatus";
 import { InstagramReelPoster } from "@/components/InstagramReelEmbed";
 import sadPizza from "@/assets/brand/sad-pizza-404.png";
@@ -361,9 +362,7 @@ function PlaceProfile() {
               loading="eager"
             />
           ) : (
-            <div className="w-full h-full grid place-items-center text-6xl" style={{ backgroundColor: meta.color }}>
-              <span aria-hidden="true">{meta.emoji}</span>
-            </div>
+            <CuisineFallbackCover cuisine={place.cuisine} emojiClassName="text-6xl" />
           )}
           <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-navy/80 via-navy/15 to-transparent" />
           <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3">

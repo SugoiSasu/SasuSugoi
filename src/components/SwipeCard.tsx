@@ -2,6 +2,7 @@ import { motion, useMotionValue, useTransform, animate } from "motion/react";
 import { MapPin } from "lucide-react";
 import { cuisineMeta } from "@/data/places";
 import { YummyFace, NopeFace } from "@/components/SwipeFaces";
+import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import type { Place } from "@/lib/places-api";
 
 const SWIPE_THRESHOLD = 120;
@@ -47,19 +48,16 @@ export function SwipeCard({
       }}
     >
       <div className="relative h-full w-full touch-pan-y overflow-hidden rounded-3xl border border-border bg-card shadow-xl">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: place.cover_image_url ? `url(${place.cover_image_url})` : undefined,
-            backgroundColor: place.cover_image_url ? undefined : meta.color,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
-          {!place.cover_image_url && (
-            <div className="grid h-full place-items-center text-8xl opacity-90" aria-hidden="true">
-              {meta.emoji}
-            </div>
+        <div className="absolute inset-0">
+          {place.cover_image_url ? (
+            <img
+              src={place.cover_image_url}
+              alt=""
+              className="h-full w-full object-cover"
+              aria-hidden="true"
+            />
+          ) : (
+            <CuisineFallbackCover cuisine={place.cuisine} emojiClassName="text-8xl" />
           )}
         </div>
 

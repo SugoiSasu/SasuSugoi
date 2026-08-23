@@ -16,6 +16,7 @@ import { useActiveAds, type Ad } from "@/lib/ads-api";
 import { SponsoredDiscoverCard } from "@/components/SponsoredDiscoverCard";
 import { pickSeeded } from "@/lib/seeded-pick";
 import { useCutoutLogo } from "@/lib/chroma-cutout";
+import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import logoDark from "@/assets/brand/po_zeramy-logo-dark.png.asset.json";
 
 export const Route = createFileRoute("/")({
@@ -348,7 +349,9 @@ function DiscoverCard({ place, stat }: { place: Place; stat?: { avg: number; cou
               className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
             />
           ) : (
-            <div className="absolute inset-0 grid place-items-center text-5xl">{meta.emoji}</div>
+            <div className="absolute inset-0">
+              <CuisineFallbackCover cuisine={place.cuisine} emojiClassName="text-5xl" />
+            </div>
           )}
           {!place.avatar_url && (
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-navy/45 via-transparent to-transparent" />
