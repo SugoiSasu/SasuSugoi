@@ -44,10 +44,8 @@ export const approveOwnerRequest = createServerFn({ method: "POST" })
       .select("role")
       .eq("user_id", userId);
     if (rErr) throw new Error(rErr.message);
-    const isAdmin = (adminRoles ?? []).some(
-      (r) => r.role === "admin" || r.role === "super_admin",
-    );
-    if (!isAdmin) throw new Error("Forbidden");
+    const isSuperAdmin = (adminRoles ?? []).some((r) => r.role === "super_admin");
+    if (!isSuperAdmin) throw new Error("Forbidden");
 
     const { data: req, error: qErr } = await supabase
       .from("owner_requests")
@@ -106,10 +104,8 @@ export const rejectOwnerRequest = createServerFn({ method: "POST" })
       .from("user_roles")
       .select("role")
       .eq("user_id", userId);
-    const isAdmin = (adminRoles ?? []).some(
-      (r) => r.role === "admin" || r.role === "super_admin",
-    );
-    if (!isAdmin) throw new Error("Forbidden");
+    const isSuperAdmin = (adminRoles ?? []).some((r) => r.role === "super_admin");
+    if (!isSuperAdmin) throw new Error("Forbidden");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin

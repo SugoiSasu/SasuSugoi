@@ -8,6 +8,7 @@ import { useFriendLeaderboard, useFriendsCount, useInviteStats } from "@/lib/fri
 import { useUserReviewStats } from "@/lib/reviews-api";
 import { UserAvatar } from "@/components/UserAvatar";
 import { LevelProgressCard } from "@/components/LevelProgress";
+import { AuthGate } from "@/components/AuthGate";
 
 export const Route = createFileRoute("/osiagniecia")({
   head: () => ({
@@ -63,6 +64,18 @@ function AchievementsPage() {
 
   const podium = (leaders ?? []).slice(0, 3);
   const rest = (leaders ?? []).slice(3);
+
+  if (!user) {
+    return (
+      <main id="main-content" className="mx-auto max-w-2xl px-4 py-10 sm:py-16">
+        <AuthGate
+          icon={Trophy}
+          title="Zaloguj się, żeby zobaczyć swoje osiągnięcia"
+          description="Zdobywaj odznaki poŻeracza, awansuj poziomy i rywalizuj ze znajomymi w Poznaniu."
+        />
+      </main>
+    );
+  }
 
   return (
     <main id="main-content" className="mx-auto max-w-3xl px-4 py-6 sm:py-10 lg:max-w-6xl lg:px-6">
