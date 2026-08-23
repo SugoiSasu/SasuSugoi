@@ -1,7 +1,7 @@
 import { BackButton } from "@/components/BackButton";
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { lazy, Suspense, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Place, OpeningHours } from "@/lib/places-api";
@@ -501,8 +501,8 @@ function PlaceProfile() {
         </div>
 
         {/* QUICK INFO bar */}
-        <div className="mb-6 -mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto scrollbar-none">
-          <div className="flex gap-2 min-w-min">
+        <div className="mb-6 -mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto scrollbar-none [mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] sm:[mask-image:none]">
+          <div className="flex gap-2 min-w-min pr-6">
             {(openInfo.today || place.opening_hours) && (
               <QuickChip
                 icon={<Clock size={14} />}
@@ -522,6 +522,7 @@ function PlaceProfile() {
           <Collapsible
             title="Godziny otwarcia"
             icon={<Clock size={18} />}
+            defaultOpen={false}
             summary={
               <span className={openInfo.open ? "text-emerald-700 font-semibold" : "text-rose-700 font-semibold"}>
                 {openInfo.open
@@ -638,6 +639,8 @@ function FollowButton({ placeId }: { placeId: string }) {
   const isFollowing = useIsFollowing(placeId);
   const toggleFollow = useToggleFollow();
   const busy = toggleFollow.isPending;
+  const navigate = useNavigate();
+  const qc = useQueryClient();
 
   if (!user) {
     return (
@@ -667,7 +670,21 @@ function FollowButton({ placeId }: { placeId: string }) {
         });
       }
     } catch (e) {
-      toast.error((e as Error).message);
+      const code = (e as { code?: string })?.code;
+      if (code === "23503") {
+        // FK violation on user_id: the session's account no longer exists
+        // (e.g. a stale/orphaned login) - staying "logged in" would just keep
+        // failing on every write, so force a clean re-login instead.
+        toast.error("Sesja wygasła - zaloguj się ponownie", {
+          description: "Twoje konto nie zostało znalezione. To się zdarza po dłuższej przerwie.",
+        });
+        await qc.cancelQueries();
+        qc.clear();
+        await supabase.auth.signOut();
+        navigate({ to: "/auth" });
+        return;
+      }
+      toast.error("Nie udało się zapisać. Spróbuj ponownie.");
     }
   };
 
