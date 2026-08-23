@@ -49,6 +49,7 @@ export function CollapsiblePlaceList({
   const [needsExpand, setNeedsExpand] = useState(false);
   const [collapsedH, setCollapsedH] = useState(0);
   const [expandedH, setExpandedH] = useState(0);
+  const [readyForTransition, setReadyForTransition] = useState(false);
 
   const sorted = places
     ? [...places].sort((a, b) => {
@@ -93,6 +94,15 @@ export function CollapsiblePlaceList({
       window.removeEventListener("resize", measure);
     };
   }, [places, variant, sort]);
+
+  // The very first height is a snap into place (no visible collapse-on-load
+  // flash) - the smooth transition only kicks in once that settled height
+  // has actually painted, so it's reserved for later user-triggered toggles.
+  useEffect(() => {
+    if (collapsedH <= 0 || readyForTransition) return;
+    const id = requestAnimationFrame(() => setReadyForTransition(true));
+    return () => cancelAnimationFrame(id);
+  }, [collapsedH, readyForTransition]);
 
   const showGradient = !expanded && needsExpand;
   const containerHeight = expanded ? expandedH : collapsedH;
@@ -139,7 +149,7 @@ export function CollapsiblePlaceList({
           className="relative overflow-hidden rounded-xl"
           style={{
             height: containerHeight > 0 ? containerHeight : undefined,
-            transition: "height 500ms cubic-bezier(0.16, 1, 0.3, 1)",
+            transition: readyForTransition ? "height 500ms cubic-bezier(0.16, 1, 0.3, 1)" : "none",
           }}
         >
           <div
