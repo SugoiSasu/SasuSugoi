@@ -33,6 +33,24 @@ export type Database = {
   };
   public: {
     Tables: {
+      admin_changelog: {
+        Row: {
+          created_at: string;
+          id: string;
+          summary: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          summary: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          summary?: string;
+        };
+        Relationships: [];
+      };
       achievements: {
         Row: {
           created_at: string;

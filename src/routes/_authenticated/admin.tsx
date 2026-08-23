@@ -1,8 +1,11 @@
 import { createFileRoute, Outlet, Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsAdmin, useIsSuperAdmin, useUser } from "@/lib/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminChangelog } from "@/lib/changelog-api";
+import { formatDistanceToNow } from "date-fns";
+import { pl } from "date-fns/locale";
 import {
   Map as MapIcon,
   FileText,
@@ -16,6 +19,7 @@ import {
   Sparkles,
   Settings2,
   ChevronDown,
+  Sparkle,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -157,6 +161,7 @@ function AdminShell() {
             </Link>
           </div>
           <div className="flex items-center gap-3">
+            <ChangelogWidget />
             <span className="hidden md:inline text-xs text-muted-foreground">{user?.email}</span>
             <button
               onClick={signOut}
@@ -198,6 +203,66 @@ function AdminShell() {
       <main id="main-content" className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
         <Outlet />
       </main>
+    </div>
+  );
+}
+
+const CHANGELOG_SEEN_KEY = "pz-admin-changelog-seen";
+
+function ChangelogWidget() {
+  const { data: entries } = useAdminChangelog();
+  const [open, setOpen] = useState(false);
+  const [seenAt, setSeenAt] = useState(() => localStorage.getItem(CHANGELOG_SEEN_KEY) ?? "");
+  const hasUnseen = useMemo(
+    () => (entries ?? []).some((e) => e.created_at > seenAt),
+    [entries, seenAt],
+  );
+
+  function toggle() {
+    const next = !open;
+    setOpen(next);
+    if (next && entries && entries.length > 0) {
+      localStorage.setItem(CHANGELOG_SEEN_KEY, entries[0].created_at);
+      setSeenAt(entries[0].created_at);
+    }
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={toggle}
+        aria-label="Co nowego"
+        className="relative chip bg-card border border-border hover:border-tomato"
+      >
+        <Sparkle size={14} /> Co nowego
+        {hasUnseen && (
+          <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-tomato" aria-hidden="true" />
+        )}
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full mt-2 z-50 w-80 max-h-96 overflow-y-auto rounded-2xl border border-border bg-card p-3 shadow-lg">
+            <p className="px-1 pb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Ostatnie zmiany
+            </p>
+            {(entries ?? []).length === 0 ? (
+              <p className="px-1 py-3 text-sm text-muted-foreground">Brak wpisów jeszcze.</p>
+            ) : (
+              <ul className="space-y-2.5">
+                {entries!.map((e) => (
+                  <li key={e.id} className="px-1">
+                    <p className="text-sm leading-snug">{e.summary}</p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      {formatDistanceToNow(new Date(e.created_at), { addSuffix: true, locale: pl })}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
