@@ -91,7 +91,7 @@ function WallPage() {
     <main id="main-content" className="min-h-dvh bg-background py-6 sm:py-8 px-3 sm:px-4">
       <div className="mx-auto max-w-2xl">
         <header className="mb-6 pb-5 border-b border-border">
-          <h1 className="font-display text-3xl sm:text-4xl mb-1">Pożeralnia</h1>
+          <h1 className="font-persona text-3xl sm:text-4xl mb-1">Pożeralnia</h1>
           <p className="text-sm text-muted-foreground">
             Aktywność znajomych, nowinki z Twoich ulubionych miejscówek i komunikaty od lokali.
           </p>

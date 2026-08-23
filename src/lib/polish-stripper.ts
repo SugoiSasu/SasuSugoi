@@ -1,10 +1,15 @@
 // Globally transliterates Polish diacritics (ą,ć,ę,ł,ń,ó,ś,ź,ż + uppercase)
 // inside any element rendered with the Persona display font, so words don't
 // awkwardly fall back to the body font mid-word (e.g. "CHCę ODWIEDZIć").
+// Persona's @font-face only declares unicode-range U+0020-00FF, so it's
+// missing glyphs for most of these letters specifically - other faces
+// (Bricolage Grotesque, Manrope, body text) have full Polish coverage and
+// must NOT be touched here, or real headings lose their diacritics for no
+// reason (e.g. a plain <h2> reading "Osiągnięcia" turning into "Osiagniecia").
 //
-// Strategy: walk text nodes whose nearest ancestor matches a display-font
-// selector (h1-h4, .font-display, .font-brand) and replace chars in-place.
-// A MutationObserver re-runs on DOM changes so React updates are covered.
+// Strategy: walk text nodes whose nearest ancestor matches .font-persona
+// specifically, and replace chars in-place. A MutationObserver re-runs on
+// DOM changes so React updates are covered.
 
 const MAP: Record<string, string> = {
   ą: "a",
@@ -27,7 +32,7 @@ const MAP: Record<string, string> = {
   Ż: "Z",
 };
 const RE = /[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g;
-const DISPLAY_SELECTOR = "h1, h2, h3, h4, .font-display, .font-brand, .font-persona";
+const DISPLAY_SELECTOR = ".font-persona";
 
 function strip(s: string): string {
   return s.replace(RE, (ch) => MAP[ch] ?? ch);
