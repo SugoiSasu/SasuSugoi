@@ -146,7 +146,7 @@ export function AppSidebar() {
         </Link>
       ) : (
         <p className="mb-2.5 mt-1.5 px-2 text-[11px] font-medium uppercase tracking-wide text-cream/40">
-          Foodie z Poznania
+          Foodies App
         </p>
       )}
 

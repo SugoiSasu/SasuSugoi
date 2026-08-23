@@ -134,7 +134,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "poŻeramy - foodie z Poznania" },
+      { title: "poŻeramy - Foodies App" },
       {
         name: "description",
         content:
@@ -143,8 +143,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#221e50" },
-      { property: "og:title", content: "poŻeramy - foodie z Poznania" },
-      { name: "twitter:title", content: "poŻeramy - foodie z Poznania" },
+      { property: "og:title", content: "poŻeramy - Foodies App" },
+      { name: "twitter:title", content: "poŻeramy - Foodies App" },
       {
         property: "og:description",
         content:
@@ -207,7 +207,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               "@id": "https://pozeramy.live/#website",
               url: "https://pozeramy.live",
               name: "poŻeramy",
-              description: "Foodie z Poznania - mapa, recenzje i rolki najlepszych miejscówek.",
+              description: "Foodies App - mapa, recenzje i rolki najlepszych miejscówek.",
               publisher: { "@id": "https://pozeramy.live/#organization" },
               inLanguage: "pl-PL",
             },

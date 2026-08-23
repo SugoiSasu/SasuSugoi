@@ -22,13 +22,13 @@ import logoDark from "@/assets/brand/po_zeramy-logo-dark.png.asset.json";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "poŻeramy - foodie z Poznania" },
+      { title: "poŻeramy - Foodies App" },
       {
         name: "description",
         content:
           "poŻeramy Poznań łyżka po łyżce. Recenzje restauracji, kebaby, ramen, śniadania i słodkości - z mapą i rolkami z Instagrama.",
       },
-      { property: "og:title", content: "poŻeramy - foodie z Poznania" },
+      { property: "og:title", content: "poŻeramy - Foodies App" },
       {
         property: "og:description",
         content: "Mapa, recenzje i rolki najlepszych miejscówek w Poznaniu.",
