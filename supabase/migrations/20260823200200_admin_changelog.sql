@@ -20,4 +20,5 @@ INSERT INTO public.admin_changelog (summary, created_at) VALUES
   ('Naprawiono zgłoszenia właściciela - blokował je martwy wpis roli admina po migracji z Lovable (FK error przy każdej próbie zgłoszenia).', '2026-08-23T20:00:00Z'),
   ('Zatwierdzanie/odrzucanie zgłoszeń właściciela wymaga teraz super_admina - spójnie z resztą panelu Moderacja.', '2026-08-23T20:00:00Z'),
   ('Strona Osiągnięcia pokazuje teraz ekran logowania niezalogowanym gościom zamiast fałszywego widoku postępu.', '2026-08-23T20:00:00Z'),
-  ('Dodano ten dziennik zmian w panelu admina.', '2026-08-23T20:00:00Z');
+  ('Dodano ten dziennik zmian w panelu admina.', '2026-08-23T20:00:00Z'),
+  ('Naprawiono logowanie Google - po zalogowaniu wracało na localhost zamiast pozeramy.live.', '2026-08-23T20:15:00Z');
