@@ -62,7 +62,7 @@ export function ScrollToTop() {
       aria-hidden={!shown}
       tabIndex={shown ? 0 : -1}
       onClick={showBack ? goBack : goUp}
-      className={`fixed right-4 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 grid h-11 w-11 place-items-center rounded-full border border-border bg-card/90 text-navy shadow-md backdrop-blur transition-all duration-300 hover:border-tomato hover:text-tomato lg:bottom-6 lg:right-6 lg:h-11 lg:w-11 ${
+      className={`fixed right-4 bottom-[calc(var(--pz-fab-bottom,4.75rem)+env(safe-area-inset-bottom))] z-30 grid h-11 w-11 place-items-center rounded-full border border-border bg-card/90 text-navy shadow-md backdrop-blur transition-all duration-300 hover:border-tomato hover:text-tomato lg:bottom-6 lg:right-6 lg:h-11 lg:w-11 ${
         shown ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"
       }`}
     >

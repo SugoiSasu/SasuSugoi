@@ -1,6 +1,6 @@
 import { BackButton } from "@/components/BackButton";
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -295,6 +295,18 @@ function PlaceProfile() {
   const { data: isOwnerOfPlace } = useIsOwnerOf((place as Place | undefined)?.id ?? "");
   const { data: isAdmin } = useIsAdmin();
   const canEditImages = !!isOwnerOfPlace || !!isAdmin;
+
+  // The mobile sticky action bar (Nawiguj/ulubione/udostępnij) floats above
+  // the bottom tab bar on this page only - push the global scroll-to-top
+  // button up to clear it instead of overlapping it. ScrollToTop lives
+  // outside this route's subtree (rendered in __root.tsx), so the only way
+  // to reach it is a CSS var on the shared :root, restored on unmount.
+  useEffect(() => {
+    document.documentElement.style.setProperty("--pz-fab-bottom", "8.5rem");
+    return () => {
+      document.documentElement.style.removeProperty("--pz-fab-bottom");
+    };
+  }, []);
 
   if (isLoading) {
     return <PlaceProfileSkeleton />;
