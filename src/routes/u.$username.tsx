@@ -25,8 +25,10 @@ import {
   CheckCircle2,
   Heart,
   Sparkles,
+  Store,
 } from "lucide-react";
 import { useProfileByUsername } from "@/lib/profile-api";
+import { usePlacesOwnedByUser } from "@/lib/owners-api";
 import { useUserRanks } from "@/lib/ranks-api";
 import { useUserReviewStats, useUserReviews, useReviewPhotoUrl } from "@/lib/reviews-api";
 import {
@@ -144,6 +146,7 @@ function PublicProfile() {
   const { data: visitedList } = useUserVisitedPlaces(profile?.id, "visited");
   const visitedCount = visitedList?.length ?? 0;
   const { data: inviteStats } = useInviteStats();
+  const { data: ownedPlaces } = usePlacesOwnedByUser(profile?.id);
 
   if (isLoading) {
     return (
@@ -218,6 +221,22 @@ function PublicProfile() {
                 {(ranks ?? []).map((r) => (
                   <RankBadge key={r.id} rank={r} />
                 ))}
+              </div>
+            )}
+            {(ownedPlaces ?? []).length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {(ownedPlaces ?? []).map((o) =>
+                  o.place ? (
+                    <Link
+                      key={o.id}
+                      to="/k/$id"
+                      params={{ id: o.place.slug ?? o.place.id }}
+                      className="chip bg-tomato/20 text-cream hover:bg-tomato/30 transition-colors duration-200"
+                    >
+                      <Store size={12} /> Właściciel {o.place.name}
+                    </Link>
+                  ) : null,
+                )}
               </div>
             )}
             {profile.district && (

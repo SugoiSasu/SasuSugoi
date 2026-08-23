@@ -2,11 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/use-auth";
-import {
-  submitOwnerRequest,
-  approveOwnerRequest,
-  rejectOwnerRequest,
-} from "./owners.functions";
+import { submitOwnerRequest, approveOwnerRequest, rejectOwnerRequest } from "./owners.functions";
 
 export interface PlaceOwner {
   id: string;
@@ -85,7 +81,33 @@ export function useMyOwnedPlaces() {
       return (data ?? []) as unknown as Array<{
         id: string;
         verified: boolean;
-        place: { id: string; slug: string; name: string; cover_image_url: string | null; cuisine: string } | null;
+        place: {
+          id: string;
+          slug: string;
+          name: string;
+          cover_image_url: string | null;
+          cuisine: string;
+        } | null;
+      }>;
+    },
+  });
+}
+
+/** Publiczne: knajpy, których dany user jest zweryfikowanym właścicielem - do odznaki "Właściciel X" na profilu. */
+export function usePlacesOwnedByUser(userId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["places-owned-by", userId ?? null],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("place_owners")
+        .select("id, place:places(id, slug, name)")
+        .eq("user_id", userId!)
+        .eq("verified", true);
+      if (error) throw error;
+      return (data ?? []) as unknown as Array<{
+        id: string;
+        place: { id: string; slug: string; name: string } | null;
       }>;
     },
   });
@@ -131,7 +153,9 @@ export function useSubmitOwnerRequest() {
 }
 
 /* -------- ADMIN -------- */
-export function useAdminOwnerRequests(status: "pending" | "approved" | "rejected" | "all" = "pending") {
+export function useAdminOwnerRequests(
+  status: "pending" | "approved" | "rejected" | "all" = "pending",
+) {
   return useQuery({
     queryKey: ["admin-owner-requests", status],
     queryFn: async (): Promise<OwnerRequest[]> => {
