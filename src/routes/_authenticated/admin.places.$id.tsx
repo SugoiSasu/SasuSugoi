@@ -1,5 +1,6 @@
 import { BackButton } from "@/components/BackButton";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   usePlaces,
@@ -10,6 +11,7 @@ import {
   type OpeningHours,
 } from "@/lib/places-api";
 import { useCuisines } from "@/lib/cuisines-api";
+import { extractMenuFromImage } from "@/lib/menu-extraction.functions";
 import { toast } from "sonner";
 import {
   Plus,
@@ -20,6 +22,7 @@ import {
   Image as ImageIcon,
   AlertCircle,
   Upload,
+  Sparkles,
 } from "lucide-react";
 import { MigratePlaceImagesButton } from "@/components/PlaceImageMigration";
 import { initialsFromName, colorFromKey } from "@/lib/avatar-utils";
@@ -82,9 +85,30 @@ function EditPlace() {
   );
   const defaultCuisine = cuisineNames[0] ?? "Mix";
   const save = useSavePlace();
+  const callExtractMenu = useServerFn(extractMenuFromImage);
 
   const [form, setForm] = useState<PlaceInput>(() => emptyPlace(defaultCuisine));
   const [hydrated, setHydrated] = useState(false);
+  const [extractingMenu, setExtractingMenu] = useState(false);
+
+  async function extractMenu() {
+    if (!form.menu_image_url) return;
+    setExtractingMenu(true);
+    try {
+      const { categories } = await callExtractMenu({
+        data: { imageUrl: form.menu_image_url },
+      });
+      setForm((f) => ({ ...f, menu_items: categories }));
+      const itemCount = categories.reduce((n, c) => n + c.items.length, 0);
+      toast.success(
+        `Wyodrębniono ${itemCount} ${itemCount === 1 ? "pozycję" : "pozycji"} w ${categories.length} ${categories.length === 1 ? "kategorii" : "kategoriach"} ✓`,
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nie udało się wyodrębnić menu");
+    } finally {
+      setExtractingMenu(false);
+    }
+  }
 
   useEffect(() => {
     if (hydrated) return;
@@ -414,15 +438,38 @@ function EditPlace() {
               className={`input ${!menuUrlValid ? "border-destructive" : ""}`}
             />
           </FormField>
-          <FormField label="URL zdjęcia menu (opcjonalnie)">
-            <input
-              type="url"
-              value={form.menu_image_url ?? ""}
-              onChange={(e) => setForm({ ...form, menu_image_url: e.target.value })}
-              placeholder="https://..."
-              className={`input ${!menuImgValid ? "border-destructive" : ""}`}
-            />
-          </FormField>
+          <ImageUploader
+            title="Zdjęcie menu (opcjonalnie)"
+            hint="JPG/PNG/WEBP, do 8 MB. Zdjęcie fizycznego menu - wystarczy telefonem."
+            subfolder="menu"
+            maxMb={8}
+            previewClass="w-32 h-20 rounded-xl"
+            value={form.menu_image_url ?? ""}
+            onChange={(url) => setForm({ ...form, menu_image_url: url })}
+          />
+          <div className="flex flex-wrap items-center gap-2 -mt-1">
+            <button
+              type="button"
+              onClick={extractMenu}
+              disabled={!form.menu_image_url || extractingMenu}
+              className="inline-flex items-center gap-2 rounded-full bg-navy text-cream px-4 py-2 text-sm font-semibold hover:bg-navy/90 disabled:opacity-50"
+              title={
+                form.menu_image_url
+                  ? "Odczytaj pozycje menu ze zdjęcia (zastąpi obecne menu powyżej)"
+                  : "Najpierw dodaj zdjęcie menu"
+              }
+            >
+              {extractingMenu ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Sparkles size={14} />
+              )}
+              Wyodrębnij menu z AI
+            </button>
+            <span className="text-xs text-muted-foreground">
+              Odczyta pozycje ze zdjęcia i wypełni menu powyżej (nadpisze obecne pozycje).
+            </span>
+          </div>
           <div className="rounded-xl border border-border p-3 space-y-2 bg-muted/30">
             <FormField label="Pasek nowości / promocji (max 100 znaków)">
               <input
