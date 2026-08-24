@@ -26,12 +26,7 @@ import asiaPattern from "@/assets/brand/po_zeramy-asia-pattern.jpg.asset.json";
 import polskaPattern from "@/assets/brand/po_zeramy-polska-pattern.jpg.asset.json";
 import italianoPattern from "@/assets/brand/po_zeramy-italiano-pattern.jpg.asset.json";
 import sweetPattern from "@/assets/brand/po_zeramy-sweet-pattern.jpg.asset.json";
-import breakfastPattern from "@/assets/brand/po_zeramy-breakfast-pattern.svg.asset.json";
-import mexicanPattern from "@/assets/brand/po_zeramy-mexican-pattern.svg.asset.json";
-import veganPattern from "@/assets/brand/po_zeramy-vegan-pattern.svg.asset.json";
-import ramenPattern from "@/assets/brand/po_zeramy-ramen-pattern.svg.asset.json";
-import sushiPattern from "@/assets/brand/po_zeramy-sushi-pattern.svg.asset.json";
-import mixPattern from "@/assets/brand/po_zeramy-mix-pattern.svg.asset.json";
+import confettiPattern from "@/assets/brand/po_zeramy-confetti-pattern.svg.asset.json";
 
 export interface CuisineMeta {
   color: string;
@@ -60,7 +55,7 @@ const META: Record<string, CuisineMeta> = {
     color: "#f0b840",
     cover: breakfastCover.url,
     emoji: "🍳",
-    chipBackground: breakfastPattern.url,
+    chipBackground: confettiPattern.url,
   },
   Słodkości: {
     color: "#e89aab",
@@ -78,13 +73,13 @@ const META: Record<string, CuisineMeta> = {
     color: "#3aa56b",
     cover: mixCover.url,
     emoji: "🌮",
-    chipBackground: mexicanPattern.url,
+    chipBackground: confettiPattern.url,
   },
   Wegańska: {
     color: "#3aa56b",
     cover: mixCover.url,
     emoji: "🥗",
-    chipBackground: veganPattern.url,
+    chipBackground: confettiPattern.url,
   },
   Burgery: {
     color: "#e35d2e",
@@ -96,15 +91,20 @@ const META: Record<string, CuisineMeta> = {
     color: "#8e5cd9",
     cover: asiaCover.url,
     emoji: "🍲",
-    chipBackground: ramenPattern.url,
+    chipBackground: confettiPattern.url,
   },
   Sushi: {
     color: "#e35d2e",
     cover: asiaCover.url,
     emoji: "🍣",
-    chipBackground: sushiPattern.url,
+    chipBackground: confettiPattern.url,
   },
-  Mix: { color: "#3b4cc7", cover: mixCover.url, emoji: "✨", chipBackground: mixPattern.url },
+  Mix: {
+    color: "#3b4cc7",
+    cover: mixCover.url,
+    emoji: "✨",
+    chipBackground: confettiPattern.url,
+  },
 };
 
 const FALLBACK: CuisineMeta = { color: "#221e50", cover: mixCover.url, emoji: "🍽️" };
