@@ -114,6 +114,9 @@ function PlacesTab() {
   const [query, setQuery] = useState("");
   const [cuisineFilter, setCuisineFilter] = useState<string>("Wszystko");
   const [sort, setSort] = useState<"default" | "name" | "rating" | "newest">("default");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const { data: cuisines } = useCuisines();
   const cuisineNames = useMemo(
     () => (cuisines ?? []).filter((c) => c.enabled).map((c) => c.name),
@@ -140,6 +143,8 @@ function PlacesTab() {
     });
   }, [places, query, cuisineFilter, sort, ratings]);
 
+  const allVisibleSelected = filtered.length > 0 && filtered.every((p) => selected.has(p.id));
+
   async function handleDeleteConfirmed() {
     if (!confirmDelete) return;
     try {
@@ -152,14 +157,51 @@ function PlacesTab() {
     }
   }
 
+  function toggleSelected(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  async function handleBulkDeleteConfirmed() {
+    setBulkDeleting(true);
+    const ids = [...selected];
+    const results = await Promise.allSettled(ids.map((id) => del.mutateAsync(id)));
+    const failed = results.filter((r) => r.status === "rejected").length;
+    if (failed === 0) {
+      toast.success(`Usunięto ${ids.length} lokali`);
+    } else {
+      toast.error(`Usunięto ${ids.length - failed} z ${ids.length} - ${failed} nie udało się`);
+    }
+    setSelected(new Set());
+    setBulkDeleting(false);
+    setBulkDeleteOpen(false);
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-        <p className="text-sm text-muted-foreground">
-          {filtered.length}
-          {places && filtered.length !== places.length ? ` z ${places.length}` : ""} miejscówek ·
-          widoczne publicznie
-        </p>
+        <div className="flex items-center gap-3 flex-wrap">
+          <p className="text-sm text-muted-foreground">
+            {filtered.length}
+            {places && filtered.length !== places.length ? ` z ${places.length}` : ""} miejscówek ·
+            widoczne publicznie
+          </p>
+          {filtered.length > 0 && (
+            <button
+              type="button"
+              onClick={() =>
+                setSelected(allVisibleSelected ? new Set() : new Set(filtered.map((p) => p.id)))
+              }
+              className="text-xs font-semibold text-tomato hover:underline"
+            >
+              {allVisibleSelected ? "Wyczyść zaznaczenie" : "Zaznacz widoczne"}
+            </button>
+          )}
+        </div>
         <Link
           to="/admin/places/$id"
           params={{ id: "new" }}
@@ -238,13 +280,32 @@ function PlacesTab() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((p) => {
             const color = cuisineMeta(p.cuisine).color;
+            const rating = ratings?.get(p.id);
+            const isSelected = selected.has(p.id);
             return (
               <div
                 key={p.id}
-                className="bg-card border border-border rounded-2xl p-4 flex flex-col gap-3"
+                className={`bg-card border rounded-2xl p-4 flex flex-col gap-3 transition-colors ${
+                  isSelected ? "border-tomato ring-1 ring-tomato" : "border-border"
+                }`}
               >
                 <div className="flex items-start gap-3">
-                  <CoverThumb url={p.avatar_url ?? p.cover_image_url} name={p.name} size={80} />
+                  <div className="relative flex-shrink-0">
+                    <CoverThumb url={p.avatar_url ?? p.cover_image_url} name={p.name} size={80} />
+                    <button
+                      type="button"
+                      onClick={() => toggleSelected(p.id)}
+                      aria-label={isSelected ? "Odznacz" : "Zaznacz"}
+                      aria-pressed={isSelected}
+                      className={`absolute -top-1.5 -left-1.5 w-6 h-6 rounded-full border-2 grid place-items-center transition-colors ${
+                        isSelected
+                          ? "bg-tomato border-tomato text-cream"
+                          : "bg-card border-border text-transparent hover:border-tomato"
+                      }`}
+                    >
+                      ✓
+                    </button>
+                  </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
@@ -264,7 +325,7 @@ function PlacesTab() {
                         </Link>
                       </div>
                       <span className="text-sm font-bold whitespace-nowrap">
-                        {ratings?.get(p.id) ? `⭐ ${ratings.get(p.id)!.avg.toFixed(1)}` : "Brak ocen"}
+                        {rating ? `⭐ ${rating.avg.toFixed(1)} (${rating.count})` : "Brak ocen"}
                       </span>
                     </div>
                     <div className="text-xs text-muted-foreground inline-flex items-center gap-1 mt-1 truncate">
@@ -295,6 +356,30 @@ function PlacesTab() {
         </div>
       )}
 
+      {selected.size > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+          <div className="flex items-center gap-3 rounded-full bg-navy text-cream shadow-2xl px-4 py-2.5">
+            <span className="text-sm font-semibold whitespace-nowrap">
+              Zaznaczono {selected.size}
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelected(new Set())}
+              className="text-sm text-cream/70 hover:text-cream"
+            >
+              Anuluj
+            </button>
+            <button
+              type="button"
+              onClick={() => setBulkDeleteOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-destructive text-destructive-foreground px-3 py-1.5 text-sm font-semibold hover:bg-destructive/90"
+            >
+              <Trash2 size={13} /> Usuń zaznaczone
+            </button>
+          </div>
+        </div>
+      )}
+
       <ConfirmDeleteModal
         open={!!confirmDelete}
         title={`Usunąć "${confirmDelete?.name}"?`}
@@ -302,6 +387,16 @@ function PlacesTab() {
         pending={del.isPending}
         onCancel={() => setConfirmDelete(null)}
         onConfirm={handleDeleteConfirmed}
+      />
+
+      <ConfirmDeleteModal
+        open={bulkDeleteOpen}
+        title={`Usunąć ${selected.size} ${selected.size === 1 ? "lokal" : "lokali"}?`}
+        description="Zniknie z mapy i wyszukiwania. Recenzje i historia wizyt użytkowników pozostaną osierocone."
+        confirmLabel={`Usuń ${selected.size}`}
+        pending={bulkDeleting}
+        onCancel={() => setBulkDeleteOpen(false)}
+        onConfirm={handleBulkDeleteConfirmed}
       />
     </div>
   );
@@ -689,7 +784,7 @@ function PlacePostsTab() {
                 <select
                   value={form.place_id}
                   onChange={(e) => setForm({ ...form, place_id: e.target.value })}
-                  className="pp-input"
+                  className="input"
                 >
                   <option value=""> - wybierz - </option>
                   {(places ?? []).map((p) => (
@@ -704,7 +799,7 @@ function PlacePostsTab() {
                 <input
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  className="pp-input"
+                  className="input"
                   maxLength={140}
                 />
               </label>
@@ -714,7 +809,7 @@ function PlacePostsTab() {
                   value={form.body}
                   onChange={(e) => setForm({ ...form, body: e.target.value })}
                   rows={4}
-                  className="pp-input"
+                  className="input"
                 />
               </label>
               <label className="block">
@@ -724,7 +819,7 @@ function PlacePostsTab() {
                 <input
                   value={form.image_url}
                   onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                  className="pp-input"
+                  className="input"
                   placeholder="https://..."
                 />
                 {form.image_url && (
@@ -760,11 +855,6 @@ function PlacePostsTab() {
         onCancel={() => setConfirmDeleteId(null)}
         onConfirm={handleDeleteConfirmed}
       />
-
-      <style>{`
-        .pp-input { width: 100%; background: hsl(var(--background)); border: 1px solid hsl(var(--border)); border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.875rem; }
-        .pp-input:focus { outline: none; border-color: hsl(var(--ring)); }
-      `}</style>
     </div>
   );
 }
