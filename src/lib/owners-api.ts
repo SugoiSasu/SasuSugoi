@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/use-auth";
 import { submitOwnerRequest, approveOwnerRequest, rejectOwnerRequest } from "./owners.functions";
+import { trackEvent } from "@/lib/analytics";
 
 export interface PlaceOwner {
   id: string;
@@ -148,6 +149,7 @@ export function useSubmitOwnerRequest() {
     }) => fn({ data }),
     onSuccess: (_r, vars) => {
       qc.invalidateQueries({ queryKey: ["my-owner-request", vars.placeId] });
+      trackEvent("owner_request_submit", { item_id: vars.placeId });
     },
   });
 }

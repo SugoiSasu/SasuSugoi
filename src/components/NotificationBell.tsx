@@ -8,6 +8,7 @@ import {
   useRealtimeStatus,
   type Notification,
 } from "@/lib/notifications-api";
+import { trackEvent } from "@/lib/analytics";
 
 const PREVIEW_STEP = 5;
 
@@ -175,6 +176,10 @@ export function NotificationBell() {
 }
 
 function NotificationRow({ n, onClick }: { n: Notification; onClick: () => void }) {
+  function handleClick() {
+    trackEvent("notification_click", { type: n.type });
+    onClick();
+  }
   const className = `flex items-start gap-3 px-4 py-3 hover:bg-background/60 transition ${!n.read_at ? "bg-tomato/5" : ""}`;
   const content = (
     <>
@@ -191,10 +196,10 @@ function NotificationRow({ n, onClick }: { n: Notification; onClick: () => void 
   );
   if (n.link) {
     return (
-      <Link to={n.link} onClick={onClick} className={className}>
+      <Link to={n.link} onClick={handleClick} className={className}>
         {content}
       </Link>
     );
   }
-  return <button type="button" onClick={onClick} className={`${className} w-full text-left`}>{content}</button>;
+  return <button type="button" onClick={handleClick} className={`${className} w-full text-left`}>{content}</button>;
 }

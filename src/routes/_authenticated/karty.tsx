@@ -4,6 +4,7 @@ import { Loader2, PartyPopper } from "lucide-react";
 import { toast } from "sonner";
 import { useSwipeDeck, useSkipPlace } from "@/lib/swipe-api";
 import { useToggleVisit } from "@/lib/visits-api";
+import { trackEvent } from "@/lib/analytics";
 import { SwipeCard } from "@/components/SwipeCard";
 import { SwipeBurst } from "@/components/SwipeBurst";
 import { YummyFace, NopeFace } from "@/components/SwipeFaces";
@@ -50,6 +51,7 @@ function KartyPage() {
         },
       );
     } else {
+      trackEvent("karty_skip", { item_id: place.id });
       skipPlace.mutate(place.id);
     }
   }

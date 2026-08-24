@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Send, Loader2, Lightbulb } from "lucide-react";
 import { submitPlaceSuggestion } from "@/lib/place-suggestions.functions";
 import { useCuisines } from "@/lib/cuisines-api";
+import { trackEvent } from "@/lib/analytics";
 
 export function SuggestPlacePanel() {
   const [open, setOpen] = useState(false);
@@ -37,6 +38,7 @@ export function SuggestPlacePanel() {
         },
       });
       toast.success("Dzięki! Zgłoszenie trafiło do redakcji 🍽️");
+      trackEvent("place_suggestion_submit", { cuisine: form.cuisine || undefined });
       setForm({ name: "", address: "", cuisine: "", website: "", instagram: "", notes: "", submitter_name: "", submitter_email: "" });
       setHoneypot("");
       setOpen(false);

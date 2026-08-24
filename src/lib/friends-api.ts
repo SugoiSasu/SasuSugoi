@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/analytics";
 
 export type FriendshipStatus = "pending" | "accepted" | "blocked";
 
@@ -131,6 +132,7 @@ export function useSendFriendRequest() {
       qc.invalidateQueries({ queryKey: ["friendship-with", toUserId] });
       qc.invalidateQueries({ queryKey: ["my-friendships"] });
       qc.invalidateQueries({ queryKey: ["friends-count"] });
+      trackEvent("friend_request_sent", { target_user_id: toUserId });
     },
   });
 }
@@ -150,11 +152,12 @@ export function useRespondToFriendRequest() {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (_d, { accept }) => {
       qc.invalidateQueries({ queryKey: ["my-friendships"] });
       qc.invalidateQueries({ queryKey: ["friendship-with"] });
       qc.invalidateQueries({ queryKey: ["friends-count"] });
       qc.invalidateQueries({ queryKey: ["friend-profiles"] });
+      if (accept) trackEvent("friend_request_accepted");
     },
   });
 }

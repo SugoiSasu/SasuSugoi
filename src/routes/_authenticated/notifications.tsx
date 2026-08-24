@@ -11,6 +11,7 @@ import {
   type NotificationType,
 } from "@/lib/notifications-api";
 import { AsyncState } from "@/components/AsyncState";
+import { trackEvent } from "@/lib/analytics";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 
@@ -214,6 +215,10 @@ function FilterPill({
 }
 
 function Row({ n, onMarkRead }: { n: Notification; onMarkRead: () => void }) {
+  function handleClick() {
+    trackEvent("notification_click", { type: n.type });
+    onMarkRead();
+  }
   const body = (
     <div className={`flex items-start gap-3 px-4 py-4 ${!n.read_at ? "bg-tomato/5" : ""}`}>
       <span className="mt-0.5 shrink-0 w-9 h-9 rounded-full bg-tomato/10 grid place-items-center">
@@ -231,13 +236,13 @@ function Row({ n, onMarkRead }: { n: Notification; onMarkRead: () => void }) {
   );
   if (n.link) {
     return (
-      <Link to={n.link} onClick={onMarkRead} className="block hover:bg-background/60 transition">
+      <Link to={n.link} onClick={handleClick} className="block hover:bg-background/60 transition">
         {body}
       </Link>
     );
   }
   return (
-    <button type="button" onClick={onMarkRead} className="block w-full text-left hover:bg-background/60 transition">
+    <button type="button" onClick={handleClick} className="block w-full text-left hover:bg-background/60 transition">
       {body}
     </button>
   );
