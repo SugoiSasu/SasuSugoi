@@ -17,13 +17,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePlaceReviewStats } from "@/lib/reviews-api";
 import { SmartText } from "@/components/SmartText";
 import { UserAvatar } from "@/components/UserAvatar";
-import { useUser, useIsAdmin } from "@/lib/use-auth";
+import { useUser, useIsAdmin, useIsSuperAdmin } from "@/lib/use-auth";
 import { useIsFavorite, useToggleFavorite, useFriendsWhoFavorited, useFavoriteCount } from "@/lib/favorites-api";
 import { useIsFollowing, useToggleFollow, useFollowCount } from "@/lib/follows-api";
 import { usePlaceOwner, useIsOwnerOf } from "@/lib/owners-api";
 import { OwnerRequestModal } from "@/components/OwnerRequestModal";
 import { EditableImageButton } from "@/components/EditableImageButton";
-import { Bell, BellOff, ShieldCheck, Trophy } from "lucide-react";
+import { Bell, BellOff, ShieldCheck, Trophy, Settings2 } from "lucide-react";
 import { usePlaceAwardWins } from "@/lib/awards-api";
 import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import { VisitStatusButton } from "@/components/VisitStatus";
@@ -295,6 +295,7 @@ function PlaceProfile() {
   const reviewStats = usePlaceReviewStats((place as Place | undefined)?.id);
   const { data: isOwnerOfPlace } = useIsOwnerOf((place as Place | undefined)?.id ?? "");
   const { data: isAdmin } = useIsAdmin();
+  const isSuper = useIsSuperAdmin();
   const canEditImages = !!isOwnerOfPlace || !!isAdmin;
 
   // The mobile sticky action bar (Nawiguj/ulubione/udostępnij) floats above
@@ -340,8 +341,17 @@ function PlaceProfile() {
   return (
     <div className="bg-cream min-h-dvh">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 pb-40 lg:max-w-6xl lg:pb-24">
-        <div className="mb-5">
+        <div className="mb-5 flex items-center justify-between gap-2 flex-wrap">
           <BackButton to="/" hash="mapa" label="Wróć do mapy" ariaLabel="Wróć do mapy lokali" />
+          {isSuper && (
+            <Link
+              to="/admin/places/$id"
+              params={{ id: place.id }}
+              className="inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-navy/80 text-navy px-4 py-2 text-sm font-semibold hover:bg-navy hover:text-cream transition"
+            >
+              <Settings2 size={16} /> Edytuj w panelu
+            </Link>
+          )}
         </div>
 
         {showPromo && (
@@ -362,7 +372,7 @@ function PlaceProfile() {
               loading="eager"
             />
           ) : (
-            <CuisineFallbackCover cuisine={place.cuisine} emojiClassName="text-6xl" />
+            <CuisineFallbackCover cuisine={place.cuisine} emojiClassName="text-[7.5rem]" />
           )}
           <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-navy/80 via-navy/15 to-transparent" />
           <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3">

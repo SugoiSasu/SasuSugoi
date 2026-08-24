@@ -57,7 +57,7 @@ export function SwipeCard({
               aria-hidden="true"
             />
           ) : (
-            <CuisineFallbackCover cuisine={place.cuisine} emojiClassName="text-8xl" />
+            <CuisineFallbackCover cuisine={place.cuisine} emojiClassName="text-[12rem]" />
           )}
         </div>
 

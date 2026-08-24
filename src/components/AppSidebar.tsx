@@ -100,7 +100,12 @@ export function AppSidebar() {
           height={44}
           className="h-11 w-11 rounded-xl object-cover shadow-sm"
         />
-        <span className="font-display text-lg font-extrabold text-cream">poŻeramy</span>
+        <span className="leading-tight">
+          <span className="block font-persona text-lg font-extrabold text-cream">poŻeramy</span>
+          <span className="block text-[10px] font-semibold uppercase tracking-wide text-cream/50">
+            Foodie App
+          </span>
+        </span>
       </Link>
 
       {user && profile ? (

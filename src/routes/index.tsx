@@ -350,13 +350,16 @@ function DiscoverCard({ place, stat }: { place: Place; stat?: { avg: number; cou
             />
           ) : (
             <div className="absolute inset-0">
-              <CuisineFallbackCover cuisine={place.cuisine} emojiClassName="text-5xl" />
+              <CuisineFallbackCover cuisine={place.cuisine} emojiClassName="text-[6rem]" />
             </div>
           )}
           {!place.avatar_url && (
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-navy/45 via-transparent to-transparent" />
           )}
-          <span className="absolute bottom-3 left-3 chip bg-cream text-navy">
+          <span
+            className="absolute bottom-3 left-3 chip text-cream shadow-sm"
+            style={{ backgroundColor: meta.color }}
+          >
             {meta.emoji} {place.cuisine}
           </span>
         </div>
