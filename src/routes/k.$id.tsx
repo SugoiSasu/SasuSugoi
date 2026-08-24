@@ -332,7 +332,12 @@ function PlaceProfile() {
   async function share() {
     const url = window.location.href;
     if (navigator.share) {
-      try { await navigator.share({ title: place!.name, url }); return; } catch {}
+      try {
+        await navigator.share({ title: place!.name, url });
+      } catch {
+        // user cancelled the native share sheet - not an error
+      }
+      return;
     }
     try { await navigator.clipboard.writeText(url); toast.success("Skopiowano link"); }
     catch { toast.error("Nie udało się skopiować"); }
