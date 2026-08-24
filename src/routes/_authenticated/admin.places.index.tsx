@@ -113,6 +113,7 @@ function PlacesTab() {
   const [confirmDelete, setConfirmDelete] = useState<Place | null>(null);
   const [query, setQuery] = useState("");
   const [cuisineFilter, setCuisineFilter] = useState<string>("Wszystko");
+  const [sort, setSort] = useState<"default" | "name" | "rating" | "newest">("default");
   const { data: cuisines } = useCuisines();
   const cuisineNames = useMemo(
     () => (cuisines ?? []).filter((c) => c.enabled).map((c) => c.name),
@@ -121,7 +122,7 @@ function PlacesTab() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return (places ?? []).filter((p) => {
+    const list = (places ?? []).filter((p) => {
       if (cuisineFilter !== "Wszystko" && p.cuisine !== cuisineFilter) return false;
       if (!q) return true;
       return (
@@ -131,7 +132,13 @@ function PlacesTab() {
         (p.description ?? "").toLowerCase().includes(q)
       );
     });
-  }, [places, query, cuisineFilter]);
+    if (sort === "default") return list;
+    return list.slice().sort((a, b) => {
+      if (sort === "name") return a.name.localeCompare(b.name, "pl");
+      if (sort === "rating") return (ratings?.get(b.id)?.avg ?? 0) - (ratings?.get(a.id)?.avg ?? 0);
+      return (b.created_at ?? "").localeCompare(a.created_at ?? "");
+    });
+  }, [places, query, cuisineFilter, sort, ratings]);
 
   async function handleDeleteConfirmed() {
     if (!confirmDelete) return;
@@ -191,18 +198,32 @@ function PlacesTab() {
             </button>
           )}
         </div>
-        <select
-          value={cuisineFilter}
-          onChange={(e) => setCuisineFilter(e.target.value)}
-          className="input sm:w-52"
-        >
-          <option value="Wszystko">Wszystkie kuchnie</option>
-          {cuisineNames.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
+        <div className="w-full sm:w-52">
+          <select
+            value={cuisineFilter}
+            onChange={(e) => setCuisineFilter(e.target.value)}
+            className="input"
+          >
+            <option value="Wszystko">Wszystkie kuchnie</option>
+            {cuisineNames.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="w-full sm:w-52">
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as typeof sort)}
+            className="input"
+          >
+            <option value="default">Domyślna kolejność</option>
+            <option value="name">Nazwa A-Z</option>
+            <option value="rating">Najwyżej oceniane</option>
+            <option value="newest">Najnowsze</option>
+          </select>
+        </div>
       </div>
 
       {isLoading ? (

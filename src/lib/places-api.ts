@@ -82,6 +82,7 @@ export interface Place {
   opening_hours: OpeningHours | null;
   menu_items: MenuCategory[] | null;
   sort_order: number;
+  created_at?: string;
   locations?: PlaceLocation[];
 }
 
