@@ -80,18 +80,31 @@ function patchCircularCreateMiddleware() {
     `${lazyMarker} { return __defaultCsrfMiddlewareCache ??= ${factoryFnName}(${args}); }\n`;
   content = content.replace(fullMatch, lazyInit);
 
-  const usage = "[defaultCsrfMiddleware]";
-  if (!content.includes(usage)) {
+  // Usage site shape depends on build config: a plain array literal
+  // `[defaultCsrfMiddleware]` normally, or an object-shorthand
+  // `{ defaultCsrfMiddleware }` passed into `wrapMiddlewaresWithSentry(...)`
+  // when @sentry/tanstackstart-react's vite plugin is active (its
+  // SENTRY_AUTH_TOKEN-gated branch in vite.config.ts). Object shorthand
+  // needs `key: value` on replace, not a bare call, or the syntax breaks.
+  let usageCount = 0;
+  content = content.replace(/\[defaultCsrfMiddleware\]/g, () => {
+    usageCount++;
+    return "[__lazyDefaultCsrfMiddleware()]";
+  });
+  content = content.replace(/\{\s*defaultCsrfMiddleware\s*\}/g, () => {
+    usageCount++;
+    return "{ defaultCsrfMiddleware: __lazyDefaultCsrfMiddleware() }";
+  });
+  if (usageCount === 0) {
     throw new Error(
       "[fix-nitro-vercel-ssr] expected 'defaultCsrfMiddleware' usage site not found in _ssr/ssr2.mjs -- " +
       "nitro output shape changed, review this script (may mean the upstream bug is fixed).",
     );
   }
-  content = content.replace(usage, "[__lazyDefaultCsrfMiddleware()]");
 
   writeFileSync(SSR2_PATH, content, "utf-8");
   console.log(
-    `[fix-nitro-vercel-ssr] deferred eager circular ${factoryFnName}() call to first use in ssr2.mjs`,
+    `[fix-nitro-vercel-ssr] deferred eager circular ${factoryFnName}() call to first use in ssr2.mjs (${usageCount} usage site(s))`,
   );
 }
 
