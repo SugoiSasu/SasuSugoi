@@ -22,6 +22,7 @@ import {
   Store,
   HelpCircle,
   Sparkles,
+  Award,
 } from "lucide-react";
 import { useUser, useIsAdmin, useIsSuperAdmin } from "@/lib/use-auth";
 import { useMyProfile } from "@/lib/profile-api";
@@ -205,6 +206,11 @@ function HoverDropdown({
                   {pendingCount}
                 </span>
               )}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/osiagniecia" className="cursor-pointer">
+              <Award size={14} className="mr-2" /> Osiągnięcia
             </Link>
           </DropdownMenuItem>
           {profile?.username && (

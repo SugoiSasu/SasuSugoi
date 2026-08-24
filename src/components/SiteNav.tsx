@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Handshake, Menu, Newspaper, Trophy, Users, X } from "lucide-react";
+import { Award, Handshake, Menu, Newspaper, Trophy, Users, X } from "lucide-react";
 import { UserMenu } from "@/components/UserMenu";
 import { NotificationBell } from "@/components/NotificationBell";
 import { AdBanner } from "@/components/AdBanner";
@@ -95,6 +95,15 @@ export function SiteNav() {
               )}
             </Link>
           )}
+          {user && (
+            <Link
+              to="/osiagniecia"
+              className="inline-flex items-center gap-1.5 hover:text-tomato transition-colors"
+              activeProps={{ className: "text-tomato" }}
+            >
+              <Award size={14} /> Osiągnięcia
+            </Link>
+          )}
           {awardsEvent && (
             <Link
               to="/warte-pozarcia"
@@ -159,6 +168,15 @@ export function SiteNav() {
                     {pendingFriends > 9 ? "9+" : pendingFriends}
                   </span>
                 )}
+              </Link>
+            )}
+            {user && (
+              <Link
+                to="/osiagniecia"
+                onClick={closeMobile}
+                className="min-h-11 py-2 text-base font-medium hover:text-tomato inline-flex items-center gap-2"
+              >
+                <Award size={16} /> Osiągnięcia
               </Link>
             )}
             {awardsEvent && (
