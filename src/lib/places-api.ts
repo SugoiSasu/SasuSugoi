@@ -1,10 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 /** Real aggregated rating per place, derived from public.reviews.
  *  Returns Map<place_id, { avg, count }>. Places with no reviews are absent. */
-export function usePlaceRatingsMap() {
-  return useQuery({
+export function placeRatingsMapQueryOptions() {
+  return queryOptions({
     queryKey: ["places-ratings-map"],
     staleTime: 30_000,
     queryFn: async () => {
@@ -24,6 +24,10 @@ export function usePlaceRatingsMap() {
       return out;
     },
   });
+}
+
+export function usePlaceRatingsMap() {
+  return useQuery(placeRatingsMapQueryOptions());
 }
 
 export interface PlaceLocation {
@@ -91,8 +95,11 @@ export type PlaceInput = Omit<Place, "id" | "slug" | "sort_order" | "locations">
   extra_locations?: PlaceLocationInput[];
 };
 
-export function usePlaces() {
-  return useQuery({
+/** Shared with route loaders (e.g. index.tsx) via queryClient.ensureQueryData
+ * so SSR actually has the data before the component renders, instead of
+ * shipping an empty loading-spinner shell to crawlers and link-preview bots. */
+export function placesQueryOptions() {
+  return queryOptions({
     queryKey: ["places"],
     queryFn: async (): Promise<Place[]> => {
       const { data, error } = await supabase
@@ -107,6 +114,10 @@ export function usePlaces() {
       }));
     },
   });
+}
+
+export function usePlaces() {
+  return useQuery(placesQueryOptions());
 }
 
 async function syncExtraLocations(placeId: string, extras: PlaceLocationInput[] | undefined) {

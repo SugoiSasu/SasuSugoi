@@ -6,7 +6,13 @@ import { SmartText } from "@/components/SmartText";
 import { DiscoverHeader } from "@/components/DiscoverHeader";
 import { SuggestPlacePanel } from "@/components/SuggestPlacePanel";
 import { cuisineMeta } from "@/data/places";
-import { usePlaces, usePlaceRatingsMap, type Place } from "@/lib/places-api";
+import {
+  usePlaces,
+  usePlaceRatingsMap,
+  placesQueryOptions,
+  placeRatingsMapQueryOptions,
+  type Place,
+} from "@/lib/places-api";
 import { searchPlaces } from "@/lib/place-search";
 import { useDebounced } from "@/lib/use-debounced";
 import { useUser } from "@/lib/use-auth";
@@ -23,6 +29,17 @@ import { BASE_URL } from "@/lib/site-config";
 import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/")({
+  // Without this, SSR rendered nothing but a loading spinner - usePlaces()
+  // had no data yet during the server render pass, so crawlers and link-
+  // preview bots (which don't run client JS) saw an empty shell instead of
+  // the actual homepage content. Prefetching into the shared queryClient
+  // here means it's already cached by the time the component renders.
+  loader: async ({ context }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData(placesQueryOptions()),
+      context.queryClient.ensureQueryData(placeRatingsMapQueryOptions()),
+    ]);
+  },
   head: () => ({
     meta: [
       { title: "poŻeramy - Foodies App" },
