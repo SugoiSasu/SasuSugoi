@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/use-auth";
+import { trackEvent } from "@/lib/analytics";
 
 export type VisitStatus = "want" | "visited";
 
@@ -87,6 +88,11 @@ export function useToggleVisit() {
       qc.invalidateQueries({ queryKey: ["my-visit-statuses"] });
       qc.invalidateQueries({ queryKey: ["user-visited-places"] });
       if (vars) qc.invalidateQueries({ queryKey: ["user-visited-places", vars.status] });
+    },
+    onSuccess: (_d, { placeId, status, on }) => {
+      if (!on) return;
+      if (status === "want") trackEvent("add_to_wishlist", { item_id: placeId });
+      else trackEvent("mark_visited", { item_id: placeId });
     },
   });
 }

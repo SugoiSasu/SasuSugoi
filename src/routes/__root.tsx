@@ -28,6 +28,7 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 
 import { installPolishStripper } from "@/lib/polish-stripper";
 import { VisitEventListener } from "@/components/VisitStatus";
+import { AuthAnalytics } from "@/components/AuthAnalytics";
 import { AlphaGate } from "@/components/AlphaGate";
 import { SiteNav } from "@/components/SiteNav";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -285,6 +286,7 @@ function RootComponent() {
           <Outlet />
         )}
         <VisitEventListener />
+        <AuthAnalytics />
         {!isAdmin && <ScrollToTop />}
       </AlphaGate>
       <Toaster position="top-right" closeButton />

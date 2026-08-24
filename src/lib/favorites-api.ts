@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/use-auth";
+import { trackEvent } from "@/lib/analytics";
 
 export interface PlaceFavorite {
   id: string;
@@ -99,6 +100,9 @@ export function useToggleFavorite() {
       qc.invalidateQueries({ queryKey: ["user-favorite-places"] });
       qc.invalidateQueries({ queryKey: ["friends-favorited"] });
       qc.invalidateQueries({ queryKey: ["place-favorite-counts"] });
+    },
+    onSuccess: (_d, { placeId, on }) => {
+      if (on) trackEvent("favorite_place", { item_id: placeId });
     },
   });
 }

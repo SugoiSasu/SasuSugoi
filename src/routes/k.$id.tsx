@@ -29,6 +29,7 @@ import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import { VisitStatusButton } from "@/components/VisitStatus";
 import { InstagramReelPoster } from "@/components/InstagramReelEmbed";
 import sadPizza from "@/assets/brand/sad-pizza-404.png";
+import { trackEvent } from "@/lib/analytics";
 
 const FoodMap = lazy(() => import("@/components/FoodMap"));
 
@@ -344,6 +345,11 @@ function PlaceProfile() {
 
   async function share() {
     const url = window.location.href;
+    trackEvent("share", {
+      method: typeof navigator.share === "function" ? "native" : "copy_link",
+      content_type: "place",
+      item_id: place!.id,
+    });
     if (navigator.share) {
       try {
         await navigator.share({ title: place!.name, url });

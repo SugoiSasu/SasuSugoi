@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/analytics";
 
 export interface Review {
   id: string;
@@ -115,6 +116,9 @@ export function useSaveReview() {
       qc.invalidateQueries({ queryKey: ["my-review", vars.values.place_id] });
       qc.invalidateQueries({ queryKey: ["user-reviews"] });
       qc.invalidateQueries({ queryKey: ["profile"] });
+      if (!vars.id) {
+        trackEvent("write_review", { item_id: vars.values.place_id, rating: vars.values.rating });
+      }
     },
   });
 }

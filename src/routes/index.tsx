@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Instagram, Star, Heart, X, MapPin, Sparkles, Clock, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { SmartText } from "@/components/SmartText";
@@ -20,6 +20,7 @@ import { useCutoutLogo } from "@/lib/chroma-cutout";
 import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import logoDark from "@/assets/brand/po_zeramy-logo-dark.png.asset.json";
 import { BASE_URL } from "@/lib/site-config";
+import { trackEvent } from "@/lib/analytics";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -81,6 +82,18 @@ function Index() {
   );
   const filtered = search.results;
   const filteredIds = useMemo(() => new Set(filtered.map((p) => p.id)), [filtered]);
+
+  // GA4 "search" event - separately (longer) debounced from the filtering
+  // query above, so it fires once the user actually pauses instead of on
+  // every near-keystroke; lastTracked guards against re-firing the same term.
+  const trackedQuery = useDebounced(query, 800);
+  const lastTracked = useRef<string | null>(null);
+  useEffect(() => {
+    const term = trackedQuery.trim();
+    if (!term || term === lastTracked.current) return;
+    lastTracked.current = term;
+    trackEvent("search", { search_term: term });
+  }, [trackedQuery]);
 
   /** Friends' picks and general top-rated are two independent rails, not a
    * fallback pair - a user with only 1-2 friend recs still gets a full
