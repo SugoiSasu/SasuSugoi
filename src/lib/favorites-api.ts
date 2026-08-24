@@ -173,7 +173,7 @@ export function useMyFavoritePlaces() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("place_favorites")
-        .select("created_at, place:places(id, slug, name, cuisine, address, cover_image_url)")
+        .select("created_at, place:places(id, slug, name, cuisine, address, avatar_url, cover_image_url)")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -188,6 +188,7 @@ export function useMyFavoritePlaces() {
                   name: string;
                   cuisine: string;
                   address: string;
+                  avatar_url: string | null;
                   cover_image_url: string | null;
                 } | null;
               }

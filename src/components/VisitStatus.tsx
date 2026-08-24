@@ -152,9 +152,9 @@ export function PlaceListGrid({
                       className="block aspect-square rounded-xl overflow-hidden ring-1 ring-border bg-background hover:ring-2 hover:ring-tomato hover:-translate-y-0.5 transition-all"
                       style={{ backgroundColor: meta.color }}
                     >
-                      {p.cover_image_url ? (
+                      {p.avatar_url || p.cover_image_url ? (
                         <img
-                          src={p.cover_image_url}
+                          src={p.avatar_url ?? p.cover_image_url!}
                           alt={p.name}
                           loading="lazy"
                           className="w-full h-full object-cover"
@@ -192,8 +192,12 @@ export function PlaceListGrid({
                 className="w-10 h-10 rounded-lg overflow-hidden shrink-0 grid place-items-center text-lg"
                 style={{ backgroundColor: meta.color }}
               >
-                {p.cover_image_url ? (
-                  <img src={p.cover_image_url} alt="" className="w-full h-full object-cover" />
+                {p.avatar_url || p.cover_image_url ? (
+                  <img
+                    src={p.avatar_url ?? p.cover_image_url!}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <span>{meta.emoji}</span>
                 )}

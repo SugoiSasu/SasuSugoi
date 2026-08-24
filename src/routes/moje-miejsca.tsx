@@ -193,9 +193,9 @@ function MyPlacesPage() {
                   className="group flex items-center gap-3 rounded-2xl border border-border bg-card p-3 transition hover:border-tomato hover:shadow-sm"
                 >
                   <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-muted">
-                    {p.cover_image_url && (
+                    {(p.avatar_url || p.cover_image_url) && (
                       <img
-                        src={p.cover_image_url}
+                        src={p.avatar_url ?? p.cover_image_url!}
                         alt=""
                         className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                         loading="lazy"

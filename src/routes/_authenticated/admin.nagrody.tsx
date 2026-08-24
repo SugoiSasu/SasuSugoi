@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Trophy, Plus, Play, Lock, Loader2 } from "lucide-react";
+import { Trophy, Plus, Play, Lock, Loader2, Trash2 } from "lucide-react";
 import { useIsSuperAdmin } from "@/lib/use-auth";
 import { useCuisines } from "@/lib/cuisines-api";
 import { usePlaces } from "@/lib/places-api";
@@ -12,6 +12,7 @@ import {
   useCloseAwardsEvent,
   useAwardsEventTally,
   useAwardWinners,
+  useDeleteAwardsEvent,
   type AwardsEvent,
 } from "@/lib/awards-api";
 
@@ -141,9 +142,11 @@ function EventCard({ event }: { event: AwardsEvent }) {
   const { data: places } = usePlaces();
   const activate = useActivateAwardsEvent();
   const close = useCloseAwardsEvent();
+  const deleteEvent = useDeleteAwardsEvent();
   const { data: tally } = useAwardsEventTally(event.status === "active" ? event.id : null);
   const { data: winners } = useAwardWinners(event.status === "closed" ? event.id : null);
   const [confirmClose, setConfirmClose] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const cuisineById = new Map((cuisines ?? []).map((c) => [c.id, c]));
   const placeById = new Map((places ?? []).map((p) => [p.id, p]));
@@ -170,6 +173,15 @@ function EventCard({ event }: { event: AwardsEvent }) {
       await close.mutateAsync(event.id);
       toast.success("Zamknięte - zwycięzcy zamrożeni");
       setConfirmClose(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Błąd");
+    }
+  }
+
+  async function handleDelete() {
+    try {
+      await deleteEvent.mutateAsync(event.id);
+      toast.success("Wydarzenie usunięte");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Błąd");
     }
@@ -213,6 +225,34 @@ function EventCard({ event }: { event: AwardsEvent }) {
               className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold hover:border-navy"
             >
               <Lock size={13} /> Zamknij
+            </button>
+          ))}
+        {event.status !== "active" &&
+          (confirmDelete ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                Usunąć na stałe wraz z głosami?
+              </span>
+              <button
+                onClick={handleDelete}
+                disabled={deleteEvent.isPending}
+                className="rounded-full bg-destructive text-white px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
+              >
+                Tak, usuń
+              </button>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="text-xs text-muted-foreground"
+              >
+                Anuluj
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold text-destructive hover:border-destructive"
+            >
+              <Trash2 size={13} /> Usuń
             </button>
           ))}
       </div>

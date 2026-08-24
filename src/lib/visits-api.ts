@@ -10,6 +10,7 @@ export interface VisitedPlace {
   name: string;
   cuisine: string;
   address: string;
+  avatar_url: string | null;
   cover_image_url: string | null;
   lat?: number | null;
   lng?: number | null;
@@ -98,7 +99,7 @@ export function useUserVisitedPlaces(userId: string | undefined, status: VisitSt
     queryFn: async (): Promise<VisitedPlace[]> => {
       const { data, error } = await supabase
         .from("place_visits")
-        .select("created_at, place:places(id, slug, name, cuisine, address, cover_image_url, lat, lng)")
+        .select("created_at, place:places(id, slug, name, cuisine, address, avatar_url, cover_image_url, lat, lng)")
         .eq("user_id", userId!)
         .eq("status", status)
         .order("created_at", { ascending: false });
@@ -119,7 +120,7 @@ export function useUserFavoritePlaces(userId: string | undefined) {
     queryFn: async (): Promise<VisitedPlace[]> => {
       const { data, error } = await supabase
         .from("place_favorites")
-        .select("created_at, place:places(id, slug, name, cuisine, address, cover_image_url, lat, lng)")
+        .select("created_at, place:places(id, slug, name, cuisine, address, avatar_url, cover_image_url, lat, lng)")
         .eq("user_id", userId!)
         .order("created_at", { ascending: false });
       if (error) throw error;

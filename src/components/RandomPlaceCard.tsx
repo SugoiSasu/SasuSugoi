@@ -40,13 +40,15 @@ export function RandomPlaceCard({ userId }: { userId: string | null | undefined 
         <div
           className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-xl transition-transform duration-200 ease-out group-hover:scale-105"
           style={{
-            backgroundImage: pick.cover_image_url ? `url(${pick.cover_image_url})` : undefined,
-            backgroundColor: pick.cover_image_url ? undefined : `${meta.color}33`,
+            backgroundImage: pick.avatar_url ?? pick.cover_image_url
+              ? `url(${pick.avatar_url ?? pick.cover_image_url})`
+              : undefined,
+            backgroundColor: pick.avatar_url ?? pick.cover_image_url ? undefined : `${meta.color}33`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
         >
-          {!pick.cover_image_url && meta.emoji}
+          {!(pick.avatar_url ?? pick.cover_image_url) && meta.emoji}
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-cream">{pick.name}</p>

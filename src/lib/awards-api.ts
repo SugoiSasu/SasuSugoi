@@ -66,6 +66,20 @@ export function useCreateAwardsEvent() {
   });
 }
 
+export function useDeleteAwardsEvent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (eventId: string) => {
+      const { error } = await sb.from("awards_events").delete().eq("id", eventId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["awards-events-admin"] });
+      qc.invalidateQueries({ queryKey: ["awards-event-current"] });
+    },
+  });
+}
+
 export function useActivateAwardsEvent() {
   const qc = useQueryClient();
   return useMutation({

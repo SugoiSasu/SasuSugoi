@@ -188,7 +188,17 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
                <div style="font-size:.7rem;color:#555">${highlightHtml(pin.address, query)}</div>`,
               { direction: "top", offset: [0, -22], opacity: 0.98, className: "pz-tooltip" },
             );
-          } else if (!selectRef.current) {
+          } else if (selectRef.current) {
+            // Full map with a parent-owned "selected place" panel (mapa.tsx's
+            // SelectedCard): click hands off to it, but hovering did nothing at
+            // all before this - give a quick name/cuisine preview on hover too.
+            marker.bindTooltip(
+              `<div style="font-family:Fraunces,serif;font-weight:600">${highlightHtml(p.name, query)}</div>
+               <div style="font-size:.7rem;color:${color};text-transform:uppercase;letter-spacing:.05em;font-weight:700">${highlightHtml(p.cuisine, query)}</div>`,
+              { direction: "top", offset: [0, -26], opacity: 0.98, className: "pz-tooltip" },
+            );
+          }
+          if (!selectRef.current) {
             // Only bind the rich popup when there's no parent-owned "selected place"
             // UI - otherwise the marker click handler above hands off to it directly
             // and this would just be a second, duplicate info panel on top of it.
@@ -199,8 +209,9 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
             const initials = escapeHtml(
               (p.name || "?").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?",
             );
-            const coverHtml = p.cover_image_url
-              ? `<img src="${escapeHtml(p.cover_image_url)}" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover;flex:0 0 auto;border:1px solid #eee" onerror="this.style.display='none'" />`
+            const coverSrc = p.avatar_url ?? p.cover_image_url;
+            const coverHtml = coverSrc
+              ? `<img src="${escapeHtml(coverSrc)}" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover;flex:0 0 auto;border:1px solid #eee" onerror="this.style.display='none'" />`
               : `<div style="width:56px;height:56px;border-radius:12px;background:${color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;flex:0 0 auto">${initials}</div>`;
             marker.bindPopup(
               `<div style="min-width:220px">

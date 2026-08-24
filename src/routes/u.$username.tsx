@@ -21,6 +21,7 @@ import {
   Ban,
   Folder,
   ShieldOff,
+  X,
   Check,
   Bookmark,
   CheckCircle2,
@@ -175,6 +176,20 @@ function PublicProfile() {
     }
   }
 
+  async function handleRemoveAvatar() {
+    if (!me) return;
+    if (!confirm("Usunąć zdjęcie profilowe?")) return;
+    setAvatarUploading(true);
+    try {
+      await updateProfile.mutateAsync({ avatar_url: null, avatar_source: "initials" });
+      toast.success("Zdjęcie usunięte");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Błąd");
+    } finally {
+      setAvatarUploading(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <main className="min-h-dvh grid place-items-center">
@@ -250,6 +265,18 @@ function PublicProfile() {
                     <Camera size={15} />
                   )}
                 </button>
+                {profile.avatar_url && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    disabled={avatarUploading}
+                    aria-label="Usuń zdjęcie profilowe"
+                    title="Usuń zdjęcie profilowe"
+                    className="pz-hit absolute bottom-0 left-0 grid h-9 w-9 place-items-center rounded-full bg-navy/80 text-cream border-2 border-cream/30 backdrop-blur-sm transition hover:bg-destructive disabled:opacity-70"
+                  >
+                    <X size={15} />
+                  </button>
+                )}
                 <input
                   ref={avatarInputRef}
                   type="file"
@@ -961,16 +988,18 @@ function ProfileSocialsZone({
   const active = links.filter((l) => !!l.url);
   if (active.length === 0) return null;
   return (
-    <div className="mt-3 rounded-2xl border border-cream/15 bg-cream/[0.06] px-4 py-3 flex flex-wrap gap-2">
+    <div className="mt-3 flex flex-wrap gap-2">
       {active.map((l) => (
         <a
           key={l.label}
           href={l.url!}
           target="_blank"
           rel="noreferrer"
-          className="chip bg-cream/15 text-cream hover:bg-cream/25"
+          aria-label={l.label}
+          title={l.label}
+          className="grid h-8 w-8 place-items-center rounded-full border border-cream/15 bg-cream/[0.06] text-cream/80 transition-colors hover:bg-cream/15 hover:text-cream"
         >
-          {l.icon} {l.label}
+          {l.icon}
         </a>
       ))}
     </div>
@@ -1088,7 +1117,7 @@ function AchievementsSection({
             }`}
           >
             <div className="overflow-hidden">
-              <ul role="list" className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2.5">
+              <ul role="list" className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {locked.map((a) => (
                   <AchievementTile
                     key={a.id}

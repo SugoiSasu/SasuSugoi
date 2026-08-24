@@ -4,6 +4,16 @@
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
+/* On touch devices a tap leaves :hover "stuck" until the next tap elsewhere -
+   every hover: lift/scale/shadow effect in the app would stay stuck applied
+   after a tap. Scope hover: to pointers that actually support hovering. */
+@custom-variant hover {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @slot;
+    }
+  }
+}
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
