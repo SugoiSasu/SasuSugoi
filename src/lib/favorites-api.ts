@@ -91,6 +91,12 @@ export function useToggleFavorite() {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["my-favorite-place-ids"] });
       qc.invalidateQueries({ queryKey: ["my-favorite-places"] });
+      // "user-favorite-places" (visits-api.ts's useUserFavoritePlaces) is a
+      // separate query key for the same place_favorites table - used by
+      // moje-miejsca's "Ulubione" tab and the sidebar/nav stat chips. Without
+      // this, favoriting/unfavoriting anywhere else left those stale until an
+      // unrelated refetch or full reload happened to touch them.
+      qc.invalidateQueries({ queryKey: ["user-favorite-places"] });
       qc.invalidateQueries({ queryKey: ["friends-favorited"] });
       qc.invalidateQueries({ queryKey: ["place-favorite-counts"] });
     },

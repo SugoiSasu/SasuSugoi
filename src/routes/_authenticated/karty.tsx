@@ -1,6 +1,7 @@
 ﻿import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, PartyPopper } from "lucide-react";
+import { toast } from "sonner";
 import { useSwipeDeck, useSkipPlace } from "@/lib/swipe-api";
 import { useToggleVisit } from "@/lib/visits-api";
 import { SwipeCard } from "@/components/SwipeCard";
@@ -38,7 +39,16 @@ function KartyPage() {
     setHiddenIds((prev) => new Set(prev).add(place.id));
     setBurst({ id: Date.now(), type: direction === "right" ? "like" : "nope" });
     if (direction === "right") {
-      toggleVisit.mutate({ placeId: place.id, status: "want", on: true });
+      toggleVisit.mutate(
+        { placeId: place.id, status: "want", on: true },
+        {
+          onSuccess: () =>
+            toast.success(`Dodano „${place.name}" do „Chcę odwiedzić"`, {
+              description: "Znajdziesz to w Moje miejsca.",
+            }),
+          onError: (err) => toast.error(err instanceof Error ? err.message : "Nie udało się dodać"),
+        },
+      );
     } else {
       skipPlace.mutate(place.id);
     }

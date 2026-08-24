@@ -2,9 +2,16 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { Bookmark, Check, ChevronRight, Heart, Search, Star } from "lucide-react";
+import { Bookmark, Check, ChevronRight, Heart, Loader2, Search, Star, X } from "lucide-react";
+import { toast } from "sonner";
 import { useUser } from "@/lib/use-auth";
-import { useUserVisitedPlaces, useUserFavoritePlaces, type VisitedPlace } from "@/lib/visits-api";
+import {
+  useUserVisitedPlaces,
+  useUserFavoritePlaces,
+  useToggleVisit,
+  type VisitedPlace,
+} from "@/lib/visits-api";
+import { useToggleFavorite } from "@/lib/favorites-api";
 import { usePlaceRatingsMap } from "@/lib/places-api";
 import { useUserLocation, haversineKm, formatDistancePl } from "@/lib/geo";
 import { AuthGate } from "@/components/AuthGate";
@@ -47,6 +54,33 @@ function MyPlacesPage() {
   const { data: favs, isLoading: loadingFavs } = useUserFavoritePlaces(user?.id);
   const { data: ratings } = usePlaceRatingsMap();
   const userLoc = useUserLocation();
+  const toggleVisit = useToggleVisit();
+  const toggleFavorite = useToggleFavorite();
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  function remove(p: VisitedPlace) {
+    setRemovingId(p.id);
+    if (tab === "fav") {
+      toggleFavorite.mutate(
+        { placeId: p.id, on: false },
+        {
+          onSuccess: () => toast.success(`Usunięto „${p.name}” z ulubionych`),
+          onError: (err) => toast.error(err instanceof Error ? err.message : "Nie udało się usunąć"),
+          onSettled: () => setRemovingId(null),
+        },
+      );
+    } else {
+      const listLabel = tab === "want" ? "„Chcę odwiedzić”" : "odwiedzonych";
+      toggleVisit.mutate(
+        { placeId: p.id, status: tab, on: false },
+        {
+          onSuccess: () => toast.success(`Usunięto „${p.name}” z ${listLabel}`),
+          onError: (err) => toast.error(err instanceof Error ? err.message : "Nie udało się usunąć"),
+          onSettled: () => setRemovingId(null),
+        },
+      );
+    }
+  }
 
   const distanceFor = (p: VisitedPlace): number | null => {
     if (!userLoc || typeof p.lat !== "number" || typeof p.lng !== "number") return null;
@@ -222,6 +256,24 @@ function MyPlacesPage() {
                       )}
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      remove(p);
+                    }}
+                    disabled={removingId === p.id}
+                    aria-label={`Usuń „${p.name}” z listy`}
+                    title="Usuń z listy"
+                    className="pz-hit -mr-1 grid shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                  >
+                    {removingId === p.id ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <X size={16} />
+                    )}
+                  </button>
                   <ChevronRight
                     size={18}
                     className="shrink-0 text-muted-foreground transition group-hover:translate-x-0.5"
