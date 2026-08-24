@@ -41,8 +41,8 @@ function TermsPage() {
             Niniejszy Regulamin określa zasady korzystania z serwisu internetowego poŻeramy,
             dostępnego pod adresem pozeramy.live (dalej: „Serwis"). Serwis prowadzony jest przez
             jego administratora, z którym można się skontaktować pod adresem{" "}
-            <a href="mailto:po_zeramy@gmail.com" className="text-tomato underline">
-              po_zeramy@gmail.com
+            <a href="mailto:po.zeramy@gmail.com" className="text-tomato underline">
+              po.zeramy@gmail.com
             </a>
             .
           </p>
@@ -167,8 +167,8 @@ function TermsPage() {
           <h2>10. Reklamacje i kontakt</h2>
           <p>
             Reklamacje dotyczące działania Serwisu oraz pytania kieruj na{" "}
-            <a href="mailto:po_zeramy@gmail.com" className="text-tomato underline">
-              po_zeramy@gmail.com
+            <a href="mailto:po.zeramy@gmail.com" className="text-tomato underline">
+              po.zeramy@gmail.com
             </a>
             , podając login/e-mail konta oraz opis problemu. Odpowiadamy w rozsądnym terminie,
             zwykle do 14 dni roboczych.

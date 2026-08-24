@@ -44,8 +44,8 @@ function PrivacyPolicy() {
           <p>
             Administratorem danych osobowych jest zespół poŻeramy. Kontakt we wszystkich
             sprawach dotyczących danych osobowych:{" "}
-            <a href="mailto:po_zeramy@gmail.com" className="text-tomato underline">
-              po_zeramy@gmail.com
+            <a href="mailto:po.zeramy@gmail.com" className="text-tomato underline">
+              po.zeramy@gmail.com
             </a>
             .
           </p>
@@ -182,8 +182,8 @@ function PrivacyPolicy() {
           <h3>4.5. Wycofanie zgody</h3>
           <p>
             W dowolnym momencie możesz wycofać zgodę, wysyłając wiadomość na{" "}
-            <a href="mailto:po_zeramy@gmail.com" className="text-tomato underline">
-              po_zeramy@gmail.com
+            <a href="mailto:po.zeramy@gmail.com" className="text-tomato underline">
+              po.zeramy@gmail.com
             </a>
             . Wycofanie zgody nie wpływa na zgodność z prawem przetwarzania, którego dokonano na
             podstawie zgody przed jej wycofaniem.
@@ -293,8 +293,8 @@ function PrivacyPolicy() {
             (przycisk „Usuń konto") - to najszybszy sposób realizacji prawa do usunięcia danych.
             W sprawie pozostałych żądań (np. eksportu danych w formacie do odczytu maszynowego)
             napisz na{" "}
-            <a href="mailto:po_zeramy@gmail.com" className="text-tomato underline">
-              po_zeramy@gmail.com
+            <a href="mailto:po.zeramy@gmail.com" className="text-tomato underline">
+              po.zeramy@gmail.com
             </a>{" "} - odpowiadamy w terminie do 30 dni.
           </p>
 

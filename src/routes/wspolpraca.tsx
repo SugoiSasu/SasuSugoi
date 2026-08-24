@@ -303,7 +303,7 @@ function CollabForm() {
           <Mail size={18} /> {submitting ? "Wysyłam…" : "Wyślij zgłoszenie"}
         </button>
         <p className="text-xs text-cream/60 mt-3 text-center">
-          albo napisz wprost: <a href="mailto:po_zeramy@gmail.com" onClick={() => trackEvent("contact_email_click", { location: "wspolpraca" })} className="underline">po_zeramy@gmail.com</a>
+          albo napisz wprost: <a href="mailto:po.zeramy@gmail.com" onClick={() => trackEvent("contact_email_click", { location: "wspolpraca" })} className="underline">po.zeramy@gmail.com</a>
         </p>
       </div>
     </form>

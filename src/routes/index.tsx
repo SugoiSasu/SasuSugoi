@@ -216,10 +216,10 @@ function Index() {
             Współpraca
           </Link>
           <a
-            href="mailto:kontakt@pozeramy.live"
+            href="mailto:po.zeramy@gmail.com"
             className="pz-hit inline-flex items-center gap-1 hover:text-tomato hover:underline"
           >
-            <Mail size={12} /> kontakt@pozeramy.live
+            <Mail size={12} /> po.zeramy@gmail.com
           </a>
         </nav>
       </div>
