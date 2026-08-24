@@ -1,4 +1,11 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /friends
+Disallow: /profile
+Disallow: /owner
+Disallow: /notifications
+Disallow: /karty
+Disallow: /auth
 
 Sitemap: https://pozeramy.live/sitemap.xml

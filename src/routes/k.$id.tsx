@@ -45,10 +45,16 @@ export const Route = createFileRoute("/k/$id")({
       .select("name,description,cover_image_url,address,rating,cuisine,slug,id");
     const { data } = await (isUuid ? q.eq("id", params.id) : q.eq("slug", params.id)).maybeSingle();
     if (!data) throw notFound();
-    return { place: data };
+    const { data: reviewRows } = await supabase.from("reviews").select("rating").eq("place_id", data.id);
+    const ratings = (reviewRows ?? []).map((r) => r.rating as number);
+    const reviewCount = ratings.length;
+    const avgRating = reviewCount > 0 ? ratings.reduce((a, b) => a + b, 0) / reviewCount : null;
+    return { place: data, avgRating, reviewCount };
   },
   head: ({ params, loaderData }) => {
     const place = loaderData?.place ?? null;
+    const avgRating = loaderData?.avgRating ?? null;
+    const reviewCount = loaderData?.reviewCount ?? 0;
     const fallbackDesc = `Profil lokalu na poŻeramy - adres, menu, recenzje i opinie poznańskich foodies.`;
     const name = place?.name ?? "Profil knajpy";
     const title = clamp(`${name} - poŻeramy Poznań`, 60);
@@ -84,7 +90,14 @@ export const Route = createFileRoute("/k/$id")({
                 ? { "@type": "PostalAddress", streetAddress: place.address, addressLocality: "Poznań", addressCountry: "PL" }
                 : undefined,
               servesCuisine: place.cuisine ?? undefined,
-              aggregateRating: undefined,
+              aggregateRating:
+                avgRating && reviewCount > 0
+                  ? {
+                      "@type": "AggregateRating",
+                      ratingValue: Math.round(avgRating * 10) / 10,
+                      reviewCount,
+                    }
+                  : undefined,
               url,
             }),
           },

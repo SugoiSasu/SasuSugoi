@@ -17,13 +17,19 @@ export const Route = createFileRoute("/sitemap.xml")({
       GET: async () => {
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "weekly", priority: "1.0" },
+          { path: "/mapa", changefreq: "weekly", priority: "0.9" },
+          { path: "/u", changefreq: "weekly", priority: "0.5" },
+          { path: "/wall", changefreq: "daily", priority: "0.5" },
+          { path: "/osiagniecia", changefreq: "monthly", priority: "0.4" },
+          { path: "/warte-pozarcia", changefreq: "weekly", priority: "0.5" },
+          { path: "/blog", changefreq: "weekly", priority: "0.5" },
           { path: "/wspolpraca", changefreq: "monthly", priority: "0.6" },
           { path: "/regulamin", changefreq: "yearly", priority: "0.3" },
           { path: "/polityka-prywatnosci", changefreq: "yearly", priority: "0.3" },
           { path: "/auth", changefreq: "yearly", priority: "0.3" },
         ];
 
-        // Dynamic content: published places
+        // Dynamic content: places + published blog posts
         try {
           const supabase = createClient(
             process.env.SUPABASE_URL!,
@@ -41,6 +47,20 @@ export const Route = createFileRoute("/sitemap.xml")({
               lastmod: k.updated_at?.slice(0, 10),
               changefreq: "monthly",
               priority: "0.6",
+            });
+          }
+
+          const { data: posts } = await supabase
+            .from("blog_posts")
+            .select("slug, updated_at")
+            .eq("status", "published");
+
+          for (const p of posts ?? []) {
+            entries.push({
+              path: `/blog/${p.slug}`,
+              lastmod: p.updated_at?.slice(0, 10),
+              changefreq: "monthly",
+              priority: "0.5",
             });
           }
         } catch {

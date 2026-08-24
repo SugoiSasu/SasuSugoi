@@ -37,6 +37,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/CookieConsent";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { PatchNotesModal } from "@/components/PatchNotesModal";
+import { BASE_URL } from "@/lib/site-config";
 
 function NotFoundComponent() {
   return (
@@ -167,13 +168,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       {
         property: "og:image",
-        content:
-          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/328e3c76-a805-46b2-8e95-0dcc3a8a9155",
+        content: `${BASE_URL}/brand/po_zeramy-logo-dark.png`,
       },
       {
         name: "twitter:image",
-        content:
-          "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/328e3c76-a805-46b2-8e95-0dcc3a8a9155",
+        content: `${BASE_URL}/brand/po_zeramy-logo-dark.png`,
       },
       { name: "google-site-verification", content: "otoVs-bqss54Ne6ibX-Y8ik3re9mnh-tGFJ-TQbA0Ac" },
     ],

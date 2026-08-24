@@ -19,6 +19,7 @@ import { pickSeeded } from "@/lib/seeded-pick";
 import { useCutoutLogo } from "@/lib/chroma-cutout";
 import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import logoDark from "@/assets/brand/po_zeramy-logo-dark.png.asset.json";
+import { BASE_URL } from "@/lib/site-config";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -34,9 +35,10 @@ export const Route = createFileRoute("/")({
         property: "og:description",
         content: "Mapa, recenzje i rolki najlepszych miejscówek w Poznaniu.",
       },
-      { property: "og:image", content: logoDark.url },
+      { property: "og:image", content: `${BASE_URL}${logoDark.url}` },
+      { property: "og:url", content: BASE_URL },
     ],
-    links: [
+    links: [{ rel: "canonical", href: BASE_URL },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
