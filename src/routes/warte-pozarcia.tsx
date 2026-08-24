@@ -1,11 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Trophy, Loader2, Check } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Trophy, Loader2, Check, Send, Lock } from "lucide-react";
 import { useUser } from "@/lib/use-auth";
 import { usePlaces } from "@/lib/places-api";
 import {
   useCurrentAwardsEvent,
   useMyAwardVotes,
-  useCastAwardVote,
+  useHasSubmittedBallot,
+  useSubmitAwardBallot,
   useAwardWinners,
 } from "@/lib/awards-api";
 import { useCuisines } from "@/lib/cuisines-api";
@@ -55,7 +58,7 @@ function WartePozarciaPage() {
         <h1 className="font-display text-3xl sm:text-4xl font-extrabold">{event.name}</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           {event.status === "active"
-            ? "Głosuj na najlepszy lokal w każdej kategorii - jeden głos na kategorię, możesz zmienić zdanie do zamknięcia głosowania."
+            ? "Wybierz najlepszy lokal w każdej kategorii i wyślij głosy jednym kliknięciem - to jednorazowe, bez możliwości zmiany później."
             : "Głosowanie zamknięte. Oto zwycięzcy."}
         </p>
       </header>
@@ -73,39 +76,99 @@ function VotingSection({ eventId, cuisineIds }: { eventId: string; cuisineIds: s
       <AuthGate
         icon={Trophy}
         title="Zaloguj się, żeby zagłosować"
-        description="Jeden głos na kategorię, żeby wynik był uczciwy."
+        description="Jeden komplet głosów na konto, żeby wynik był uczciwy."
       />
     );
+  }
+
+  return <VotingGate eventId={eventId} cuisineIds={cuisineIds} />;
+}
+
+function VotingGate({ eventId, cuisineIds }: { eventId: string; cuisineIds: string[] }) {
+  const { data: hasSubmitted, isLoading } = useHasSubmittedBallot(eventId);
+
+  if (isLoading) {
+    return (
+      <div className="grid place-items-center py-16">
+        <Loader2 className="animate-spin text-tomato" size={28} />
+      </div>
+    );
+  }
+
+  if (hasSubmitted) {
+    return <SubmittedBallot eventId={eventId} cuisineIds={cuisineIds} />;
   }
 
   return <VotingCategories eventId={eventId} cuisineIds={cuisineIds} />;
 }
 
-function VotingCategories({ eventId, cuisineIds }: { eventId: string; cuisineIds: string[] }) {
+function SubmittedBallot({ eventId, cuisineIds }: { eventId: string; cuisineIds: string[] }) {
   const { data: cuisines } = useCuisines();
   const { data: places } = usePlaces();
   const { data: myVotes } = useMyAwardVotes(eventId);
-  const castVote = useCastAwardVote(eventId);
+  const cuisineById = new Map((cuisines ?? []).map((c) => [c.id, c]));
+  const placeById = new Map((places ?? []).map((p) => [p.id, p]));
+
+  return (
+    <div>
+      <div className="mb-6 flex items-center gap-2 rounded-2xl border-2 border-tomato/40 bg-tomato/10 px-4 py-3 text-sm font-semibold text-navy">
+        <Lock size={16} className="text-tomato shrink-0" /> Głosy wysłane - dzięki! Nie da się już ich zmienić.
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {cuisineIds.map((cid) => {
+          const cuisine = cuisineById.get(cid);
+          const placeId = myVotes?.get(cid);
+          const place = placeId ? placeById.get(placeId) : undefined;
+          if (!cuisine) return null;
+          return (
+            <div key={cid} className="rounded-2xl border-2 border-border bg-card p-3">
+              <p className="text-xs font-bold uppercase tracking-wider text-navy/70 mb-1">
+                {cuisine.emoji} {cuisine.name}
+              </p>
+              <p className="text-sm font-semibold">{place?.name ?? "-"}</p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function VotingCategories({ eventId, cuisineIds }: { eventId: string; cuisineIds: string[] }) {
+  const { data: cuisines } = useCuisines();
+  const { data: places } = usePlaces();
+  const submitBallot = useSubmitAwardBallot(eventId);
+  const [picks, setPicks] = useState<Record<string, string>>({});
 
   const cuisineById = new Map((cuisines ?? []).map((c) => [c.id, c]));
+  const validCuisineIds = cuisineIds.filter((cid) => {
+    const cuisine = cuisineById.get(cid);
+    if (!cuisine) return false;
+    return (places ?? []).some((p) => p.cuisine === cuisine.name && p.is_published !== false);
+  });
+  const pickedCount = validCuisineIds.filter((cid) => picks[cid]).length;
+  const allPicked = validCuisineIds.length > 0 && pickedCount === validCuisineIds.length;
 
-  async function vote(cuisineId: string, placeId: string) {
+  async function submit() {
     try {
-      await castVote.mutateAsync({ cuisineId, placeId });
-    } catch {
-      // toast not needed - button state reflects the result
+      await submitBallot.mutateAsync(
+        Object.entries(picks).map(([cuisineId, placeId]) => ({ cuisineId, placeId })),
+      );
+      toast.success("Głosy wysłane! Dzięki za udział.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nie udało się wysłać głosów.");
     }
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-24">
       {cuisineIds.map((cid) => {
         const cuisine = cuisineById.get(cid);
         if (!cuisine) return null;
         const candidates = (places ?? []).filter(
           (p) => p.cuisine === cuisine.name && p.is_published !== false,
         );
-        const myPick = myVotes?.get(cid);
+        const myPick = picks[cid];
         return (
           <section key={cid}>
             <h2 className="font-display text-xl mb-3">
@@ -120,9 +183,8 @@ function VotingCategories({ eventId, cuisineIds }: { eventId: string; cuisineIds
                   return (
                     <button
                       key={p.id}
-                      onClick={() => vote(cid, p.id)}
-                      disabled={castVote.isPending}
-                      className={`text-left rounded-2xl border-2 p-3 transition disabled:opacity-60 ${
+                      onClick={() => setPicks((prev) => ({ ...prev, [cid]: p.id }))}
+                      className={`text-left rounded-2xl border-2 p-3 transition ${
                         picked
                           ? "border-tomato bg-tomato/10"
                           : "border-border bg-card hover:border-tomato/40"
@@ -141,6 +203,26 @@ function VotingCategories({ eventId, cuisineIds }: { eventId: string; cuisineIds
           </section>
         );
       })}
+
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur-md px-4 py-3">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
+          <span className="text-sm font-semibold text-muted-foreground">
+            Wybrano {pickedCount}/{validCuisineIds.length}
+          </span>
+          <button
+            onClick={submit}
+            disabled={!allPicked || submitBallot.isPending}
+            className="inline-flex items-center gap-2 rounded-full bg-tomato text-cream px-6 py-2.5 font-semibold disabled:opacity-50"
+          >
+            {submitBallot.isPending ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Send size={16} />
+            )}
+            Wyślij głosy
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

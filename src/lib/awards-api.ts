@@ -133,21 +133,52 @@ export function useMyAwardVotes(eventId: string | null) {
   });
 }
 
-export function useCastAwardVote(eventId: string) {
+/** Has this account already sent its final ballot for this event? Once true,
+ * voting is locked for them - submit_award_ballot() refuses a second call. */
+export function useHasSubmittedBallot(eventId: string | null) {
+  const { user } = useUser();
+  return useQuery({
+    queryKey: ["award-ballot-submitted", eventId, user?.id ?? null],
+    enabled: !!eventId && !!user,
+    queryFn: async () => {
+      const { data, error } = await sb
+        .from("award_ballots")
+        .select("id")
+        .eq("event_id", eventId)
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return !!data;
+    },
+  });
+}
+
+const BALLOT_ERROR_MESSAGES: Record<string, string> = {
+  auth_required: "Musisz być zalogowany.",
+  event_not_found: "Wydarzenie nie istnieje.",
+  event_not_active: "Głosowanie jest zamknięte.",
+  already_submitted: "Już wysłałeś swoje głosy - można to zrobić tylko raz.",
+  invalid_pick: "Wybierz lokal w każdej kategorii.",
+};
+
+/** Sends every pick at once and permanently locks this account's ballot for
+ * the event - there's no per-category autosave anymore, just this one shot. */
+export function useSubmitAwardBallot(eventId: string) {
   const qc = useQueryClient();
   const { user } = useUser();
   return useMutation({
-    mutationFn: async (input: { cuisineId: string; placeId: string }) => {
+    mutationFn: async (picks: Array<{ cuisineId: string; placeId: string }>) => {
       if (!user) throw new Error("Musisz być zalogowany");
-      const { error } = await sb
-        .from("award_votes")
-        .upsert(
-          { event_id: eventId, user_id: user.id, cuisine_id: input.cuisineId, place_id: input.placeId },
-          { onConflict: "event_id,user_id,cuisine_id" },
-        );
-      if (error) throw error;
+      const { error } = await sb.rpc("submit_award_ballot", {
+        _event_id: eventId,
+        _picks: picks.map((p) => ({ cuisine_id: p.cuisineId, place_id: p.placeId })),
+      });
+      if (error) throw new Error(BALLOT_ERROR_MESSAGES[error.message] ?? "Nie udało się wysłać głosów.");
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["my-award-votes", eventId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["my-award-votes", eventId] });
+      qc.invalidateQueries({ queryKey: ["award-ballot-submitted", eventId] });
+    },
   });
 }
 
