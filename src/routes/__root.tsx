@@ -1,3 +1,13 @@
+// tanstackStart({ client: { entry: "./src/client.tsx" } }) is silently
+// ignored by this framework version in both dev and prod builds (confirmed
+// by bundling a unique marker string into src/instrument.client.ts and
+// finding it absent from the output either way) - initialize the client
+// SDK here instead, guarded to browser-only so it never runs in the SSR
+// bundle where server.ts already calls Sentry.init() itself.
+if (typeof document !== "undefined") {
+  import("../instrument.client");
+}
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,

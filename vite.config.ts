@@ -13,7 +13,7 @@ export default defineConfig({
   plugins: [
     tsConfigPaths(),
     tailwindcss(),
-    tanstackStart({ client: { entry: "./src/client.tsx" }, server: { entry: "./src/server.ts" } }),
+    tanstackStart({ server: { entry: "./src/server.ts" } }),
     nitro({ preset: "vercel" }),
     viteReact(),
     // Uploads source maps so Sentry shows real stack traces instead of
