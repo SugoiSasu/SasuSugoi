@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Lock, Trophy } from "lucide-react";
+import { Lock, Search, Trophy, X } from "lucide-react";
 import { useUser } from "@/lib/use-auth";
 import { useMyProfile } from "@/lib/profile-api";
 import { useAchievements, useUserAchievements, computeProgress, type CriteriaType } from "@/lib/achievements-api";
@@ -42,6 +42,7 @@ function AchievementsPage() {
   const { data: friendsCount } = useFriendsCount(user?.id);
   const { data: inviteStats } = useInviteStats();
   const [filter, setFilter] = useState<Filter>("all");
+  const [query, setQuery] = useState("");
 
   const points = profile?.points_total ?? 0;
   const unlocked = useMemo(() => new Set((mine ?? []).map((m) => m.achievement_id)), [mine]);
@@ -54,13 +55,15 @@ function AchievementsPage() {
   };
 
   const enabled = useMemo(() => (all ?? []).filter((a) => a.enabled !== false), [all]);
-  const shown = useMemo(
-    () =>
-      enabled.filter((a) =>
-        filter === "all" ? true : filter === "unlocked" ? unlocked.has(a.id) : !unlocked.has(a.id),
-      ),
-    [enabled, filter, unlocked],
-  );
+  const shown = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return enabled.filter((a) => {
+      if (filter === "unlocked" && !unlocked.has(a.id)) return false;
+      if (filter === "locked" && unlocked.has(a.id)) return false;
+      if (!q) return true;
+      return a.name.toLowerCase().includes(q) || (a.description ?? "").toLowerCase().includes(q);
+    });
+  }, [enabled, filter, unlocked, query]);
 
   const podium = (leaders ?? []).slice(0, 3);
   const rest = (leaders ?? []).slice(3);
@@ -92,7 +95,9 @@ function AchievementsPage() {
 
       <section className="mt-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-display text-lg font-extrabold">Odznaki</h2>
+          <h2 className="font-display text-lg font-extrabold">
+            Odznaki <span className="text-sm font-normal text-muted-foreground">({shown.length})</span>
+          </h2>
           <div className="flex gap-2">
             {(
               [
@@ -113,6 +118,31 @@ function AchievementsPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="relative mt-3">
+          <Search
+            size={16}
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Szukaj odznaki po nazwie…"
+            aria-label="Szukaj odznaki"
+            className="h-11 w-full rounded-full border border-border bg-card pl-10 pr-10 text-sm outline-none transition focus:border-tomato"
+          />
+          {!!query && (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              aria-label="Wyczyść wyszukiwanie"
+              className="absolute right-1 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full text-muted-foreground transition hover:text-tomato"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
 
         {loadingAll ? (
@@ -183,7 +213,7 @@ function AchievementsPage() {
           })}
           {shown.length === 0 && (
             <li className="col-span-full rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-              Brak odznak w tym filtrze.
+              {query ? `Nic nie pasuje do "${query}".` : "Brak odznak w tym filtrze."}
             </li>
           )}
         </ul>

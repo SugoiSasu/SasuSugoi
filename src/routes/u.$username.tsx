@@ -381,6 +381,7 @@ function PublicProfile() {
 
       {/* Achievements */}
       <AchievementsSection
+        isMe={isMe}
         achievements={(achievements ?? []).filter((a) => a.enabled)}
         unlockedIds={new Set((unlocked ?? []).map((u) => u.achievement_id))}
         unlockedAt={new Map((unlocked ?? []).map((u) => [u.achievement_id, u.unlocked_at]))}
@@ -1007,11 +1008,13 @@ function ProfileSocialsZone({
 }
 
 function AchievementsSection({
+  isMe,
   achievements,
   unlockedIds,
   unlockedAt,
   userStats,
 }: {
+  isMe: boolean;
   achievements: import("@/lib/achievements-api").Achievement[];
   unlockedIds: Set<string>;
   unlockedAt: Map<string, string>;
@@ -1043,15 +1046,25 @@ function AchievementsSection({
       className="mx-auto max-w-3xl px-4 sm:px-6 pb-12 sm:pb-16"
       aria-labelledby="achievements-heading"
     >
-      <h2
-        id="achievements-heading"
-        className="font-display text-2xl sm:text-3xl mb-5 flex items-center gap-2.5 tracking-tight"
-      >
-        <Trophy size={20} className="text-tomato" aria-hidden="true" /> Achievementy
-        <span className="text-sm text-muted-foreground font-sans" aria-live="polite">
-          ({got.length}/{achievements.length})
-        </span>
-      </h2>
+      <div className="mb-5 flex flex-wrap items-baseline justify-between gap-3">
+        <h2
+          id="achievements-heading"
+          className="font-display text-2xl sm:text-3xl flex items-center gap-2.5 tracking-tight"
+        >
+          <Trophy size={20} className="text-tomato" aria-hidden="true" /> Achievementy
+          <span className="text-sm text-muted-foreground font-sans" aria-live="polite">
+            ({got.length}/{achievements.length})
+          </span>
+        </h2>
+        {isMe && (
+          <Link
+            to="/osiagniecia"
+            className="pz-hit inline-flex items-center text-xs font-semibold text-tomato hover:underline"
+          >
+            Przeglądaj i szukaj wszystkich →
+          </Link>
+        )}
+      </div>
 
       {achievements.length === 0 ? (
         <div className="text-sm text-muted-foreground">Brak zdefiniowanych achievementów.</div>
