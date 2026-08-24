@@ -1,6 +1,6 @@
 import { BackButton } from "@/components/BackButton";
 import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   MapPin,
@@ -9,6 +9,7 @@ import {
   Trophy,
   Users,
   Loader2,
+  Camera,
   UserPlus,
   UserCheck,
   Clock,
@@ -27,7 +28,7 @@ import {
   Sparkles,
   Store,
 } from "lucide-react";
-import { useProfileByUsername } from "@/lib/profile-api";
+import { useProfileByUsername, useUpdateProfile, uploadAvatar } from "@/lib/profile-api";
 import { usePlacesOwnedByUser } from "@/lib/owners-api";
 import { useUserRanks } from "@/lib/ranks-api";
 import { useUserReviewStats, useUserReviews, useReviewPhotoUrl } from "@/lib/reviews-api";
@@ -58,7 +59,7 @@ import {
 } from "@/lib/friends-api";
 import { useUserVisitedPlaces, useUserFavoritePlaces } from "@/lib/visits-api";
 import { useUser } from "@/lib/use-auth";
-import { usePlaces } from "@/lib/places-api";
+import { usePlaces, usePlaceRatingsMap } from "@/lib/places-api";
 import { UserAvatar } from "@/components/UserAvatar";
 import { PlaceListGrid } from "@/components/VisitStatus";
 import { CollapsiblePlaceList } from "@/components/CollapsiblePlaceList";
@@ -147,6 +148,32 @@ function PublicProfile() {
   const visitedCount = visitedList?.length ?? 0;
   const { data: inviteStats } = useInviteStats();
   const { data: ownedPlaces } = usePlacesOwnedByUser(profile?.id);
+  const updateProfile = useUpdateProfile();
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleAvatarFile(file: File) {
+    if (!me) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Plik za duży (max 5 MB)");
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      toast.error("To nie jest obrazek");
+      return;
+    }
+    setAvatarUploading(true);
+    try {
+      const path = await uploadAvatar(me.id, file);
+      await updateProfile.mutateAsync({ avatar_url: path, avatar_source: "upload" });
+      toast.success("Zdjęcie zaktualizowane");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Błąd uploadu");
+    } finally {
+      setAvatarUploading(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  }
 
   if (isLoading) {
     return (
@@ -207,6 +234,34 @@ function PublicProfile() {
               gender={profile.gender}
               className="relative border-4 border-cream/25 shadow-[0_12px_32px_-8px_rgba(0,0,0,0.55)] transition-transform duration-500 hover:scale-[1.03]"
             />
+            {isMe && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={avatarUploading}
+                  aria-label="Zmień zdjęcie profilowe"
+                  title="Zmień zdjęcie profilowe"
+                  className="pz-hit absolute bottom-0 right-0 grid h-9 w-9 place-items-center rounded-full bg-navy/80 text-cream border-2 border-cream/30 backdrop-blur-sm transition hover:bg-navy disabled:opacity-70"
+                >
+                  {avatarUploading ? (
+                    <Loader2 size={15} className="animate-spin" />
+                  ) : (
+                    <Camera size={15} />
+                  )}
+                </button>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void handleAvatarFile(f);
+                  }}
+                />
+              </>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="font-display text-3xl sm:text-4xl leading-tight tracking-tight flex flex-wrap items-center gap-2.5">
@@ -245,10 +300,12 @@ function PublicProfile() {
               </p>
             )}
             {profile.bio && (
-              <p className="mt-5 text-cream/90 leading-relaxed max-w-prose">{profile.bio}</p>
+              <div className="mt-5 rounded-2xl border border-cream/15 bg-cream/[0.06] px-4 py-3">
+                <p className="text-cream/90 leading-relaxed max-w-prose">{profile.bio}</p>
+              </div>
             )}
             {profile.favorite_cuisines.length > 0 && (
-              <div className="mt-5 flex flex-wrap gap-2">
+              <div className="mt-3 rounded-2xl border border-cream/15 bg-cream/[0.06] px-4 py-3 flex flex-wrap gap-2">
                 {profile.favorite_cuisines.map((c) => (
                   <span key={c} className="chip bg-cream/15 text-cream">
                     {c}
@@ -256,26 +313,21 @@ function PublicProfile() {
                 ))}
               </div>
             )}
-            <ProfileSocials profile={profile} />
-            <div className="mt-6">
-              {isMe ? (
-                <Link
-                  to="/profile"
-                  className="chip bg-cream/15 text-cream hover:bg-cream/25 transition-colors duration-200"
-                >
-                  Edytuj profil
-                </Link>
-              ) : me ? (
-                <FriendActions otherUserId={profile.id} otherUsername={profile.username} />
-              ) : (
-                <Link
-                  to="/auth"
-                  className="chip bg-cream/15 text-cream hover:bg-cream/25 transition-colors duration-200"
-                >
-                  <UserPlus size={12} /> Zaloguj się, by zaprosić
-                </Link>
-              )}
-            </div>
+            <ProfileSocialsZone profile={profile} />
+            {!isMe && (
+              <div className="mt-4">
+                {me ? (
+                  <FriendActions otherUserId={profile.id} otherUsername={profile.username} />
+                ) : (
+                  <Link
+                    to="/auth"
+                    className="chip bg-cream/15 text-cream hover:bg-cream/25 transition-colors duration-200"
+                  >
+                    <UserPlus size={12} /> Zaloguj się, by zaprosić
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -498,11 +550,12 @@ function PlaceLists({
 
 function RecommendedForCuisines({ cuisines }: { cuisines: string[] }) {
   const { data: places } = usePlaces();
+  const { data: ratings } = usePlaceRatingsMap();
   if (!cuisines.length || !places?.length) return null;
   const primary = cuisines[0];
   const recs = places
     .filter((p) => p.cuisine === primary)
-    .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+    .sort((a, b) => (ratings?.get(b.id)?.avg ?? 0) - (ratings?.get(a.id)?.avg ?? 0))
     .slice(0, 3);
   if (!recs.length) return null;
   return (
@@ -887,7 +940,7 @@ function ListToggleRow({
   );
 }
 
-function ProfileSocials({
+function ProfileSocialsZone({
   profile,
 }: {
   profile: {
@@ -908,7 +961,7 @@ function ProfileSocials({
   const active = links.filter((l) => !!l.url);
   if (active.length === 0) return null;
   return (
-    <div className="mt-4 flex flex-wrap gap-2">
+    <div className="mt-3 rounded-2xl border border-cream/15 bg-cream/[0.06] px-4 py-3 flex flex-wrap gap-2">
       {active.map((l) => (
         <a
           key={l.label}
@@ -981,7 +1034,7 @@ function AchievementsSection({
             id={gotPanelId}
             role="list"
             aria-label={`Zdobyte achievementy (${got.length})`}
-            className={`grid grid-cols-3 sm:grid-cols-5 gap-3 ${
+            className={`grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2.5 ${
               showAllGot
                 ? "overflow-y-auto overscroll-contain pr-1 max-h-[clamp(420px,66vh,640px)]"
                 : ""
@@ -1035,7 +1088,7 @@ function AchievementsSection({
             }`}
           >
             <div className="overflow-hidden">
-              <ul role="list" className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <ul role="list" className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2.5">
                 {locked.map((a) => (
                   <AchievementTile
                     key={a.id}
@@ -1087,14 +1140,14 @@ function AchievementTile({
             : "bg-muted/30 border-dashed border-border opacity-50 grayscale"
         }`}
       >
-        <div className="text-3xl mb-1" aria-hidden="true">
+        <div className="text-2xl mb-1" aria-hidden="true">
           {a.icon_url?.startsWith("http") ? (
-            <img src={a.icon_url} alt="" className="w-8 h-8" />
+            <img src={a.icon_url} alt="" className="w-6 h-6" />
           ) : (
             (a.icon_url ?? "🏅")
           )}
         </div>
-        <div className="text-[10px] font-semibold uppercase tracking-wider leading-tight">
+        <div className="text-[9px] font-semibold uppercase tracking-wider leading-tight">
           {a.name}
         </div>
       </li>

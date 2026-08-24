@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { usePlaces, useDeletePlace, type Place } from "@/lib/places-api";
+import { usePlaces, usePlaceRatingsMap, useDeletePlace, type Place } from "@/lib/places-api";
 import {
   useCuisines,
   useSaveCuisine,
@@ -108,6 +108,7 @@ function AdminPlaces() {
 
 function PlacesTab() {
   const { data: places, isLoading } = usePlaces();
+  const { data: ratings } = usePlaceRatingsMap();
   const del = useDeletePlace();
   const [confirmDelete, setConfirmDelete] = useState<Place | null>(null);
   const [query, setQuery] = useState("");
@@ -241,7 +242,9 @@ function PlacesTab() {
                           {p.name}
                         </Link>
                       </div>
-                      <span className="text-sm font-bold whitespace-nowrap">⭐ {p.rating}</span>
+                      <span className="text-sm font-bold whitespace-nowrap">
+                        {ratings?.get(p.id) ? `⭐ ${ratings.get(p.id)!.avg.toFixed(1)}` : "Brak ocen"}
+                      </span>
                     </div>
                     <div className="text-xs text-muted-foreground inline-flex items-center gap-1 mt-1 truncate">
                       <MapPin size={12} className="flex-shrink-0" />

@@ -391,7 +391,6 @@ export function useForYouFeed() {
             .select(placeCols)
             .eq("is_published", true)
             .in("cuisine", cuisines)
-            .order("rating", { ascending: false })
             .limit(40),
         );
       }
@@ -402,7 +401,6 @@ export function useForYouFeed() {
             .select(placeCols)
             .eq("is_published", true)
             .eq("district", district)
-            .order("rating", { ascending: false })
             .limit(40),
         );
       }
@@ -412,7 +410,6 @@ export function useForYouFeed() {
             .from("places")
             .select(placeCols)
             .eq("is_published", true)
-            .order("rating", { ascending: false })
             .limit(40),
         );
       }

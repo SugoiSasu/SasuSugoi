@@ -314,27 +314,14 @@ function EditPlace() {
               className="input"
             />
           </FormField>
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="Ocena (1–5)">
-              <input
-                type="number"
-                step="0.1"
-                min="0"
-                max="5"
-                value={form.rating}
-                onChange={(e) => setForm({ ...form, rating: parseFloat(e.target.value) })}
-                className="input"
-              />
-            </FormField>
-            <FormField label="Adres">
-              <input
-                required
-                value={form.address}
-                onChange={(e) => setForm({ ...form, address: e.target.value })}
-                className="input"
-              />
-            </FormField>
-          </div>
+          <FormField label="Adres">
+            <input
+              required
+              value={form.address}
+              onChange={(e) => setForm({ ...form, address: e.target.value })}
+              className="input"
+            />
+          </FormField>
           <div className="grid grid-cols-2 gap-3">
             <FormField label="Szerokość (lat)">
               <input
