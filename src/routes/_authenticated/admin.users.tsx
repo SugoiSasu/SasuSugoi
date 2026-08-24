@@ -11,7 +11,19 @@ import {
 } from "@/lib/roles-api";
 import { useRanks, useGrantRankToUser, useRevokeRankFromUser, useUserRanks } from "@/lib/ranks-api";
 import { RankBadge } from "@/components/RankBadge";
-import { Crown, Search, Loader2, Shield, User as UserIcon, X, Award, ExternalLink, Trash2 } from "lucide-react";
+import {
+  Crown,
+  Search,
+  Loader2,
+  Shield,
+  User as UserIcon,
+  X,
+  Award,
+  ExternalLink,
+  Trash2,
+  FlaskConical,
+} from "lucide-react";
+import { UserAvatar } from "@/components/UserAvatar";
 import { toast } from "sonner";
 import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
 import { deleteUserAccount } from "@/lib/admin-users.functions";
@@ -41,13 +53,22 @@ const ROLE_STYLE: Record<AppRole, string> = {
   super_admin: "bg-amber-500/15 text-amber-700 border border-amber-500/30",
 };
 
+type StatusFilter = "all" | "staff" | "beta";
+
 function AdminUsers() {
   const isSuper = useIsSuperAdmin();
   const { user: me } = useUser();
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const { data: users, isLoading } = useAllUsersWithRoles(search);
   const grant = useGrantRole();
   const revoke = useRevokeRole();
+
+  const filtered = (users ?? []).filter((u) => {
+    if (statusFilter === "staff") return u.roles.includes("admin") || u.roles.includes("super_admin");
+    if (statusFilter === "beta") return u.is_beta_tester;
+    return true;
+  });
 
   if (!isSuper) {
     return (
@@ -111,93 +132,124 @@ function AdminUsers() {
         )}
       </div>
 
+      <div className="flex flex-wrap gap-2 mb-5">
+        {(
+          [
+            ["all", "Wszyscy"],
+            ["staff", "Admini"],
+            ["beta", "Beta testerzy"],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setStatusFilter(key)}
+            className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+              statusFilter === key
+                ? "border-tomato bg-tomato/10 text-tomato"
+                : "border-border bg-card hover:border-tomato"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       {isLoading ? (
         <div className="grid place-items-center py-20">
           <Loader2 className="animate-spin" size={28} />
         </div>
-      ) : users && users.length > 0 ? (
-        <div className="bg-card border border-border rounded-2xl overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="text-left px-4 py-3">Użytkownik</th>
-                <th className="text-left px-4 py-3">Aktualne rangi</th>
-                <th className="text-left px-4 py-3 hidden md:table-cell">Zmień</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u) => (
-                <tr key={u.id} className="border-t border-border align-top">
-                  <td className="px-4 py-3">
-                    {u.username ? (
-                      <Link
-                        to="/u/$username"
-                        params={{ username: u.username }}
-                        className="inline-flex items-center gap-1.5 font-semibold hover:text-tomato transition-colors"
+      ) : filtered.length > 0 ? (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((u) => (
+            <div key={u.id} className="bg-card border border-border rounded-2xl p-4 flex flex-col gap-3">
+              {/* Identity */}
+              <div className="flex items-center gap-3">
+                <UserAvatar avatarUrl={u.avatar_url} displayName={u.display_name} username={u.username} size={44} />
+                <div className="min-w-0 flex-1">
+                  {u.username ? (
+                    <Link
+                      to="/u/$username"
+                      params={{ username: u.username }}
+                      className="inline-flex items-center gap-1.5 font-semibold hover:text-tomato transition-colors truncate"
+                    >
+                      <span className="truncate">{u.display_name || u.username || "(bez nazwy)"}</span>
+                      <ExternalLink size={12} className="opacity-60 shrink-0" />
+                    </Link>
+                  ) : (
+                    <div className="font-semibold truncate">{u.display_name || "(bez nazwy)"}</div>
+                  )}
+                  <div className="text-xs text-muted-foreground truncate">
+                    {u.username ? `@${u.username}` : u.id.slice(0, 8)}
+                    {u.id === me?.id && " · to Ty"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Status: read-only badges */}
+              <div className="flex flex-wrap gap-1.5">
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${ROLE_STYLE.user}`}
+                >
+                  {ROLE_ICON.user} Użytkownik
+                </span>
+                {u.roles
+                  .filter((r) => r !== "user")
+                  .map((r) => (
+                    <span
+                      key={r}
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${ROLE_STYLE[r]}`}
+                    >
+                      {ROLE_ICON[r]} {ROLE_LABEL[r]}
+                    </span>
+                  ))}
+                {u.is_beta_tester && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-700 border border-emerald-500/30">
+                    <FlaskConical size={12} /> Beta tester
+                  </span>
+                )}
+                <UserRanksInline userId={u.id} />
+              </div>
+
+              <div className="border-t border-dashed border-border" />
+
+              {/* Actions: buttons, deliberately styled differently from the status badges above */}
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+                  Zarządzaj
+                </p>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {ALL_ROLES.filter((r) => r !== "user").map((r) => {
+                    const has = u.roles.includes(r);
+                    return (
+                      <button
+                        key={r}
+                        onClick={() => toggleRole(u.id, r, has)}
+                        disabled={grant.isPending || revoke.isPending}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition disabled:opacity-50 ${
+                          has
+                            ? "bg-tomato text-cream border-tomato hover:bg-tomato/80"
+                            : "bg-transparent border-border hover:border-tomato hover:text-tomato"
+                        }`}
                       >
-                        {u.display_name || u.username || "(bez nazwy)"}
-                        <ExternalLink size={12} className="opacity-60" />
-                      </Link>
-                    ) : (
-                      <div className="font-semibold">
-                        {u.display_name || "(bez nazwy)"}
-                      </div>
-                    )}
-                    <div className="text-xs text-muted-foreground">
-                      {u.username ? `@${u.username}` : u.id.slice(0, 8)}
-                      {u.id === me?.id && " · to Ty"}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    {u.roles.length === 0 ? (
-                      <span className="text-xs text-muted-foreground"> - user - </span>
-                    ) : (
-                      <div className="flex flex-wrap gap-1.5">
-                        {u.roles.map((r) => (
-                          <span
-                            key={r}
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${ROLE_STYLE[r]}`}
-                          >
-                            {ROLE_ICON[r]} {ROLE_LABEL[r]}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <UserRanksInline userId={u.id} />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      {ALL_ROLES.filter((r) => r !== "user").map((r) => {
-                        const has = u.roles.includes(r);
-                        return (
-                          <button
-                            key={r}
-                            onClick={() => toggleRole(u.id, r, has)}
-                            disabled={grant.isPending || revoke.isPending}
-                            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition disabled:opacity-50 ${
-                              has
-                                ? "bg-tomato text-cream hover:bg-tomato/80"
-                                : "bg-muted hover:bg-muted/70"
-                            }`}
-                          >
-                            {has ? `− ${ROLE_LABEL[r]}` : `+ ${ROLE_LABEL[r]}`}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <RankPicker userId={u.id} />
-                    <BetaTesterToggle userId={u.id} value={u.is_beta_tester} />
-                    {u.id !== me?.id && (
-                      <DeleteUserButton
-                        userId={u.id}
-                        label={u.display_name || u.username || u.id.slice(0, 8)}
-                      />
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                        {has ? `− ${ROLE_LABEL[r]}` : `+ ${ROLE_LABEL[r]}`}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <RankPicker userId={u.id} />
+                  <BetaTesterToggle userId={u.id} value={u.is_beta_tester} />
+                </div>
+                {u.id !== me?.id && (
+                  <DeleteUserButton
+                    userId={u.id}
+                    label={u.display_name || u.username || u.id.slice(0, 8)}
+                  />
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="text-center py-20 bg-card border border-border rounded-2xl text-muted-foreground">
