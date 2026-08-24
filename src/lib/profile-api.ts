@@ -25,6 +25,8 @@ export interface Profile {
   vip_until: string | null;
   vip_nick_color: string | null;
   gender: "M" | "K" | null;
+  onboarding_seen_at: string | null;
+  ig_popup_dismissed_at: string | null;
 }
 
 export const POZNAN_DISTRICTS = [
@@ -99,6 +101,8 @@ export interface ProfileUpdate {
   x_url?: string | null;
   vip_nick_color?: string | null;
   gender?: "M" | "K" | null;
+  onboarding_seen_at?: string;
+  ig_popup_dismissed_at?: string;
 }
 
 /**

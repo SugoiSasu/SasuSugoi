@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { MapPin, Star, Trophy, Users, Sparkles, X, ChevronLeft } from "lucide-react";
 import { useUser } from "@/lib/use-auth";
 import { hasSeenOnboarding, markOnboardingSeen, onOnboardingOpenRequest } from "@/lib/onboarding";
+import { useMyProfile, useUpdateProfile } from "@/lib/profile-api";
 
 interface Step {
   icon: React.ElementType;
@@ -45,16 +46,25 @@ const STEPS: Step[] = [
 
 export function OnboardingTour() {
   const { user, loading } = useUser();
+  // Server-side flag is the source of truth (survives cache clears / new
+  // devices); localStorage only avoids a flash of the tour while this
+  // query is still loading right after sign-in.
+  const { data: profile, isLoading: profileLoading } = useMyProfile();
+  const updateProfile = useUpdateProfile();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    if (loading || !user) return;
+    if (loading || !user || profileLoading) return;
+    if (profile?.onboarding_seen_at) {
+      markOnboardingSeen(user.id);
+      return;
+    }
     if (!hasSeenOnboarding(user.id)) {
       setStep(0);
       setOpen(true);
     }
-  }, [user, loading]);
+  }, [user, loading, profile, profileLoading]);
 
   useEffect(() => {
     return onOnboardingOpenRequest(() => {
@@ -65,7 +75,12 @@ export function OnboardingTour() {
 
   function close() {
     setOpen(false);
-    if (user) markOnboardingSeen(user.id);
+    if (user) {
+      markOnboardingSeen(user.id);
+      if (!profile?.onboarding_seen_at) {
+        updateProfile.mutate({ onboarding_seen_at: new Date().toISOString() });
+      }
+    }
   }
 
   if (!open) return null;

@@ -10,6 +10,7 @@ import { usePlaces, usePlaceRatingsMap, type Place } from "@/lib/places-api";
 import { searchPlaces } from "@/lib/place-search";
 import { useDebounced } from "@/lib/use-debounced";
 import { useUser } from "@/lib/use-auth";
+import { useMyProfile, useUpdateProfile } from "@/lib/profile-api";
 import { useIsFavorite, useToggleFavorite } from "@/lib/favorites-api";
 import { useFriendRecommendations } from "@/lib/friends-api";
 import { useActiveAds, type Ad } from "@/lib/ads-api";
@@ -395,9 +396,18 @@ function DiscoverCard({ place, stat }: { place: Place; stat?: { avg: number; cou
 
 /* --------------------------- first visit popup --------------------------- */
 function FirstVisitPopup() {
+  const { user, loading } = useUser();
+  // Server-side flag is the source of truth for logged-in accounts (survives
+  // cache clears / new devices); anonymous visitors have no account to tie
+  // it to, so they stay on localStorage only.
+  const { data: profile, isLoading: profileLoading } = useMyProfile();
+  const updateProfile = useUpdateProfile();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    if (loading) return;
+    if (user && profileLoading) return;
+    if (user && profile?.ig_popup_dismissed_at) return;
     try {
       if (!localStorage.getItem("pozeramy_ig_popup_seen")) {
         const t = setTimeout(() => setOpen(true), 1200);
@@ -406,7 +416,7 @@ function FirstVisitPopup() {
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [user, loading, profile, profileLoading]);
 
   if (!open) return null;
   const close = () => {
@@ -414,6 +424,9 @@ function FirstVisitPopup() {
       localStorage.setItem("pozeramy_ig_popup_seen", "1");
     } catch {
       /* ignore */
+    }
+    if (user && !profile?.ig_popup_dismissed_at) {
+      updateProfile.mutate({ ig_popup_dismissed_at: new Date().toISOString() });
     }
     setOpen(false);
   };
