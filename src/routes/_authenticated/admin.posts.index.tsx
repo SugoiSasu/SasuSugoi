@@ -2,8 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useAllPostsAdmin, useDeletePost } from "@/lib/posts-api";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Loader2, ExternalLink, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, ExternalLink, Search, FileText } from "lucide-react";
 import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
+import {
+  AdminPageHeader,
+  AdminStatBar,
+  adminCtaClass,
+  countThisMonth,
+  type AdminStat,
+} from "@/components/admin/AdminPageShell";
 
 export const Route = createFileRoute("/_authenticated/admin/posts/")({
   component: AdminPosts,
@@ -26,6 +33,35 @@ function AdminPosts() {
     );
   }, [posts, search]);
 
+  const postStats = useMemo<AdminStat[]>(() => {
+    const list = posts ?? [];
+    const published = list.filter((p) => p.status === "published").length;
+    const drafts = list.length - published;
+    const noCover = list.filter((p) => !p.cover_image_url).length;
+    const added = countThisMonth(list);
+    return [
+      {
+        label: "Wszystkie wpisy",
+        value: list.length,
+        delta: added ? `+${added} w tym mies.` : "bez nowych",
+        tone: added ? "ok" : "neutral",
+      },
+      { label: "Opublikowane", value: published, delta: "widoczne publicznie", tone: "ok" },
+      {
+        label: "Szkice",
+        value: drafts,
+        delta: drafts ? "do dokończenia" : "brak",
+        tone: drafts ? "attention" : "ok",
+      },
+      {
+        label: "Bez okładki",
+        value: noCover,
+        delta: noCover ? "do uzupełnienia" : "komplet",
+        tone: noCover ? "attention" : "ok",
+      },
+    ];
+  }, [posts]);
+
   async function handleDeleteConfirmed() {
     if (!confirmDelete) return;
     try {
@@ -40,19 +76,17 @@ function AdminPosts() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <div>
-          <h1 className="font-display text-3xl">Wpisy blogowe</h1>
-          <p className="text-sm text-muted-foreground">{posts?.length ?? 0} wpisów</p>
-        </div>
-        <Link
-          to="/admin/posts/$id"
-          params={{ id: "new" }}
-          className="inline-flex items-center gap-2 rounded-full bg-tomato text-cream px-5 py-2.5 font-semibold hover:bg-tomato/90 transition"
-        >
-          <Plus size={16} /> Nowy wpis
-        </Link>
-      </div>
+      <AdminPageHeader
+        title="Wpisy blogowe"
+        icon={<FileText size={26} />}
+        subtitle="Treści redakcyjne widoczne w zakładce Odkrywaj."
+        action={
+          <Link to="/admin/posts/$id" params={{ id: "new" }} className={adminCtaClass}>
+            <Plus size={16} /> Nowy wpis
+          </Link>
+        }
+      />
+      <AdminStatBar loading={isLoading} stats={postStats} />
 
       {(posts?.length ?? 0) > 0 && (
         <div className="relative mb-4 max-w-sm">

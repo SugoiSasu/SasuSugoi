@@ -6,6 +6,7 @@ import { Crown, Loader2, ShieldCheck, Search, Trash2, ExternalLink, Copy, Archiv
 import { useIsSuperAdmin, useUser } from "@/lib/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
+import { AdminStatBar } from "@/components/admin/AdminPageShell";
 
 export const Route = createFileRoute("/_authenticated/admin/collab")({
   head: () => ({ meta: [{ title: "Współpraca - Panel admina" }] }),
@@ -106,6 +107,17 @@ function AdminCollab() {
     return c;
   }, [data]);
 
+  const { todayCount, monthCount } = useMemo(() => {
+    const now = new Date();
+    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const list = data ?? [];
+    return {
+      todayCount: list.filter((s) => s.created_at >= dayStart).length,
+      monthCount: list.filter((s) => s.created_at >= monthStart).length,
+    };
+  }, [data]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return (data ?? []).filter((s) => {
@@ -146,6 +158,39 @@ function AdminCollab() {
           <ShieldCheck size={14} className="text-emerald-600" /> Tylko super admin
         </div>
       </header>
+
+      {/* Complements the status chips below rather than repeating them: those
+          filter by state, this answers "how fresh is the backlog and are we
+          actually replying". */}
+      <AdminStatBar
+        loading={isLoading}
+        stats={[
+          {
+            label: "Nieprzeczytane",
+            value: counts.new,
+            delta: counts.new ? "czeka na Ciebie" : "wszystko przejrzane",
+            tone: counts.new ? "attention" : "ok",
+          },
+          {
+            label: "Dziś",
+            value: todayCount,
+            delta: todayCount ? "nowych zgłoszeń" : "brak nowych",
+            tone: todayCount ? "ok" : "neutral",
+          },
+          {
+            label: "W tym miesiącu",
+            value: monthCount,
+            delta: `${counts.all} łącznie`,
+            tone: "neutral",
+          },
+          {
+            label: "Odpowiedziano",
+            value: counts.all ? `${Math.round((counts.replied / counts.all) * 100)}%` : "—",
+            delta: `${counts.replied} z ${counts.all}`,
+            tone: counts.replied === counts.all && counts.all > 0 ? "ok" : "neutral",
+          },
+        ]}
+      />
 
       {/* Filter chips */}
       <div className="flex flex-wrap gap-2">

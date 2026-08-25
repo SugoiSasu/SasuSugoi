@@ -1,7 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Save, Trash2, Loader2, X, Lock, Zap, Trophy, Award, Medal } from "lucide-react";
+import {
+  Plus,
+  Save,
+  Trash2,
+  Loader2,
+  X,
+  Lock,
+  Zap,
+  Trophy,
+  Award,
+  Medal,
+  Sparkles,
+} from "lucide-react";
+import {
+  AdminPageHeader,
+  AdminStatBar,
+  type AdminStat,
+} from "@/components/admin/AdminPageShell";
 import { useIsAdmin, useIsSuperAdmin } from "@/lib/use-auth";
 import { usePointsRules, useUpdatePointsRule } from "@/lib/points-rules-api";
 import {
@@ -43,13 +60,13 @@ function AdminGamifikacja() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="font-display text-3xl mb-1">Gamifikacja</h1>
-        <p className="text-sm text-muted-foreground">
-          Punkty, achievementy i rangi - system nagradzania użytkowników.
-        </p>
-      </div>
-      <div className="flex gap-2 mb-6">
+      <AdminPageHeader
+        title="Gamifikacja"
+        icon={<Sparkles size={26} />}
+        subtitle="Punkty, achievementy i rangi - system nagradzania użytkowników."
+      />
+      <GamificationStatBar />
+      <div className="flex gap-2 mb-6 flex-wrap">
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -77,6 +94,50 @@ const POINTS_LABELS: Record<string, string> = {
   list_created: "Za utworzenie listy tematycznej",
   challenge_completed: "Za ukończenie wyzwania",
 };
+
+/**
+ * All four numbers are "how big is the system and how much of it is live" -
+ * a disabled achievement or a disabled points rule is invisible to users,
+ * and that's easy to forget you left switched off.
+ */
+function GamificationStatBar() {
+  const { data: rules, isLoading } = usePointsRules();
+  const { data: achievements } = useAchievements();
+  const { data: challenges } = useChallenges();
+  const { data: ranks } = useRanks();
+
+  const stats = useMemo<AdminStat[]>(() => {
+    const r = rules ?? [];
+    const a = achievements ?? [];
+    const c = challenges ?? [];
+    const offRules = r.filter((x) => !x.enabled).length;
+    const offAch = a.filter((x) => !x.enabled).length;
+    const offCh = c.filter((x) => !x.enabled).length;
+    return [
+      {
+        label: "Reguły punktów",
+        value: r.length,
+        delta: offRules ? `${offRules} wyłączonych` : "wszystkie aktywne",
+        tone: offRules ? "attention" : "ok",
+      },
+      {
+        label: "Achievementy",
+        value: a.length,
+        delta: offAch ? `${offAch} wyłączonych` : "wszystkie aktywne",
+        tone: offAch ? "attention" : "ok",
+      },
+      {
+        label: "Wyzwania",
+        value: c.length,
+        delta: offCh ? `${offCh} wyłączonych` : "wszystkie aktywne",
+        tone: offCh ? "attention" : "ok",
+      },
+      { label: "Rangi", value: (ranks ?? []).length, delta: "progi poziomów", tone: "neutral" },
+    ];
+  }, [rules, achievements, challenges, ranks]);
+
+  return <AdminStatBar stats={stats} loading={isLoading} />;
+}
 
 function PointsTab() {
   const { data: rules, isLoading } = usePointsRules();

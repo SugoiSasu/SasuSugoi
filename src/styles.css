@@ -50,6 +50,7 @@
   --color-mustard: var(--mustard);
   --color-sage: var(--sage);
   --color-cobalt: var(--cobalt);
+  --color-ok: var(--ok);
 
   --font-display: "Bricolage Grotesque", "Manrope", "Inter", system-ui, sans-serif;
   --font-brand: "Bricolage Grotesque", "Manrope", "Inter", system-ui, sans-serif;
@@ -84,6 +85,11 @@
   --tomato: oklch(0.615 0.205 36);
   --mustard: oklch(0.84 0.16 86);
   --sage: oklch(0.78 0.06 155);
+  /* Semantic "positive/healthy" accent for admin metrics. --sage is a pale
+     surface tint (chroma .06) - unreadable as a text label - so this is a
+     deeper sibling on the same hue, tuned to sit next to --tomato without
+     fighting it. Attention/warning reuses --tomato (already the accent). */
+  --ok: oklch(0.55 0.13 155);
 
   --background: var(--cream);
   --foreground: var(--navy);

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   Check,
@@ -16,7 +16,13 @@ import {
   MessageSquare,
   Lightbulb,
   Store,
+  ShieldCheck,
 } from "lucide-react";
+import {
+  AdminPageHeader,
+  AdminStatBar,
+  type AdminStat,
+} from "@/components/admin/AdminPageShell";
 import {
   usePlaceSuggestions,
   useApproveSuggestion,
@@ -50,11 +56,13 @@ function AdminModeracja() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="font-display text-3xl mb-1">Moderacja</h1>
-        <p className="text-sm text-muted-foreground">Zgłoszenia nowych lokali i wnioski o przejęcie profilu.</p>
-      </div>
-      <div className="flex gap-2 mb-6">
+      <AdminPageHeader
+        title="Moderacja"
+        icon={<ShieldCheck size={26} />}
+        subtitle="Zgłoszenia nowych lokali i wnioski o przejęcie profilu."
+      />
+      <ModerationStatBar />
+      <div className="flex gap-2 mb-6 flex-wrap">
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -68,6 +76,64 @@ function AdminModeracja() {
       {tab === "suggestions" ? <SuggestionsTab /> : <OwnerRequestsTab />}
     </div>
   );
+}
+
+/**
+ * Moderation is a decision queue, not a list - so the bar leads with "how
+ * much is waiting" rather than a grand total. Both queues are counted
+ * together in "W kolejce" because that is the number that decides whether
+ * you need to open this page at all today.
+ */
+function ModerationStatBar() {
+  const { data: suggestions, isLoading } = usePlaceSuggestions();
+  const { data: owners } = useAdminOwnerRequests("all");
+
+  const stats = useMemo<AdminStat[]>(() => {
+    const sug = suggestions ?? [];
+    const own = owners ?? [];
+    const sugPending = sug.filter((s) => s.status === "pending").length;
+    const ownPending = own.filter((o) => o.status === "pending").length;
+    const queue = sugPending + ownPending;
+    const decided = [...sug, ...own].filter((r) => r.status !== "pending");
+    const approved = decided.filter((r) => r.status === "approved").length;
+    const oldest = sug
+      .concat(own as unknown as PlaceSuggestion[])
+      .filter((r) => r.status === "pending")
+      .map((r) => r.created_at)
+      .sort()[0];
+    return [
+      {
+        label: "W kolejce",
+        value: queue,
+        delta: queue ? "czeka na decyzję" : "kolejka pusta",
+        tone: queue ? "attention" : "ok",
+      },
+      {
+        label: "Zgłoszenia lokali",
+        value: sugPending,
+        delta: `${sug.length} łącznie`,
+        tone: sugPending ? "attention" : "ok",
+      },
+      {
+        label: "Wnioski właścicieli",
+        value: ownPending,
+        delta: `${own.length} łącznie`,
+        tone: ownPending ? "attention" : "ok",
+      },
+      {
+        label: "Najstarsze czeka",
+        value: oldest
+          ? formatDistanceToNow(new Date(oldest), { locale: pl })
+          : decided.length
+            ? "—"
+            : "—",
+        delta: decided.length ? `${approved} zatwierdzonych` : "brak decyzji",
+        tone: "neutral",
+      },
+    ];
+  }, [suggestions, owners]);
+
+  return <AdminStatBar stats={stats} loading={isLoading} />;
 }
 
 function BulkBar({

@@ -19,7 +19,14 @@ export function useUserCounts() {
   return useQuery({
     queryKey: ["user-counts"],
     queryFn: async () => {
-      const [total, admins, beta] = await Promise.all([
+      const monthStart = (() => {
+        const n = new Date();
+        return new Date(n.getFullYear(), n.getMonth(), 1).toISOString();
+      })();
+      // No last_seen/last_active column exists on profiles, so the prototype's
+      // "Aktywni (30 dni)" is not derivable honestly - "Nowi w tym mies." is
+      // the real signal we can actually compute. Don't fake the other one.
+      const [total, admins, beta, fresh] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         // A user can hold both "admin" and "super_admin" rows at once (see
         // the panel itself - Super Admins get both badges) - a plain row
@@ -30,12 +37,22 @@ export function useUserCounts() {
           .from("profiles")
           .select("id", { count: "exact", head: true })
           .eq("is_beta_tester", true),
+        supabase
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", monthStart),
       ]);
       if (total.error) throw total.error;
       if (admins.error) throw admins.error;
       if (beta.error) throw beta.error;
+      if (fresh.error) throw fresh.error;
       const staffCount = new Set((admins.data ?? []).map((r) => r.user_id)).size;
-      return { all: total.count ?? 0, staff: staffCount, beta: beta.count ?? 0 };
+      return {
+        all: total.count ?? 0,
+        staff: staffCount,
+        beta: beta.count ?? 0,
+        newThisMonth: fresh.count ?? 0,
+      };
     },
   });
 }

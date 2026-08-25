@@ -23,7 +23,9 @@ import {
   ExternalLink,
   Trash2,
   FlaskConical,
+  Users,
 } from "lucide-react";
+import { AdminPageHeader, AdminStatBar } from "@/components/admin/AdminPageShell";
 import { UserAvatar } from "@/components/UserAvatar";
 import { toast } from "sonner";
 import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
@@ -117,17 +119,44 @@ function AdminUsers() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="font-display text-3xl mb-1 inline-flex items-center gap-2">
-          Użytkownicy i rangi
-          {!isLoading && (
-            <span className="text-base font-normal text-muted-foreground">({counts.all})</span>
-          )}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Nadawaj i odbieraj rangi. Tylko Super Admin widzi tę stronę.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Użytkownicy i rangi"
+        icon={<Users size={26} />}
+        subtitle="Nadawaj i odbieraj rangi. Tylko Super Admin widzi tę stronę."
+      />
+      <AdminStatBar
+        loading={!userCounts}
+        stats={[
+          {
+            label: "Wszystkie konta",
+            value: userCounts?.all ?? 0,
+            delta: userCounts?.newThisMonth
+              ? `+${userCounts.newThisMonth} w tym mies.`
+              : "bez nowych",
+            tone: userCounts?.newThisMonth ? "ok" : "neutral",
+          },
+          {
+            label: "Nowi w tym mies.",
+            value: userCounts?.newThisMonth ?? 0,
+            delta: "od 1. dnia miesiąca",
+            tone: "neutral",
+          },
+          {
+            label: "Zespół (admini)",
+            value: userCounts?.staff ?? 0,
+            delta: "admin + super admin",
+            tone: "neutral",
+          },
+          {
+            label: "Beta testerzy",
+            value: userCounts?.beta ?? 0,
+            delta: userCounts?.all
+              ? `${Math.round(((userCounts.beta ?? 0) / userCounts.all) * 100)}% bazy`
+              : "—",
+            tone: "ok",
+          },
+        ]}
+      />
 
       <div className="relative mb-4">
         <Search

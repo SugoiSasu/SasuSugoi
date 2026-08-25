@@ -35,6 +35,13 @@ import {
 import { Map as MapPinIcon } from "lucide-react";
 import { initialsFromName, colorFromKey } from "@/lib/avatar-utils";
 import { MigrateAllPlacesButton } from "@/components/PlaceImageMigration";
+import {
+  AdminPageHeader,
+  AdminStatBar,
+  adminCtaClass,
+  countThisMonth,
+  type AdminStat,
+} from "@/components/admin/AdminPageShell";
 
 export const Route = createFileRoute("/_authenticated/admin/places/")({
   component: AdminPlaces,
@@ -82,15 +89,20 @@ function AdminPlaces() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="font-display text-3xl mb-1 inline-flex items-center gap-2">
-          <MapPinIcon size={26} /> Lokale
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Miejscówki na mapie, kuchnie i wpisy widoczne na Wallu.
-        </p>
-      </div>
-      <div className="flex gap-2 mb-6">
+      <AdminPageHeader
+        title="Lokale"
+        icon={<MapPinIcon size={26} />}
+        subtitle="Miejscówki na mapie, kuchnie i wpisy widoczne na Wallu."
+        action={
+          tab === "lokale" ? (
+            <Link to="/admin/places/$id" params={{ id: "new" }} className={adminCtaClass}>
+              <Plus size={16} /> Dodaj lokal
+            </Link>
+          ) : undefined
+        }
+      />
+      <PlacesStatBar />
+      <div className="flex gap-2 mb-6 flex-wrap">
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -104,6 +116,57 @@ function AdminPlaces() {
       {tab === "lokale" ? <PlacesTab /> : tab === "kuchnie" ? <CuisinesTab /> : <PlacePostsTab />}
     </div>
   );
+}
+
+/**
+ * Every number here is derived from the same queries the tabs already run
+ * (react-query dedupes them), so nothing extra hits the network. "Bez
+ * zdjęcia" and "Bez ocen" are the two actionable ones - they're the reason
+ * this bar exists rather than just showing a total.
+ */
+function PlacesStatBar() {
+  const { data: places, isLoading } = usePlaces();
+  const { data: ratings } = usePlaceRatingsMap();
+  const { data: cuisines } = useCuisines();
+
+  const stats = useMemo<AdminStat[]>(() => {
+    const list = places ?? [];
+    const noPhoto = list.filter((p) => !p.avatar_url && !p.cover_image_url).length;
+    const rated = list.filter((p) => ratings?.get(p.id));
+    const noRating = list.length - rated.length;
+    const avg = rated.length
+      ? rated.reduce((sum, p) => sum + (ratings!.get(p.id)!.avg ?? 0), 0) / rated.length
+      : 0;
+    const added = countThisMonth(list);
+    return [
+      {
+        label: "Wszystkie lokale",
+        value: list.length,
+        delta: added ? `+${added} w tym mies.` : "bez nowych",
+        tone: added ? "ok" : "neutral",
+      },
+      {
+        label: "Bez zdjęcia",
+        value: noPhoto,
+        delta: noPhoto ? "do uzupełnienia" : "komplet",
+        tone: noPhoto ? "attention" : "ok",
+      },
+      {
+        label: "Bez ocen",
+        value: noRating,
+        delta: `${rated.length} ocenionych`,
+        tone: noRating ? "attention" : "ok",
+      },
+      {
+        label: "Śr. ocena",
+        value: rated.length ? avg.toFixed(1).replace(".", ",") : "—",
+        delta: `${(cuisines ?? []).filter((c) => c.enabled).length} kuchni`,
+        tone: "neutral",
+      },
+    ];
+  }, [places, ratings, cuisines]);
+
+  return <AdminStatBar stats={stats} loading={isLoading} />;
 }
 
 function PlacesTab() {
@@ -202,13 +265,6 @@ function PlacesTab() {
             </button>
           )}
         </div>
-        <Link
-          to="/admin/places/$id"
-          params={{ id: "new" }}
-          className="inline-flex items-center gap-2 rounded-full bg-tomato text-cream px-5 py-2.5 font-semibold hover:bg-tomato/90 transition"
-        >
-          <Plus size={16} /> Dodaj lokal
-        </Link>
       </div>
 
       <div className="mb-5">
@@ -328,7 +384,11 @@ function PlacesTab() {
                         {rating ? `⭐ ${rating.avg.toFixed(1)} (${rating.count})` : "Brak ocen"}
                       </span>
                     </div>
-                    <div className="text-xs text-muted-foreground inline-flex items-center gap-1 mt-1 truncate">
+                    {/* `flex`, not `inline-flex`: an inline-flex sizes to its
+                        content, so the inner truncate had no width to clip
+                        against and long addresses pushed the card (and the
+                        page) past the viewport by ~34px at 1280. */}
+                    <div className="text-xs text-muted-foreground flex items-center gap-1 mt-1 min-w-0">
                       <MapPin size={12} className="flex-shrink-0" />
                       <span className="truncate">{p.address}</span>
                     </div>
