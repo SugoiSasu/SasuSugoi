@@ -12,6 +12,34 @@ export interface UserWithRoles {
   roles: AppRole[];
 }
 
+/** super_admin only: real site-wide totals, independent of useAllUsersWithRoles'
+ * 50-row cap and search filter - that list is for browsing/managing, this is
+ * for "how many users do we actually have". */
+export function useUserCounts() {
+  return useQuery({
+    queryKey: ["user-counts"],
+    queryFn: async () => {
+      const [total, admins, beta] = await Promise.all([
+        supabase.from("profiles").select("id", { count: "exact", head: true }),
+        // A user can hold both "admin" and "super_admin" rows at once (see
+        // the panel itself - Super Admins get both badges) - a plain row
+        // count would double-count them, so fetch ids and dedupe instead of
+        // using a head-only count here.
+        supabase.from("user_roles").select("user_id").in("role", ["admin", "super_admin"]),
+        supabase
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .eq("is_beta_tester", true),
+      ]);
+      if (total.error) throw total.error;
+      if (admins.error) throw admins.error;
+      if (beta.error) throw beta.error;
+      const staffCount = new Set((admins.data ?? []).map((r) => r.user_id)).size;
+      return { all: total.count ?? 0, staff: staffCount, beta: beta.count ?? 0 };
+    },
+  });
+}
+
 /** super_admin only: list all profiles + their roles. RLS enforces it. */
 export function useAllUsersWithRoles(search: string) {
   return useQuery({

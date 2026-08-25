@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useIsSuperAdmin, useUser, type AppRole } from "@/lib/use-auth";
 import {
   useAllUsersWithRoles,
+  useUserCounts,
   useGrantRole,
   useRevokeRole,
   useSetBetaTester,
@@ -61,6 +62,7 @@ function AdminUsers() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const { data: users, isLoading } = useAllUsersWithRoles(search);
+  const { data: userCounts } = useUserCounts();
   const grant = useGrantRole();
   const revoke = useRevokeRole();
 
@@ -69,6 +71,18 @@ function AdminUsers() {
     if (statusFilter === "beta") return u.is_beta_tester;
     return true;
   });
+
+  // Real site-wide totals (useUserCounts, unaffected by the 50-row cap and
+  // search filter on the list below) when not searching; while searching,
+  // show counts within the search results instead, since "how many admins
+  // total" isn't what the filter chips mean once you've typed a query.
+  const counts = search.trim()
+    ? {
+        all: users?.length ?? 0,
+        staff: (users ?? []).filter((u) => u.roles.includes("admin") || u.roles.includes("super_admin")).length,
+        beta: (users ?? []).filter((u) => u.is_beta_tester).length,
+      }
+    : { all: userCounts?.all ?? 0, staff: userCounts?.staff ?? 0, beta: userCounts?.beta ?? 0 };
 
   if (!isSuper) {
     return (
@@ -104,7 +118,12 @@ function AdminUsers() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="font-display text-3xl mb-1">Użytkownicy i rangi</h1>
+        <h1 className="font-display text-3xl mb-1 inline-flex items-center gap-2">
+          Użytkownicy i rangi
+          {!isLoading && (
+            <span className="text-base font-normal text-muted-foreground">({counts.all})</span>
+          )}
+        </h1>
         <p className="text-sm text-muted-foreground">
           Nadawaj i odbieraj rangi. Tylko Super Admin widzi tę stronę.
         </p>
@@ -150,7 +169,7 @@ function AdminUsers() {
                 : "border-border bg-card hover:border-tomato"
             }`}
           >
-            {label}
+            {label} <span className="opacity-60">({counts[key]})</span>
           </button>
         ))}
       </div>
