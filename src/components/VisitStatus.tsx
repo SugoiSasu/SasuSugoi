@@ -74,7 +74,10 @@ export function VisitStatusButton({
     toggle.mutate(
       { placeId, status, on: next },
       {
-        onSuccess: () => toast.success(next ? m.toastOn : m.toastOff),
+        // Stable id: rapid re-toggling replaces the toast in place instead
+        // of stacking a contradicting one on top of it.
+        onSuccess: () =>
+          toast.success(next ? m.toastOn : m.toastOff, { id: `visit-${status}-${placeId}` }),
         onError: (err) => toast.error((err as Error).message),
       },
     );
@@ -245,6 +248,7 @@ export function VisitEventListener() {
                 : next
                   ? "Oznaczono jako odwiedzone"
                   : "Cofnięto oznaczenie",
+              { id: `visit-${status}-${placeId}` },
             ),
           onError: (err) => toast.error((err as Error).message),
         },

@@ -703,13 +703,21 @@ function FollowButton({ placeId }: { placeId: string }) {
     if (busy) return;
     try {
       await toggleFollow.mutateAsync({ placeId, on: !isFollowing });
+      // Stable id per place: a second toggle fired while the first toast is
+      // still visible (rapid follow/unfollow) replaces it in place instead
+      // of stacking a second, contradicting toast on top - reported live
+      // 2026-08-25 as two overlapping "Obserwujesz"/"Przestałeś obserwować"
+      // toasts at once.
+      const toastId = `follow-${placeId}`;
       if (isFollowing) {
         toast("Przestałeś obserwować knajpę", {
+          id: toastId,
           icon: <BellOff size={16} className="text-muted-foreground" />,
           description: "Nie będziesz już dostawać powiadomień o nowościach i promocjach tego lokalu.",
         });
       } else {
         toast.success("Obserwujesz knajpę", {
+          id: toastId,
           icon: <Bell size={16} className="text-tomato" />,
           description: "Będziesz dostawać powiadomienia o nowościach i promocjach tego lokalu.",
         });
@@ -989,7 +997,10 @@ function FavoriteIconButton({
         onClick={() => {
           const next = !isFav;
           toggle.mutate({ placeId, on: next }, {
-            onSuccess: () => toast.success(next ? "Dodano do ulubionych ❤️" : "Usunięto z ulubionych"),
+            onSuccess: () =>
+              toast.success(next ? "Dodano do ulubionych ❤️" : "Usunięto z ulubionych", {
+                id: `fav-${placeId}`,
+              }),
             onError: (e) => toast.error((e as Error).message),
           });
         }}
