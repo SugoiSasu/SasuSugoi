@@ -189,9 +189,21 @@ function FriendsPage() {
           )}
         </div>
 
-        {tab === "friends" && <FriendsTab myId={user.id} />}
-        {tab === "requests" && <RequestsTab myId={user.id} />}
-        {tab === "invite" && <InviteTab />}
+        {tab === "friends" && (
+          <div className="pz-fade-in">
+            <FriendsTab myId={user.id} />
+          </div>
+        )}
+        {tab === "requests" && (
+          <div className="pz-fade-in">
+            <RequestsTab myId={user.id} />
+          </div>
+        )}
+        {tab === "invite" && (
+          <div className="pz-fade-in">
+            <InviteTab />
+          </div>
+        )}
       </div>
     </main>
   );

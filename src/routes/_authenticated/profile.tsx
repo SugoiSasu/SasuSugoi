@@ -334,7 +334,7 @@ function ProfilePage() {
         </div>
 
         {tab === "profil" && (
-          <form onSubmit={handleSave} className="space-y-6">
+          <form onSubmit={handleSave} className="pz-fade-in space-y-6">
             <section className="rounded-2xl bg-card border border-border p-5">
               <label className="block text-xs uppercase tracking-wider font-semibold mb-3">
                 Zdjęcie profilowe
@@ -585,7 +585,7 @@ function ProfilePage() {
         )}
 
         {tab === "prywatnosc" && (
-          <div className="space-y-6">
+          <div className="pz-fade-in space-y-6">
             <section className="rounded-2xl bg-card border border-border p-5">
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
@@ -623,10 +623,14 @@ function ProfilePage() {
           </div>
         )}
 
-        {tab === "powiadomienia" && <NotificationsSection profile={profile ?? null} />}
+        {tab === "powiadomienia" && (
+          <div className="pz-fade-in">
+            <NotificationsSection profile={profile ?? null} />
+          </div>
+        )}
 
         {tab === "konto" && (
-          <div className="space-y-6">
+          <div className="pz-fade-in space-y-6">
             <DataExportSection />
             <DeleteAccountSection />
           </div>
