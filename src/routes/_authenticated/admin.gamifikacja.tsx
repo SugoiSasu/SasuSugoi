@@ -908,7 +908,7 @@ function RanksTab() {
               <div className="flex items-start justify-between gap-2">
                 <RankBadge rank={r} />
                 {r.is_system && (
-                  <span className="text-[10px] uppercase tracking-wider font-bold text-amber-600">
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-tomato">
                     systemowa
                   </span>
                 )}

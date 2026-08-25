@@ -42,6 +42,7 @@ import {
   countThisMonth,
   type AdminStat,
 } from "@/components/admin/AdminPageShell";
+import { AdminSearchInput, AdminEmptyState } from "@/components/admin/AdminControls";
 
 export const Route = createFileRoute("/_authenticated/admin/places/")({
   component: AdminPlaces,
@@ -273,29 +274,12 @@ function PlacesTab() {
 
       {/* Search + filter */}
       <div className="mb-5 flex flex-col sm:flex-row gap-3">
-        <div className="flex-1 relative">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-          />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Szukaj po nazwie, adresie, opisie..."
-            className="input pl-9 w-full"
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={() => setQuery("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 grid place-items-center rounded-full hover:bg-muted"
-              aria-label="Wyczyść"
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
+        <AdminSearchInput
+          value={query}
+          onChange={setQuery}
+          placeholder="Szukaj po nazwie, adresie, opisie…"
+          className="flex-1"
+        />
         <div className="w-full sm:w-52">
           <select
             value={cuisineFilter}
@@ -329,9 +313,10 @@ function PlacesTab() {
           <Loader2 className="animate-spin" size={28} />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-20 text-muted-foreground">
-          Brak wyników. Spróbuj innego zapytania 🔍
-        </div>
+        <AdminEmptyState
+          title="Brak wyników dla tych filtrów."
+          hint="Spróbuj innego zapytania lub wyczyść filtr kuchni."
+        />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((p) => {

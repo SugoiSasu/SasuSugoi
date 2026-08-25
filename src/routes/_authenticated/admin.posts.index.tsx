@@ -2,7 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useAllPostsAdmin, useDeletePost } from "@/lib/posts-api";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Loader2, ExternalLink, Search, FileText } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, ExternalLink, FileText } from "lucide-react";
+import {
+  AdminSearchInput,
+  AdminStatusTag,
+  AdminEmptyState,
+} from "@/components/admin/AdminControls";
 import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
 import {
   AdminPageHeader,
@@ -89,15 +94,12 @@ function AdminPosts() {
       <AdminStatBar loading={isLoading} stats={postStats} />
 
       {(posts?.length ?? 0) > 0 && (
-        <div className="relative mb-4 max-w-sm">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Szukaj po tytule, slugu, tagu…"
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-card border border-border outline-none focus:border-tomato text-sm"
-          />
-        </div>
+        <AdminSearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Szukaj po tytule, slugu, tagu…"
+          className="mb-4 max-w-sm"
+        />
       )}
 
       {isLoading ? (
@@ -122,9 +124,10 @@ function AdminPosts() {
                     <div className="text-xs text-muted-foreground">{p.slug}</div>
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
-                    <span className={`chip ${p.status === "published" ? "bg-tomato text-cream" : "bg-muted text-foreground"}`}>
-                      {p.status === "published" ? "Opublikowany" : "Szkic"}
-                    </span>
+                    <AdminStatusTag
+                      tone={p.status === "published" ? "ok" : "neutral"}
+                      label={p.status === "published" ? "Opublikowany" : "Szkic"}
+                    />
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell text-xs text-muted-foreground">
                     {p.tags.join(", ") || " - "}
@@ -151,16 +154,16 @@ function AdminPosts() {
           </table>
         </div>
       ) : search ? (
-        <div className="text-center py-20 bg-card border border-border rounded-2xl">
-          <p className="text-muted-foreground">Nic nie pasuje do „{search}".</p>
-        </div>
+        <AdminEmptyState title={`Nic nie pasuje do „${search}".`} hint="Spróbuj innego hasła." />
       ) : (
-        <div className="text-center py-20 bg-card border border-border rounded-2xl">
-          <p className="text-muted-foreground mb-4">Brak wpisów. Stwórz pierwszy!</p>
-          <Link to="/admin/posts/$id" params={{ id: "new" }} className="inline-flex items-center gap-2 rounded-full bg-tomato text-cream px-5 py-2.5 font-semibold">
-            <Plus size={16} /> Nowy wpis
-          </Link>
-        </div>
+        <AdminEmptyState
+          title="Brak wpisów. Stwórz pierwszy!"
+          action={
+            <Link to="/admin/posts/$id" params={{ id: "new" }} className={adminCtaClass}>
+              <Plus size={16} /> Nowy wpis
+            </Link>
+          }
+        />
       )}
 
       <ConfirmDeleteModal

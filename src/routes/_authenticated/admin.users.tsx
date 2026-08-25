@@ -26,6 +26,7 @@ import {
   Users,
 } from "lucide-react";
 import { AdminPageHeader, AdminStatBar } from "@/components/admin/AdminPageShell";
+import { AdminSearchInput, AdminFilterChips } from "@/components/admin/AdminControls";
 import { UserAvatar } from "@/components/UserAvatar";
 import { toast } from "sonner";
 import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
@@ -53,7 +54,9 @@ const ROLE_ICON: Record<AppRole, React.ReactNode> = {
 const ROLE_STYLE: Record<AppRole, string> = {
   user: "bg-muted text-foreground",
   admin: "bg-tomato/15 text-tomato border border-tomato/30",
-  super_admin: "bg-amber-500/15 text-amber-700 border border-amber-500/30",
+  // --mustard is the brand's own gold; no need for Tailwind's amber. It is a
+  // light token (L .84), so the label stays navy rather than a tinted text.
+  super_admin: "bg-mustard/30 text-navy border border-mustard",
 };
 
 type StatusFilter = "all" | "staff" | "beta";
@@ -158,50 +161,23 @@ function AdminUsers() {
         ]}
       />
 
-      <div className="relative mb-4">
-        <Search
-          size={16}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-        />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Szukaj po nicku lub display name…"
-          className="w-full pl-10 pr-9 py-3 rounded-xl bg-card border border-border outline-none focus:border-tomato"
-        />
-        {search && (
-          <button
-            onClick={() => setSearch("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            aria-label="Wyczyść"
-          >
-            <X size={16} />
-          </button>
-        )}
-      </div>
+      <AdminSearchInput
+        value={search}
+        onChange={setSearch}
+        placeholder="Szukaj po nicku lub display name…"
+        className="mb-4"
+      />
 
-      <div className="flex flex-wrap gap-2 mb-5">
-        {(
-          [
-            ["all", "Wszyscy"],
-            ["staff", "Admini"],
-            ["beta", "Beta testerzy"],
-          ] as const
-        ).map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setStatusFilter(key)}
-            className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-              statusFilter === key
-                ? "border-tomato bg-tomato/10 text-tomato"
-                : "border-border bg-card hover:border-tomato"
-            }`}
-          >
-            {label} <span className="opacity-60">({counts[key]})</span>
-          </button>
-        ))}
-      </div>
+      <AdminFilterChips
+        value={statusFilter}
+        onChange={setStatusFilter}
+        className="mb-5"
+        options={[
+          { key: "all", label: "Wszyscy", count: counts.all },
+          { key: "staff", label: "Admini", count: counts.staff },
+          { key: "beta", label: "Beta testerzy", count: counts.beta },
+        ]}
+      />
 
       {isLoading ? (
         <div className="grid place-items-center py-20">
@@ -252,7 +228,7 @@ function AdminUsers() {
                     </span>
                   ))}
                 {u.is_beta_tester && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-700 border border-emerald-500/30">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-ok/12 text-ok border border-ok/30">
                     <FlaskConical size={12} /> Beta tester
                   </span>
                 )}
@@ -384,7 +360,7 @@ function DeleteUserButton({ userId, label }: { userId: string; label: string }) 
       <button
         onClick={() => setOpen(true)}
         disabled={pending}
-        className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-500/10 text-red-600 hover:bg-red-500/20 border border-red-500/30 transition disabled:opacity-50"
+        className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-destructive/10 text-destructive hover:bg-destructive/20 border border-destructive/30 transition disabled:opacity-50"
       >
         {pending ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
         Usuń konto

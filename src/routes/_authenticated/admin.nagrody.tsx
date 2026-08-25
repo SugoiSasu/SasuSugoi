@@ -155,7 +155,7 @@ function EventCard({ event }: { event: AwardsEvent }) {
     event.status === "draft"
       ? "bg-muted text-muted-foreground"
       : event.status === "active"
-        ? "bg-emerald-600 text-white"
+        ? "bg-ok text-cream"
         : "bg-navy text-cream";
   const statusLabel = event.status === "draft" ? "Szkic" : event.status === "active" ? "Aktywne" : "Zamknięte";
 
@@ -199,7 +199,7 @@ function EventCard({ event }: { event: AwardsEvent }) {
           <button
             onClick={handleActivate}
             disabled={activate.isPending}
-            className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 text-white px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-full bg-ok text-cream px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
           >
             <Play size={13} /> Odpal
           </button>

@@ -964,7 +964,7 @@ function UrlStatusBadge({ status }: { status: UrlStatus }) {
     checking: { text: "Sprawdzam adres…", cls: "bg-muted text-muted-foreground border-border" },
     ok: {
       text: "✓ URL działa w przeglądarce",
-      cls: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30",
+      cls: "bg-ok/10 text-ok border-ok/30",
     },
     broken: {
       text: "✗ URL nie ładuje się w przeglądarce",

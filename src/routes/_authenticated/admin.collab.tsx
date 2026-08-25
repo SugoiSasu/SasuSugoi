@@ -7,6 +7,13 @@ import { useIsSuperAdmin, useUser } from "@/lib/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
 import { AdminStatBar } from "@/components/admin/AdminPageShell";
+import {
+  AdminSearchInput,
+  AdminFilterChips,
+  AdminStatusTag,
+  statusToneClass,
+  type StatusTone,
+} from "@/components/admin/AdminControls";
 
 export const Route = createFileRoute("/_authenticated/admin/collab")({
   head: () => ({ meta: [{ title: "Współpraca - Panel admina" }] }),
@@ -30,11 +37,13 @@ type Submission = {
   admin_notes: string | null;
 };
 
-const STATUS_META: Record<CollabStatus, { label: string; cls: string }> = {
-  new: { label: "Nowa", cls: "bg-tomato/15 text-tomato border-tomato/30" },
-  read: { label: "Odczytana", cls: "bg-blue-500/15 text-blue-600 border-blue-500/30" },
-  replied: { label: "Odpowiedziana", cls: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" },
-  archived: { label: "Zarchiwizowana", cls: "bg-muted text-muted-foreground border-border" },
+// Tones, not hand-picked colours: every one resolves to a brand token via
+// AdminControls (ok=--ok, attention=--tomato, info=--cobalt, neutral=muted).
+const STATUS_META: Record<CollabStatus, { label: string; tone: StatusTone }> = {
+  new: { label: "Nowa", tone: "attention" },
+  read: { label: "Odczytana", tone: "info" },
+  replied: { label: "Odpowiedziana", tone: "ok" },
+  archived: { label: "Zarchiwizowana", tone: "neutral" },
 };
 
 function AdminCollab() {
@@ -155,7 +164,7 @@ function AdminCollab() {
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <ShieldCheck size={14} className="text-emerald-600" /> Tylko super admin
+          <ShieldCheck size={14} className="text-ok" /> Tylko super admin
         </div>
       </header>
 
@@ -192,35 +201,22 @@ function AdminCollab() {
         ]}
       />
 
-      {/* Filter chips */}
-      <div className="flex flex-wrap gap-2">
-        {(["all", "new", "read", "replied", "archived"] as const).map((k) => {
-          const active = filter === k;
-          const label = k === "all" ? "Wszystkie" : STATUS_META[k].label;
-          return (
-            <button
-              key={k}
-              onClick={() => setFilter(k)}
-              className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-semibold border transition ${
-                active ? "bg-tomato text-cream border-tomato" : "bg-card border-border hover:border-tomato"
-              }`}
-            >
-              {label}
-              <span className={`rounded-full px-1.5 ${active ? "bg-cream/20" : "bg-muted text-muted-foreground"}`}>
-                {counts[k]}
-              </span>
-            </button>
-          );
-        })}
-        <div className="relative ml-auto">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Szukaj po marce, mailu, treści…"
-            className="pl-9 pr-3 py-2 rounded-full bg-card border border-border text-sm focus:border-tomato outline-none w-64"
-          />
-        </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <AdminFilterChips
+          value={filter}
+          onChange={setFilter}
+          options={(["all", "new", "read", "replied", "archived"] as const).map((k) => ({
+            key: k,
+            label: k === "all" ? "Wszystkie" : STATUS_META[k].label,
+            count: counts[k],
+          }))}
+        />
+        <AdminSearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Szukaj po marce, mailu, treści…"
+          className="ml-auto w-full sm:w-72"
+        />
       </div>
 
       {/* Table / list */}
@@ -243,9 +239,10 @@ function AdminCollab() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold truncate">{s.brand}</span>
-                      <span className={`text-[10px] uppercase tracking-wider font-bold rounded-full px-2 py-0.5 border ${STATUS_META[s.status].cls}`}>
-                        {STATUS_META[s.status].label}
-                      </span>
+                      <AdminStatusTag
+                        tone={STATUS_META[s.status].tone}
+                        label={STATUS_META[s.status].label}
+                      />
                       {s.status === "new" && (
                         <span className="text-[10px] text-tomato font-bold animate-pulse">●</span>
                       )}
@@ -349,7 +346,9 @@ function DetailModal({
                   key={k}
                   onClick={() => onStatus(k)}
                   className={`text-xs font-bold rounded-full px-3 py-1.5 border transition ${
-                    submission.status === k ? STATUS_META[k].cls : "bg-card border-border hover:border-tomato text-muted-foreground"
+                    submission.status === k
+                      ? statusToneClass[STATUS_META[k].tone]
+                      : "bg-card border-border hover:border-tomato text-muted-foreground"
                   }`}
                 >
                   {STATUS_META[k].label}
@@ -377,12 +376,12 @@ function DetailModal({
           </div>
 
           {/* Dowód zgody RODO */}
-          <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/30 p-4">
+          <div className="rounded-xl bg-ok/5 border border-ok/30 p-4">
             <div className="flex items-start justify-between gap-3 mb-3">
               <h3 className="text-sm font-bold flex items-center gap-2">
-                <ShieldCheck size={16} className="text-emerald-600" /> Dowód zgody RODO
+                <ShieldCheck size={16} className="text-ok" /> Dowód zgody RODO
               </h3>
-              <button onClick={copyProof} className="chip bg-card border border-border hover:border-emerald-500 text-xs">
+              <button onClick={copyProof} className="chip bg-card border border-border hover:border-ok text-xs">
                 <Copy size={12} /> Kopiuj
               </button>
             </div>
@@ -490,11 +489,14 @@ type Reply = {
   created_at: string;
 };
 
-const CHANNEL_META: Record<Reply["channel"], { label: string; icon: React.ReactNode; cls: string }> = {
-  email: { label: "Email", icon: <Send size={12} />, cls: "bg-blue-500/15 text-blue-600 border-blue-500/30" },
-  phone: { label: "Telefon", icon: <Phone size={12} />, cls: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30" },
-  note: { label: "Notatka", icon: <StickyNote size={12} />, cls: "bg-amber-500/15 text-amber-600 border-amber-500/30" },
-  other: { label: "Inne", icon: <MoreHorizontal size={12} />, cls: "bg-muted text-muted-foreground border-border" },
+const CHANNEL_META: Record<
+  Reply["channel"],
+  { label: string; icon: React.ReactNode; cls: string }
+> = {
+  email: { label: "Email", icon: <Send size={12} />, cls: statusToneClass.info },
+  phone: { label: "Telefon", icon: <Phone size={12} />, cls: statusToneClass.ok },
+  note: { label: "Notatka", icon: <StickyNote size={12} />, cls: statusToneClass.attention },
+  other: { label: "Inne", icon: <MoreHorizontal size={12} />, cls: statusToneClass.neutral },
 };
 
 function RepliesSection({ submissionId, brand, email }: { submissionId: string; brand: string; email: string }) {

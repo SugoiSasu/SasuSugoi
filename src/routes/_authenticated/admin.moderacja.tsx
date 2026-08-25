@@ -306,7 +306,7 @@ function SuggestionsTab() {
           <div className="grid gap-2">
             {done.map((s) => (
               <div key={s.id} className="bg-card border border-border rounded-xl p-3 flex items-center gap-3 text-sm">
-                <span className={`chip text-xs ${s.status === "approved" ? "bg-emerald-100 text-emerald-800" : "bg-muted text-muted-foreground"}`}>
+                <span className={`chip text-xs ${s.status === "approved" ? "bg-ok/12 text-ok" : "bg-muted text-muted-foreground"}`}>
                   {s.status === "approved" ? "✓ zatwierdzone" : "✕ odrzucone"}
                 </span>
                 <div className="flex-1 min-w-0 truncate">
@@ -445,7 +445,7 @@ function OwnerRequestsTab() {
                         toast.error((e as Error).message);
                       }
                     }}
-                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-emerald-600 text-white px-4 py-2 font-semibold hover:bg-emerald-700 disabled:opacity-50"
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-full bg-ok text-cream px-4 py-2 font-semibold hover:bg-ok/90 disabled:opacity-50"
                   >
                     <CheckCircle2 size={16} /> Zatwierdź
                   </button>
@@ -467,7 +467,7 @@ function OwnerRequestsTab() {
               )}
               {r.status !== "pending" && (
                 <span
-                  className={`chip ${r.status === "approved" ? "bg-emerald-600 text-white" : "bg-muted"}`}
+                  className={`chip ${r.status === "approved" ? "bg-ok text-cream" : "bg-muted"}`}
                 >
                   {r.status === "approved" ? "Zatwierdzone" : "Odrzucone"}
                 </span>

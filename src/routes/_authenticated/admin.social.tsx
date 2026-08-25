@@ -180,10 +180,10 @@ function PlatformCard({
           <span
             className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
               account.last_sync_error
-                ? "bg-red-500/15 text-red-600"
+                ? "bg-destructive/12 text-destructive"
                 : stale
-                  ? "bg-amber-500/15 text-amber-700"
-                  : "bg-emerald-500/15 text-emerald-700"
+                  ? "bg-mustard/30 text-navy"
+                  : "bg-ok/12 text-ok"
             }`}
           >
             {account.last_sync_error ? (
@@ -239,7 +239,7 @@ function PlatformCard({
       )}
 
       {account?.last_sync_error && (
-        <p className="text-xs text-red-600 mb-2 line-clamp-2">{account.last_sync_error}</p>
+        <p className="text-xs text-destructive mb-2 line-clamp-2">{account.last_sync_error}</p>
       )}
       {account?.last_synced_at && (
         <p className="text-[11px] text-muted-foreground mb-3">
@@ -315,7 +315,7 @@ function PlatformCard({
             <button
               onClick={() => setConfirmRemove(true)}
               disabled={del.isPending}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-red-600 text-xs font-semibold hover:bg-red-500/10 disabled:opacity-50"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-destructive text-xs font-semibold hover:bg-destructive/10 disabled:opacity-50"
             >
               <Trash2 size={12} /> Usuń
             </button>

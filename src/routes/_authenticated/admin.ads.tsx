@@ -17,6 +17,7 @@ import {
   MousePointerClick,
   Users,
   Layers,
+  Megaphone,
 } from "lucide-react";
 import { useIsSuperAdmin, useUser } from "@/lib/use-auth";
 import {
@@ -34,6 +35,17 @@ import { usePlaces } from "@/lib/places-api";
 import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
 import { Field } from "@/components/admin/Field";
 import { useStorageImageUpload } from "@/components/admin/useStorageImageUpload";
+import {
+  AdminPageHeader,
+  AdminStatBar,
+  adminCtaClass,
+  type AdminStat,
+} from "@/components/admin/AdminPageShell";
+import {
+  AdminSearchInput,
+  AdminStatusTag,
+  type StatusTone,
+} from "@/components/admin/AdminControls";
 
 export const Route = createFileRoute("/_authenticated/admin/ads")({
   head: () => ({ meta: [{ title: "Reklamy - Panel admina" }] }),
@@ -104,6 +116,50 @@ function AdminAds() {
     if (!q) return list;
     return list.filter((a) => a.message.toLowerCase().includes(q));
   }, [ads, search]);
+
+  // Impressions/clicks come from useAdStats, which the list already loads.
+  const adStats = useMemo<AdminStat[]>(() => {
+    const list = ads ?? [];
+    const live = list.filter((a) => getAdLiveStatus(a) === "active").length;
+    const totals = list.reduce(
+      (acc, a) => {
+        const s = stats?.[a.id];
+        acc.impressions += s?.impressions ?? 0;
+        acc.clicks += s?.clicks ?? 0;
+        return acc;
+      },
+      { impressions: 0, clicks: 0 },
+    );
+    const ctr = totals.impressions
+      ? ((totals.clicks / totals.impressions) * 100).toFixed(1).replace(".", ",")
+      : null;
+    return [
+      {
+        label: "Aktywne teraz",
+        value: live,
+        delta: `${list.length} łącznie`,
+        tone: live ? "ok" : "attention",
+      },
+      {
+        label: "Wyświetlenia",
+        value: totals.impressions.toLocaleString("pl-PL"),
+        delta: "łącznie",
+        tone: "neutral",
+      },
+      {
+        label: "Kliknięcia",
+        value: totals.clicks.toLocaleString("pl-PL"),
+        delta: "łącznie",
+        tone: "neutral",
+      },
+      {
+        label: "Śr. CTR",
+        value: ctr ? `${ctr}%` : "—",
+        delta: "klik / wyświetlenie",
+        tone: "neutral",
+      },
+    ];
+  }, [ads, stats]);
 
   if (!isSuper) {
     return (
@@ -184,52 +240,30 @@ function AdminAds() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6 gap-3 flex-wrap">
-        <div>
-          <h1 className="font-display text-3xl mb-1">Reklamy (Head Admin)</h1>
-          <p className="text-sm text-muted-foreground">
-            Ta sama reklama pokazuje się w pasku u góry, w sidebarze desktopowym i jako karta w
-            feedzie „Nowo otwarte". Grafika pełni rolę logo w kompaktowych miejscach - może linkować
-            do lokalu lub URL.
-            <br />
-            <span className="text-xs">
-              Zalecane wymiary (pasek u góry):{" "}
-              <strong className="text-foreground">{RECOMMENDED_DIMENSIONS}</strong>. W
-              sidebarze/feedzie grafika jest kadrowana do kwadratu/5:4.
-            </span>
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => startEdit(null)}
-          className="inline-flex items-center gap-2 rounded-full bg-tomato text-cream px-4 py-2 text-sm font-semibold hover:bg-tomato/90"
-        >
-          <Plus size={14} /> Nowa reklama
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Reklamy"
+        icon={<Megaphone size={26} />}
+        subtitle="Ta sama reklama pokazuje się w pasku u góry, w sidebarze i jako karta w feedzie „Nowo otwarte”."
+        action={
+          <button type="button" onClick={() => startEdit(null)} className={adminCtaClass}>
+            <Plus size={16} /> Nowa reklama
+          </button>
+        }
+      />
+      <AdminStatBar loading={isLoading} stats={adStats} />
+      <p className="text-xs text-muted-foreground -mt-2 mb-5">
+        Zalecane wymiary (pasek u góry):{" "}
+        <strong className="text-foreground">{RECOMMENDED_DIMENSIONS}</strong>. W sidebarze/feedzie
+        grafika jest kadrowana do kwadratu/5:4.
+      </p>
 
       {(ads?.length ?? 0) > 0 && (
-        <div className="relative mb-4">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-          />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Szukaj po treści reklamy…"
-            className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-card border border-border outline-none focus:border-tomato text-sm"
-          />
-          {search && (
-            <button
-              onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              aria-label="Wyczyść"
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
+        <AdminSearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Szukaj po treści reklamy…"
+          className="mb-4"
+        />
       )}
 
       {isLoading ? (
@@ -276,7 +310,7 @@ function AdminAds() {
                     >
                       <Eye size={11} /> {s?.impressions ?? 0}
                       {s && s.impressions_7d > 0 && (
-                        <span className="text-emerald-500">+{s.impressions_7d}/7d</span>
+                        <span className="text-ok font-semibold">+{s.impressions_7d}/7d</span>
                       )}
                     </span>
                     <span
@@ -285,7 +319,7 @@ function AdminAds() {
                     >
                       <MousePointerClick size={11} /> {s?.clicks ?? 0}
                       {s && s.clicks_7d > 0 && (
-                        <span className="text-emerald-500">+{s.clicks_7d}/7d</span>
+                        <span className="text-ok font-semibold">+{s.clicks_7d}/7d</span>
                       )}
                     </span>
                     {ctr && <span title="Click-through rate">CTR {ctr}%</span>}
@@ -586,14 +620,14 @@ function PresetChips({ options, onPick }: { options: string[]; onPick: (value: s
   );
 }
 
-const STATUS_STYLE: Record<LiveAdStatus, { label: string; cls: string }> = {
-  active: { label: "Aktywna", cls: "bg-emerald-500/10 text-emerald-500" },
-  scheduled: { label: "Zaplanowana", cls: "bg-sky-500/10 text-sky-500" },
-  expired: { label: "Wygasła", cls: "bg-amber-500/10 text-amber-500" },
-  disabled: { label: "Wyłączona", cls: "bg-muted text-muted-foreground" },
+const STATUS_STYLE: Record<LiveAdStatus, { label: string; tone: StatusTone }> = {
+  active: { label: "Aktywna", tone: "ok" },
+  scheduled: { label: "Zaplanowana", tone: "info" },
+  expired: { label: "Wygasła", tone: "attention" },
+  disabled: { label: "Wyłączona", tone: "neutral" },
 };
 
 function StatusChip({ status }: { status: LiveAdStatus }) {
   const s = STATUS_STYLE[status];
-  return <span className={`chip text-[10px] uppercase ${s.cls}`}>{s.label}</span>;
+  return <AdminStatusTag tone={s.tone} label={s.label} className="uppercase" />;
 }

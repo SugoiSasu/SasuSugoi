@@ -154,9 +154,9 @@ function AlphaGateTab() {
 
 const STATUS_META: Record<RealtimeStatus, { label: string; cls: string; icon: React.ReactNode }> = {
   idle:       { label: "Idle",         cls: "text-muted-foreground bg-muted/40 border-border",        icon: <Info size={14} /> },
-  connecting: { label: "Łączenie…",    cls: "text-blue-600 bg-blue-500/10 border-blue-500/30",        icon: <RefreshCw size={14} className="animate-spin" /> },
-  connected:  { label: "Realtime OK",  cls: "text-emerald-600 bg-emerald-500/10 border-emerald-500/30", icon: <CheckCircle2 size={14} /> },
-  error:      { label: "Offline (polling 15s)", cls: "text-amber-600 bg-amber-500/10 border-amber-500/30", icon: <WifiOff size={14} /> },
+  connecting: { label: "Łączenie…",    cls: "text-cobalt bg-cobalt/10 border-cobalt/30",        icon: <RefreshCw size={14} className="animate-spin" /> },
+  connected:  { label: "Realtime OK",  cls: "text-ok bg-ok/10 border-ok/30", icon: <CheckCircle2 size={14} /> },
+  error:      { label: "Offline (polling 15s)", cls: "text-tomato bg-tomato/10 border-tomato/30", icon: <WifiOff size={14} /> },
 };
 
 function DiagnostykaTab() {
@@ -248,8 +248,8 @@ function Card({
 
 function LevelBadge({ level }: { level: "info" | "warn" | "error" }) {
   const map = {
-    info:  "bg-blue-500/10 text-blue-600 border-blue-500/30",
-    warn:  "bg-amber-500/10 text-amber-600 border-amber-500/30",
+    info:  "bg-cobalt/10 text-cobalt border-cobalt/30",
+    warn:  "bg-tomato/10 text-tomato border-tomato/30",
     error: "bg-rose-500/10 text-rose-600 border-rose-500/30",
   } as const;
   return (
