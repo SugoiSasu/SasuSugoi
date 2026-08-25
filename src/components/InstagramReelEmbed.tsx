@@ -96,7 +96,16 @@ function InstagramReelModal({
     retry: 1,
   });
 
+  // Instagram's oEmbed HTML is a bare, unstyled English "View this post on
+  // Instagram" blockquote until their embed.js script processes it into the
+  // real iframe - visible for ~1-1.5s and looked broken (reported live
+  // 2026-08-25). Keep our own branded spinner over it until embed.js
+  // actually finishes (detected via an <iframe> appearing in the DOM),
+  // instead of exposing that raw intermediate state.
+  const [embedReady, setEmbedReady] = useState(false);
+
   useEffect(() => {
+    setEmbedReady(false);
     if (!data?.html) return;
     let cancelled = false;
     loadInstagramScript().then(() => {
@@ -104,6 +113,28 @@ function InstagramReelModal({
     });
     return () => {
       cancelled = true;
+    };
+  }, [data?.html]);
+
+  useEffect(() => {
+    if (!data?.html || !containerRef.current) return;
+    const el = containerRef.current;
+    if (el.querySelector("iframe")) {
+      setEmbedReady(true);
+      return;
+    }
+    const observer = new MutationObserver(() => {
+      if (el.querySelector("iframe")) {
+        setEmbedReady(true);
+        observer.disconnect();
+      }
+    });
+    observer.observe(el, { childList: true, subtree: true });
+    // Fallback so a stuck/failed embed.js doesn't leave the spinner forever.
+    const timeout = setTimeout(() => setEmbedReady(true), 4000);
+    return () => {
+      observer.disconnect();
+      clearTimeout(timeout);
     };
   }, [data?.html]);
 
@@ -155,7 +186,18 @@ function InstagramReelModal({
             </div>
           )}
           {data?.html && (
-            <div ref={containerRef} dangerouslySetInnerHTML={{ __html: data.html }} />
+            <div className="relative">
+              {!embedReady && (
+                <div className="absolute inset-0 z-10 grid aspect-[9/16] place-items-center bg-card">
+                  <Loader2 className="animate-spin text-tomato" size={28} />
+                </div>
+              )}
+              <div
+                ref={containerRef}
+                dangerouslySetInnerHTML={{ __html: data.html }}
+                className={embedReady ? "" : "invisible min-h-[420px]"}
+              />
+            </div>
           )}
         </div>
       </div>
