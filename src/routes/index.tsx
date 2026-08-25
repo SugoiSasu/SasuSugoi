@@ -27,6 +27,7 @@ import { useCutoutLogo } from "@/lib/chroma-cutout";
 import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import { OpenStatus, isNewPlace } from "@/components/OpenStatus";
 import { HomeSocialBand } from "@/components/HomeSocialBand";
+import { RandomPlaceCard } from "@/components/RandomPlaceCard";
 import { type QuickFilter } from "@/components/QuickFilters";
 import { useMyFavoritePlaceIds } from "@/lib/favorites-api";
 import logoDark from "@/assets/brand/po_zeramy-logo-dark.png.asset.json";
@@ -283,6 +284,13 @@ function Index() {
             />
           </>
         )}
+
+        {/* Below lg only: on desktop the same widget already lives in the
+            sidebar, and two random picks on one screen would contradict
+            each other. */}
+        <div className="py-4 lg:hidden">
+          <RandomPlaceCard userId={user?.id} variant="panel" />
+        </div>
 
         <HomeSocialBand />
 
