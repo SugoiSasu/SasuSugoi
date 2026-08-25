@@ -81,27 +81,46 @@ let observer: MutationObserver | null = null;
 export function installPolishStripper() {
   if (installed || typeof window === "undefined") return;
   installed = true;
-  const run = () => processNode(document.body);
-  run();
-  observer = new MutationObserver((mutations) => {
-    for (const m of mutations) {
-      if (m.type === "characterData") {
-        processNode(m.target);
-      } else if (m.type === "childList") {
-        m.addedNodes.forEach((n) => processNode(n));
-      } else if (m.type === "attributes" && m.target.nodeType === Node.ELEMENT_NODE) {
-        // class change may add font-display - reprocess subtree.
-        processNode(m.target);
+
+  function start() {
+    const run = () => processNode(document.body);
+    run();
+    observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.type === "characterData") {
+          processNode(m.target);
+        } else if (m.type === "childList") {
+          m.addedNodes.forEach((n) => processNode(n));
+        } else if (m.type === "attributes" && m.target.nodeType === Node.ELEMENT_NODE) {
+          // class change may add font-display - reprocess subtree.
+          processNode(m.target);
+        }
       }
-    }
-  });
-  observer.observe(document.body, {
-    subtree: true,
-    childList: true,
-    characterData: true,
-    attributes: true,
-    attributeFilter: ["class"],
-  });
+    });
+    observer.observe(document.body, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+  }
+
+  // Deferred, not run synchronously in the mounting effect: this walks and
+  // directly mutates DOM text nodes, which can race React's own hydration
+  // of lazy-loaded route components (Suspense boundaries hydrate on their
+  // own schedule, independently of the root's effect timing). Confirmed
+  // live - a raw run() here stripped a lazy route's heading before React
+  // had hydrated that subtree, so React's hydration check saw already-
+  // mutated text and threw a genuine mismatch, forcing a client re-render.
+  // requestIdleCallback runs after the browser's higher-priority hydration
+  // work, giving React a chance to finish first; setTimeout is the fallback
+  // for browsers without it (older Safari).
+  if ("requestIdleCallback" in window) {
+    requestIdleCallback(start, { timeout: 2000 });
+  } else {
+    setTimeout(start, 0);
+  }
 }
 
 export function uninstallPolishStripper() {
