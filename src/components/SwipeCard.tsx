@@ -2,7 +2,6 @@ import { motion, useMotionValue, useTransform, animate } from "motion/react";
 import { MapPin } from "lucide-react";
 import { cuisineMeta } from "@/data/places";
 import { YummyFace, NopeFace } from "@/components/SwipeFaces";
-import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import type { Place } from "@/lib/places-api";
 
 const SWIPE_THRESHOLD = 120;
@@ -65,7 +64,18 @@ export function SwipeCard({
               aria-hidden="true"
             />
           ) : (
-            <CuisineFallbackCover cuisine={place.cuisine} emojiClassName="text-[12rem]" />
+            // No real photo yet: a lone giant cuisine emoji here (used to be
+            // text-[12rem], nearly half the card) read as a cheap placeholder
+            // sticker (flagged live 2026-08-25 - "wygląda tandetnie"). Reuse
+            // the same illustrated brand pattern already used for the
+            // homepage's cuisine chips instead - designed, tileable art that
+            // was otherwise sitting unused at chip scale only.
+            <div
+              className="h-full w-full bg-cover bg-center"
+              style={{
+                backgroundImage: `linear-gradient(180deg, ${meta.color}00 0%, ${meta.color}3d 55%, #17143d 100%), url(${meta.chipBackground ?? meta.cover})`,
+              }}
+            />
           )}
         </div>
 
