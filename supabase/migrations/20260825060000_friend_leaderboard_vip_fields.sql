@@ -5,6 +5,11 @@
 -- friend_leaderboard was missing avatar_source and VIP fields that the
 -- global ranking query already selects, so VIP badges/avatar rendering
 -- were inconsistent between the two.
+--
+-- Postgres rejects CREATE OR REPLACE when the RETURNS TABLE column set
+-- changes, so the old signature has to be dropped first.
+DROP FUNCTION IF EXISTS public.friend_leaderboard(uuid);
+
 CREATE OR REPLACE FUNCTION public.friend_leaderboard(_user uuid)
 RETURNS TABLE(
   user_id uuid,
@@ -40,3 +45,8 @@ RETURNS TABLE(
   JOIN public.profiles p ON p.id = ids.uid
   ORDER BY COALESCE(p.points_total, 0) DESC;
 $$;
+
+-- Dropping the old function reset its privileges to the Postgres default
+-- (EXECUTE granted to PUBLIC) - restore the original restriction.
+REVOKE ALL ON FUNCTION public.friend_leaderboard(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.friend_leaderboard(uuid) TO authenticated;
