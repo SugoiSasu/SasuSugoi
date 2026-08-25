@@ -41,9 +41,24 @@ export function NotificationBell() {
   const markRead = useMarkRead();
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(PREVIEW_STEP);
+  const [ringing, setRinging] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const items = (data ?? []) as Notification[];
   const unread = items.filter((n) => !n.read_at).length;
+
+  // Ring the bell only on a genuine new arrival (N -> N+1 while mounted),
+  // never on first mount/page load - a null->N transition on load would
+  // shake the bell on every navigation, which reads as noise, not signal.
+  const prevUnread = useRef<number | null>(null);
+  useEffect(() => {
+    const prev = prevUnread.current;
+    prevUnread.current = unread;
+    if (prev !== null && unread > prev) {
+      setRinging(true);
+      const t = setTimeout(() => setRinging(false), 600);
+      return () => clearTimeout(t);
+    }
+  }, [unread]);
 
   // Close on outside click or Escape
   useEffect(() => {
@@ -87,7 +102,7 @@ export function NotificationBell() {
         aria-label={offline ? "Powiadomienia (offline)" : "Powiadomienia"}
         className="relative inline-flex items-center justify-center w-11 h-11 sm:w-9 sm:h-9 rounded-full hover:bg-card active:scale-95 transition"
       >
-        <Bell size={18} />
+        <Bell size={18} className={ringing ? "pz-bell-ring" : undefined} />
         {unread > 0 && (
           <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-tomato text-cream text-[10px] font-bold grid place-items-center">
             {unread > 9 ? "9+" : unread}
