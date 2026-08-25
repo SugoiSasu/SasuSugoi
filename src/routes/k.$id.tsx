@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Place, OpeningHours } from "@/lib/places-api";
 
 import { cuisineMeta, CUISINES } from "@/data/places";
+import { recordPlaceView } from "@/lib/recently-viewed";
 import {
   ArrowLeft, Star, MapPin, Loader2, BookOpen, ExternalLink, Home,
   Map as MapIcon, Heart, Play, Navigation, Phone, Globe, Clock, Wallet,
@@ -319,6 +320,12 @@ function PlaceProfile() {
   // button up to clear it instead of overlapping it. ScrollToTop lives
   // outside this route's subtree (rendered in __root.tsx), so the only way
   // to reach it is a CSS var on the shared :root, restored on unmount.
+  // Remember this visit for the homepage's "Ostatnio oglądane" strip. Keyed
+  // by place.id, never the URL param, which may be a slug.
+  useEffect(() => {
+    if (place?.id) recordPlaceView(place.id);
+  }, [place?.id]);
+
   useEffect(() => {
     document.documentElement.style.setProperty("--pz-fab-bottom", "8.5rem");
     return () => {

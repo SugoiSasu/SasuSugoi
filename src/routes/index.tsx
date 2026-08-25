@@ -28,6 +28,7 @@ import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import { OpenStatus, isNewPlace } from "@/components/OpenStatus";
 import { HomeSocialBand } from "@/components/HomeSocialBand";
 import { RandomPlaceCard } from "@/components/RandomPlaceCard";
+import { RecentlyViewedStrip } from "@/components/RecentlyViewedStrip";
 import { type QuickFilter } from "@/components/QuickFilters";
 import { useMyFavoritePlaceIds } from "@/lib/favorites-api";
 import logoDark from "@/assets/brand/po_zeramy-logo-dark.png.asset.json";
@@ -257,6 +258,7 @@ function Index() {
 
         {!empty && (
           <>
+            <RecentlyViewedStrip />
             <PlaceRail
               title="Polecane dla Ciebie"
               icon={<Sparkles size={12} />}
