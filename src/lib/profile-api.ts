@@ -28,6 +28,8 @@ export interface Profile {
   onboarding_seen_at: string | null;
   ig_popup_dismissed_at: string | null;
   notification_prefs: Record<string, boolean> | null;
+  active_title: string | null;
+  active_title_achievement_id: string | null;
 }
 
 export const POZNAN_DISTRICTS = [
@@ -75,7 +77,7 @@ export function useProfileByUsername(usernameOrId: string) {
       // by anon visitors; keeps internal-only columns like is_beta_tester and
       // returned_after_break_at from ever leaking into the response payload.
       const q = supabase.from("profiles").select(
-        "id, username, display_name, avatar_url, avatar_source, bio, district, favorite_cuisines, is_public, points_total, created_at, instagram_url, tiktok_url, youtube_url, facebook_url, x_url, is_vip, vip_until, vip_nick_color, gender",
+        "id, username, display_name, avatar_url, avatar_source, bio, district, favorite_cuisines, is_public, points_total, created_at, instagram_url, tiktok_url, youtube_url, facebook_url, x_url, is_vip, vip_until, vip_nick_color, gender, active_title, active_title_achievement_id",
       );
       const { data, error } = UUID_RE.test(usernameOrId)
         ? await q.eq("id", usernameOrId).maybeSingle()

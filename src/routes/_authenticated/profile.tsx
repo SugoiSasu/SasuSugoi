@@ -41,6 +41,8 @@ import { CUISINES } from "@/data/places";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isVipActive, VIP_NICK_COLORS, VipBadge } from "@/components/VipBadge";
+import { TitleTag } from "@/components/TitleTag";
+import { useMyTitledAchievements, useSetActiveTitle } from "@/lib/achievements-api";
 import { passwordStrengthError } from "@/lib/password";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -382,6 +384,8 @@ function ProfilePage() {
             </section>
 
             {profile && isVipActive(profile) && <VipNickColorSection profile={profile} />}
+
+            {profile && <TitleSection profile={profile} userId={user?.id} />}
 
             <section className="rounded-2xl bg-card border border-border p-5 space-y-4">
               <div>
@@ -1087,6 +1091,66 @@ function VipNickColorSection({ profile }: { profile: Profile }) {
         >
           Wyczyść
         </button>
+      </div>
+    </section>
+  );
+}
+
+/** LoL-style selectable title: pick one unlocked, "wearable" achievement to
+ * display next to your name on your profile, Ranking, and Friends. Player
+ * chooses - never automatic - matching the design principle this was
+ * adapted from (see [[project_lol_titles_plan]]). */
+function TitleSection({ profile, userId }: { profile: Profile; userId: string | undefined }) {
+  const { data: titled, isLoading } = useMyTitledAchievements(userId);
+  const setTitle = useSetActiveTitle();
+  const current = profile.active_title_achievement_id;
+
+  async function pick(achievementId: string | null) {
+    try {
+      await setTitle.mutateAsync(achievementId);
+      toast.success(achievementId ? "Tytuł ustawiony ✓" : "Tytuł usunięty");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nie udało się zapisać tytułu");
+    }
+  }
+
+  if (isLoading) return null;
+  if (!titled || titled.length === 0) return null;
+
+  return (
+    <section className="rounded-2xl bg-card border border-border p-5 space-y-3">
+      <label className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
+        Twój tytuł
+      </label>
+      <p className="text-sm text-muted-foreground">
+        Wybierz tytuł do wyświetlenia przy nazwie - na profilu, w Rankingu i u Znajomych. Masz{" "}
+        {titled.length} do wyboru, odblokowane za osiągnięcia.
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        {titled.map((t) => (
+          <button
+            key={t.achievement_id}
+            type="button"
+            onClick={() => pick(t.achievement_id)}
+            disabled={setTitle.isPending}
+            aria-pressed={current === t.achievement_id}
+            className={`rounded-full transition disabled:opacity-50 ${
+              current === t.achievement_id ? "ring-2 ring-offset-2 ring-tomato" : "hover:scale-105"
+            }`}
+          >
+            <TitleTag title={t.title} size="md" />
+          </button>
+        ))}
+        {current && (
+          <button
+            type="button"
+            onClick={() => pick(null)}
+            disabled={setTitle.isPending}
+            className="ml-1 text-xs font-semibold text-muted-foreground hover:text-tomato disabled:opacity-40"
+          >
+            Wyczyść
+          </button>
+        )}
       </div>
     </section>
   );

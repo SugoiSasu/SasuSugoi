@@ -64,6 +64,7 @@ import { runWithToast } from "@/components/AsyncState";
 import { RankBadge } from "@/components/RankBadge";
 import { LevelProgressCard, levelInfo } from "@/components/LevelProgress";
 import { VipBadge, isVipActive, vipNameStyle } from "@/components/VipBadge";
+import { TitleTag } from "@/components/TitleTag";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function relativeTimePl(iso: string): string {
@@ -292,6 +293,7 @@ function PublicProfile() {
                 {profile.display_name || `@${profile.username}`}
               </span>
               {isVipActive(profile) && <VipBadge size="md" />}
+              <TitleTag title={profile.active_title} size="md" />
             </h1>
             <p className="text-cream/70 text-sm mt-1.5">@{profile.username}</p>
             {(ranks ?? []).length > 0 && (

@@ -11,6 +11,16 @@ export interface Achievement {
   criteria: any;
   sort_order: number;
   enabled: boolean;
+  category?: string | null;
+  title?: string | null;
+}
+
+export interface TitledAchievement {
+  achievement_id: string;
+  slug: string;
+  name: string;
+  title: string;
+  category: string | null;
 }
 
 export interface UserAchievement {
@@ -110,6 +120,52 @@ export function useUnlockManualAchievement() {
     },
     onSuccess: (unlocked) => {
       if (unlocked) qc.invalidateQueries({ queryKey: ["user-achievements"] });
+    },
+  });
+}
+
+/** LoL-style selectable titles: only unlocked achievements that carry a
+ * `title` are wearable. Used by the picker in Ustawienia. */
+export function useMyTitledAchievements(userId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["my-titled-achievements", userId ?? null],
+    enabled: !!userId,
+    queryFn: async (): Promise<TitledAchievement[]> => {
+      const { data, error } = await supabase
+        .from("user_achievements")
+        .select("achievement_id, achievements!inner(slug, name, title, category)")
+        .eq("user_id", userId!)
+        .not("achievements.title", "is", null);
+      if (error) throw error;
+      return (data ?? []).map((row) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const a = row.achievements as any;
+        return {
+          achievement_id: row.achievement_id,
+          slug: a.slug,
+          name: a.name,
+          title: a.title,
+          category: a.category ?? null,
+        };
+      });
+    },
+  });
+}
+
+export function useSetActiveTitle() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (achievementId: string | null) => {
+      const { error } = await supabase.rpc("set_active_title", {
+        _achievement_id: achievementId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["profile"] });
+      qc.invalidateQueries({ queryKey: ["profile-by-username"] });
+      qc.invalidateQueries({ queryKey: ["users-ranking"] });
+      qc.invalidateQueries({ queryKey: ["friend-leaderboard"] });
     },
   });
 }

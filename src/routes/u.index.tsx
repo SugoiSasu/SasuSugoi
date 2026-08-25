@@ -23,6 +23,7 @@ import { useUser } from "@/lib/use-auth";
 import type { AvatarSource } from "@/lib/profile-api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VipBadge, isVipActive, vipNameStyle } from "@/components/VipBadge";
+import { TitleTag } from "@/components/TitleTag";
 import { useFriendLeaderboard } from "@/lib/friends-api";
 
 const PAGE_SIZE = 24;
@@ -354,6 +355,7 @@ interface RankProfile {
   is_vip: boolean;
   vip_until: string | null;
   vip_nick_color: string | null;
+  active_title: string | null;
   reviews_count?: number;
   achievements_count?: number;
 }
@@ -362,7 +364,7 @@ async function fetchRanking(limit: number): Promise<RankProfile[]> {
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "id, username, display_name, avatar_url, avatar_source, points_total, is_vip, vip_until, vip_nick_color",
+      "id, username, display_name, avatar_url, avatar_source, points_total, is_vip, vip_until, vip_nick_color, active_title",
     )
     .or("username.not.is.null,display_name.not.is.null")
     .order("points_total", { ascending: false })
@@ -455,6 +457,7 @@ function RankingSection() {
           is_vip: r.is_vip,
           vip_until: r.vip_until,
           vip_nick_color: r.vip_nick_color,
+          active_title: r.active_title,
           reviews_count: r.reviews_count,
           achievements_count: r.achievements_count,
         }));
@@ -670,6 +673,11 @@ function PodiumCard({
               @{profile.username}
             </div>
           )}
+          {profile.active_title && (
+            <div className="mt-1 hidden justify-center sm:flex">
+              <TitleTag title={profile.active_title} />
+            </div>
+          )}
         </div>
         <div>
           <div className="font-display text-base sm:text-2xl leading-none text-tomato">
@@ -719,6 +727,7 @@ function RankRow({
             </span>
             {isMe && <span className="text-tomato text-xs">(Ty)</span>}
             {isVipActive(profile) && <VipBadge />}
+            <TitleTag title={profile.active_title} />
           </div>
           {profile.reviews_count !== undefined ? (
             <div className="text-[11px] text-muted-foreground truncate">

@@ -670,6 +670,7 @@ export interface FriendLeaderRow {
   is_vip: boolean;
   vip_until: string | null;
   vip_nick_color: string | null;
+  active_title: string | null;
   points_total: number;
   reviews_count: number;
   achievements_count: number;

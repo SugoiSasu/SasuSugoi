@@ -41,6 +41,7 @@ export type Database = {
     Tables: {
       achievements: {
         Row: {
+          category: string | null
           created_at: string
           criteria: Json
           description: string | null
@@ -50,9 +51,11 @@ export type Database = {
           name: string
           slug: string
           sort_order: number
+          title: string | null
           updated_at: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           criteria: Json
           description?: string | null
@@ -62,9 +65,11 @@ export type Database = {
           name: string
           slug: string
           sort_order?: number
+          title?: string | null
           updated_at?: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           criteria?: Json
           description?: string | null
@@ -74,6 +79,7 @@ export type Database = {
           name?: string
           slug?: string
           sort_order?: number
+          title?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1703,6 +1709,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_title: string | null
+          active_title_achievement_id: string | null
           avatar_source: string
           avatar_url: string | null
           bio: string | null
@@ -1731,6 +1739,8 @@ export type Database = {
           youtube_url: string | null
         }
         Insert: {
+          active_title?: string | null
+          active_title_achievement_id?: string | null
           avatar_source?: string
           avatar_url?: string | null
           bio?: string | null
@@ -1759,6 +1769,8 @@ export type Database = {
           youtube_url?: string | null
         }
         Update: {
+          active_title?: string | null
+          active_title_achievement_id?: string | null
           avatar_source?: string
           avatar_url?: string | null
           bio?: string | null
@@ -2445,6 +2457,7 @@ export type Database = {
         Args: { _user: string }
         Returns: {
           achievements_count: number
+          active_title: string
           avatar_source: string
           avatar_url: string
           display_name: string
@@ -2547,6 +2560,7 @@ export type Database = {
         Args: { _event_id: string; _picks: Json }
         Returns: undefined
       }
+      set_active_title: { Args: { _achievement_id: string | null }; Returns: undefined }
       unlock_manual_achievement: { Args: { _slug: string }; Returns: boolean }
       wall_item_owner: {
         Args: { _kind: string; _ref_id: string }
