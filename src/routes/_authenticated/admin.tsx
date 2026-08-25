@@ -179,24 +179,29 @@ function AdminShell() {
           pathname={pathname}
           navigate={navigate}
         />
-        <nav className="hidden sm:flex overflow-x-auto border-t border-border">
+        <nav className="hidden sm:flex items-start gap-0 overflow-x-auto border-t border-border pt-2">
           {NAV_GROUPS.map((group, gi) => {
             const items = group.items.filter((it) => !it.superOnly || isSuper);
             if (items.length === 0) return null;
             return (
               <div
                 key={group.title}
-                className={`flex shrink-0 ${gi > 0 ? "ml-2 border-l border-border pl-2" : ""}`}
+                className={`flex shrink-0 flex-col gap-1 ${gi > 0 ? "ml-3 border-l border-border pl-3" : ""}`}
               >
-                {items.map((it) => (
-                  <AdminTab
-                    key={it.to}
-                    to={it.to}
-                    icon={it.icon}
-                    label={it.label}
-                    pathname={pathname}
-                  />
-                ))}
+                <span className="px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                  {group.title}
+                </span>
+                <div className="flex shrink-0">
+                  {items.map((it) => (
+                    <AdminTab
+                      key={it.to}
+                      to={it.to}
+                      icon={it.icon}
+                      label={it.label}
+                      pathname={pathname}
+                    />
+                  ))}
+                </div>
               </div>
             );
           })}
