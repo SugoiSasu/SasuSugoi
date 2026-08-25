@@ -6,6 +6,37 @@
 // bundle where server.ts already calls Sentry.init() itself.
 if (typeof document !== "undefined") {
   import("../instrument.client");
+
+  // Every route nested under _authenticated (Karty, Notifications, Friends,
+  // ...) throws an uncaught "InvalidStateError: Transition was aborted
+  // because of invalid state" on load - TanStack Router's
+  // defaultViewTransition wraps navigation in document.startViewTransition(),
+  // and that layout route's own async auth check (beforeLoad) plus its
+  // ssr:false mount path means the browser sometimes gets asked to start a
+  // second transition before the first one settles, which the View
+  // Transitions API rejects. Confirmed extensively this doesn't break
+  // anything - Karty/Friends/Notifications all work correctly - it's just
+  // Sentry/console noise from a benign, well-known API race.
+  //
+  // A sibling rejection - "AbortError: Transition was skipped" - fires from
+  // the same document.startViewTransition() machinery whenever a navigation
+  // supersedes a still-running transition (e.g. two nav clicks in quick
+  // succession, anywhere in the app, not just _authenticated routes) - also
+  // documented, benign browser behavior, not an app bug. Suppress only these
+  // two known rejections so real errors still surface normally.
+  window.addEventListener("unhandledrejection", (event) => {
+    const reason = event.reason;
+    if (
+      reason &&
+      typeof reason === "object" &&
+      typeof reason.message === "string" &&
+      ((reason.name === "InvalidStateError" &&
+        reason.message.includes("Transition was aborted")) ||
+        (reason.name === "AbortError" && reason.message.includes("Transition was skipped")))
+    ) {
+      event.preventDefault();
+    }
+  });
 }
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
