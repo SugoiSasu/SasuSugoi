@@ -48,7 +48,6 @@ import {
   useCreateInvite,
   useRevokeInvite,
   useFriendSuggestions,
-  useFriendLeaderboard,
   useInviteStats,
   type FriendProfile,
 } from "@/lib/friends-api";
@@ -73,7 +72,13 @@ import {
 // does double duty (finds people, shows "Znajomy"/"Wysłano" state inline).
 // "Zablokowani" is real but rarely used - reachable via a small header
 // link instead of taking a permanent slot in the main tab row.
-const TAB_KEYS = ["friends", "requests", "invite", "leaderboard", "blocked"] as const;
+//
+// Update 2026-08-25: dropped the "Ranking" tab (was a standalone,
+// differently-styled friends-only leaderboard living only here) in favor
+// of a single shared ranking UI at /u with a Wszyscy/Znajomi scope
+// toggle - see [[project_ranking_page_redesign_todo]]. This page now
+// links out to it instead of duplicating it.
+const TAB_KEYS = ["friends", "requests", "invite", "blocked"] as const;
 type TabKey = (typeof TAB_KEYS)[number];
 
 const searchSchema = z.object({
@@ -141,6 +146,13 @@ function FriendsPage() {
               </p>
             </div>
             <div className="flex flex-wrap items-start gap-2">
+              <Link
+                to="/u"
+                search={{ scope: "friends", q: "", page: 1 }}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-tomato/40 bg-tomato/10 px-3 py-1.5 text-sm font-medium text-tomato hover:bg-tomato/15 transition-colors"
+              >
+                <Trophy size={16} /> Ranking znajomych
+              </Link>
               {myProfile?.username && (
                 <Link
                   to="/u/$username"
@@ -180,7 +192,6 @@ function FriendsPage() {
         {tab === "friends" && <FriendsTab myId={user.id} />}
         {tab === "requests" && <RequestsTab myId={user.id} />}
         {tab === "invite" && <InviteTab />}
-        {tab === "leaderboard" && <LeaderboardTab myId={user.id} />}
       </div>
     </main>
   );
@@ -335,7 +346,6 @@ function TabsBar({ tab, onChange }: { tab: TabKey; onChange: (t: TabKey) => void
       badge: incoming || undefined,
     },
     { key: "invite", label: "Zaproś", icon: <Share2 size={14} /> },
-    { key: "leaderboard", label: "Ranking", icon: <Trophy size={14} /> },
   ];
   return (
     <div className="-mx-4 px-4 flex-1 min-w-0 overflow-x-auto">
@@ -1028,72 +1038,6 @@ function InviteBlock() {
         </div>
       )}
     </section>
-  );
-}
-
-/* ============================================================
- * LEADERBOARD TAB
- * ============================================================ */
-function LeaderboardTab({ myId }: { myId: string }) {
-  const lbQ = useFriendLeaderboard();
-  const rows = lbQ.data;
-  return (
-    <AsyncState
-      isLoading={lbQ.isLoading}
-      isError={lbQ.isError}
-      error={lbQ.error}
-      isFetching={lbQ.isFetching}
-      isEmpty={!rows || rows.length === 0}
-      emptyText="Brak danych do rankingu."
-      onRetry={() => lbQ.refetch()}
-      skeletonRows={5}
-    >
-      <section>
-        <ol className="space-y-2">
-          {(rows ?? []).map((r, idx) => {
-            const isMe = r.user_id === myId;
-            return (
-              <li
-                key={r.user_id}
-                className={`bg-card border rounded-2xl p-3 flex items-center gap-3 ${
-                  isMe ? "border-tomato" : "border-border"
-                }`}
-              >
-                <span
-                  className={`w-7 h-7 grid place-items-center rounded-full text-xs font-bold ${
-                    idx === 0
-                      ? "bg-yellow-400 text-navy"
-                      : idx === 1
-                        ? "bg-gray-300 text-navy"
-                        : idx === 2
-                          ? "bg-orange-400 text-navy"
-                          : "bg-muted text-foreground"
-                  }`}
-                >
-                  {idx + 1}
-                </span>
-                <AvatarLink
-                  username={r.username}
-                  avatarUrl={r.avatar_url}
-                  displayName={r.display_name}
-                  size={36}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold truncate">
-                    {r.display_name || `@${r.username}`}{" "}
-                    {isMe && <span className="text-tomato text-xs">(Ty)</span>}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {r.reviews_count} recenzji · {r.achievements_count} odznak
-                  </div>
-                </div>
-                <div className="font-display text-lg text-tomato">{r.points_total}</div>
-              </li>
-            );
-          })}
-        </ol>
-      </section>
-    </AsyncState>
   );
 }
 

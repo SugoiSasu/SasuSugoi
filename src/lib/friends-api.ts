@@ -666,6 +666,10 @@ export interface FriendLeaderRow {
   display_name: string | null;
   username: string | null;
   avatar_url: string | null;
+  avatar_source: "google" | "upload" | "initials" | null;
+  is_vip: boolean;
+  vip_until: string | null;
+  vip_nick_color: string | null;
   points_total: number;
   reviews_count: number;
   achievements_count: number;

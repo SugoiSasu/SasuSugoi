@@ -2445,12 +2445,16 @@ export type Database = {
         Args: { _user: string }
         Returns: {
           achievements_count: number
+          avatar_source: string
           avatar_url: string
           display_name: string
+          is_vip: boolean
           points_total: number
           reviews_count: number
           user_id: string
           username: string
+          vip_nick_color: string
+          vip_until: string
         }[]
       }
       friends_of: {
