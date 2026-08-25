@@ -205,28 +205,73 @@ export function usePlaceRatingBreakdown(placeId: string) {
 
 const DAY_ORDER = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
 
+/**
+ * Richer opening state than a bare open/closed boolean.
+ *
+ * "Otwarte" alone only answers half the question a hungry person is actually
+ * asking - the real one is "will I make it?". So this also reports when the
+ * place closes and how long is left, which is what the card renders.
+ */
+export type PlaceOpenState =
+  | { status: "open"; closesAt: string; minutesToClose: number }
+  | { status: "closing-soon"; closesAt: string; minutesToClose: number }
+  | { status: "closed"; opensAt: string | null }
+  | { status: "unknown" };
+
+/** Below this many minutes to closing time, the card switches to a warning. */
+const CLOSING_SOON_MINUTES = 60;
+
+function parseSlot(slot: { open: string; close: string } | null | undefined) {
+  if (!slot?.open || !slot?.close) return null;
+  const [oh, om] = slot.open.split(":").map(Number);
+  const [ch, cm] = slot.close.split(":").map(Number);
+  if ([oh, om, ch, cm].some((n) => Number.isNaN(n))) return null;
+  const openMin = oh * 60 + om;
+  let closeMin = ch * 60 + cm;
+  if (closeMin <= openMin) closeMin += 24 * 60; // spans midnight
+  return { openMin, closeMin, open: slot.open, close: slot.close };
+}
+
+export function placeOpenState(
+  hours: OpeningHours | null | undefined,
+  now: Date = new Date(),
+): PlaceOpenState {
+  if (!hours) return { status: "unknown" };
+  const cur = now.getHours() * 60 + now.getMinutes();
+  const todayIdx = now.getDay();
+  const yesterdayIdx = (todayIdx + 6) % 7;
+
+  const today = parseSlot(hours[DAY_ORDER[todayIdx]]);
+  // Yesterday's slot can still be running if it closes past midnight; from
+  // "now"'s perspective that slot sits a whole day earlier on the timeline.
+  const overnight = parseSlot(hours[DAY_ORDER[yesterdayIdx]]);
+
+  for (const [slot, offset] of [
+    [today, 0],
+    [overnight, 24 * 60],
+  ] as const) {
+    if (!slot) continue;
+    const t = cur + offset;
+    if (t >= slot.openMin && t < slot.closeMin) {
+      const minutesToClose = slot.closeMin - t;
+      return {
+        status: minutesToClose <= CLOSING_SOON_MINUTES ? "closing-soon" : "open",
+        closesAt: slot.close,
+        minutesToClose,
+      };
+    }
+  }
+
+  // Closed. Only today's own opening time is useful on a card - "opens
+  // Thursday" is noise when you are deciding where to eat right now.
+  return { status: "closed", opensAt: today && cur < today.openMin ? today.open : null };
+}
+
 /** True when the place's opening_hours cover the current local day/time (handles past-midnight closing). */
 export function isPlaceOpenNow(
   hours: OpeningHours | null | undefined,
   now: Date = new Date(),
 ): boolean {
-  if (!hours) return false;
-  const cur = now.getHours() * 60 + now.getMinutes();
-
-  const check = (slot: { open: string; close: string } | null | undefined, offset: number) => {
-    if (!slot?.open || !slot?.close) return false;
-    const [oh, om] = slot.open.split(":").map(Number);
-    const [ch, cm] = slot.close.split(":").map(Number);
-    if ([oh, om, ch, cm].some((n) => Number.isNaN(n))) return false;
-    const openMin = oh * 60 + om;
-    let closeMin = ch * 60 + cm;
-    if (closeMin <= openMin) closeMin += 24 * 60; // spans midnight
-    const t = cur + offset;
-    return t >= openMin && t < closeMin;
-  };
-
-  const todayIdx = now.getDay();
-  const yesterdayIdx = (todayIdx + 6) % 7;
-  // today's slot, plus yesterday's slot that may still run past midnight
-  return check(hours[DAY_ORDER[todayIdx]], 0) || check(hours[DAY_ORDER[yesterdayIdx]], 24 * 60);
+  const s = placeOpenState(hours, now);
+  return s.status === "open" || s.status === "closing-soon";
 }

@@ -24,6 +24,7 @@ import { SponsoredDiscoverCard } from "@/components/SponsoredDiscoverCard";
 import { pickSeeded } from "@/lib/seeded-pick";
 import { useCutoutLogo } from "@/lib/chroma-cutout";
 import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
+import { OpenStatus, isNewPlace } from "@/components/OpenStatus";
 import logoDark from "@/assets/brand/po_zeramy-logo-dark.png.asset.json";
 import { BASE_URL } from "@/lib/site-config";
 import { trackEvent } from "@/lib/analytics";
@@ -389,6 +390,11 @@ function DiscoverCard({ place, stat }: { place: Place; stat?: { avg: number; cou
           {!place.avatar_url && (
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-navy/45 via-transparent to-transparent" />
           )}
+          {isNewPlace(place.created_at) && (
+            <span className="absolute left-3 top-3 rounded-full bg-tomato px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-cream shadow-sm">
+              Nowość
+            </span>
+          )}
           <span
             className="absolute bottom-3 left-3 chip text-cream shadow-sm"
             style={{ backgroundColor: meta.color }}
@@ -400,10 +406,20 @@ function DiscoverCard({ place, stat }: { place: Place; stat?: { avg: number; cou
           <SmartText as="h3" className="font-display text-lg leading-tight">
             {place.name}
           </SmartText>
-          <p className="mt-0.5 truncate text-xs text-muted-foreground">
-            {place.cuisine}
-            {place.price_range ? ` • ${place.price_range}` : ""}
-          </p>
+          {/* This line used to repeat the cuisine, which the chip on the
+              image already shows 40px above it. Spent on the opening state
+              instead - the one thing that actually decides whether you go.
+              Dropped entirely when we know neither hours nor price: for such
+              a place the line has nothing new to say, and an empty 0-height
+              paragraph just breaks the card's internal rhythm. */}
+          {(place.opening_hours || place.price_range) && (
+            <p className="mt-1 flex items-center gap-2 truncate text-xs">
+              <OpenStatus hours={place.opening_hours} />
+              {place.price_range && (
+                <span className="text-muted-foreground">{place.price_range}</span>
+              )}
+            </p>
+          )}
           <div className="mt-2 flex items-center justify-between text-xs">
             <span className="inline-flex items-center gap-1 font-semibold">
               {stat ? (
