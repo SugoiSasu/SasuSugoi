@@ -61,7 +61,13 @@ export function SwipeCard({
           )}
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent p-5 pt-20 text-cream">
+        {place.avatar_url && (
+          <div className="absolute left-5 top-5 h-14 w-14 overflow-hidden rounded-2xl border-2 border-cream/80 bg-cream shadow-lg">
+            <img src={place.avatar_url} alt="" className="h-full w-full object-contain p-1" aria-hidden="true" />
+          </div>
+        )}
+
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-5 pt-24 text-cream">
           <span className="chip mb-2 bg-cream/15 text-cream">
             {meta.emoji} {place.cuisine}
           </span>
@@ -69,6 +75,11 @@ export function SwipeCard({
           <p className="mt-1.5 flex items-center gap-1.5 text-sm text-cream/80">
             <MapPin size={13} className="shrink-0" /> {place.address}
           </p>
+          {place.description && (
+            <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-cream/90">
+              {place.description}
+            </p>
+          )}
         </div>
 
         <motion.div
