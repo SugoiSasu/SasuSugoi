@@ -39,6 +39,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/CookieConsent";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { PatchNotesModal } from "@/components/PatchNotesModal";
+import { InAppBrowserBanner } from "@/components/InAppBrowserBanner";
 import { BASE_URL } from "@/lib/site-config";
 
 function NotFoundComponent() {
@@ -296,6 +297,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <InAppBrowserBanner />
       <AlphaGate enabled={alphaGateEnabled}>
         {showShell ? (
           <div className="min-h-dvh lg:pl-[236px]">
