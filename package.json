@@ -2,7 +2,7 @@
   "name": "tanstack_start_ts",
   "private": true,
   "sideEffects": [
-    "src/instrument.client.ts",
+    "src/sentry-client-init.ts",
     "src/server.ts",
     "src/styles.css"
   ],

@@ -1,11 +1,20 @@
 // tanstackStart({ client: { entry: "./src/client.tsx" } }) is silently
 // ignored by this framework version in both dev and prod builds (confirmed
-// by bundling a unique marker string into src/instrument.client.ts and
-// finding it absent from the output either way) - initialize the client
-// SDK here instead, guarded to browser-only so it never runs in the SSR
-// bundle where server.ts already calls Sentry.init() itself.
+// by bundling a unique marker string into the client-init file and finding
+// it absent from the output either way) - initialize the client SDK here
+// instead, guarded to browser-only so it never runs in the SSR bundle
+// where server.ts already calls Sentry.init() itself.
+//
+// Filename deliberately does NOT match *.client.* (was instrument.client.ts)
+// - TanStack Start's import-protection plugin denies importing any file
+// matching that pattern from a module it considers part of the server
+// bundle, and __root.tsx is compiled into both. This import existed
+// unchanged for many prior successful builds, then started failing production
+// builds 2026-08-25 (all builds after commit 2cd3871 - a change to this same
+// file that never touched this line) - renaming sidesteps whatever bundler
+// heuristic started flagging it rather than chasing why the flag flipped.
 if (typeof document !== "undefined") {
-  import("../instrument.client");
+  import("../sentry-client-init");
 
   // Every route nested under _authenticated (Karty, Notifications, Friends,
   // ...) throws an uncaught "InvalidStateError: Transition was aborted
