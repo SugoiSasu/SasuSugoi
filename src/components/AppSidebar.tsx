@@ -15,6 +15,8 @@ import {
   Heart,
   UserPlus2,
   Layers,
+  Award,
+  Handshake,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,6 +44,7 @@ const socialItems = [
   { to: "/friends", label: "Znajomi", icon: Users },
   { to: "/osiagniecia", label: "Osiągnięcia", icon: Trophy },
   { to: "/wall", label: "Pożeralnia", icon: Newspaper },
+  { to: "/u", label: "Ranking", icon: Award },
 ] as const;
 
 const linkBase =
@@ -245,6 +248,14 @@ export function AppSidebar() {
         <Link to="/profile" className={linkBase} activeProps={activeCls}>
           <Settings size={18} className={iconCls} />
           <span className="truncate">Ustawienia</span>
+        </Link>
+        <Link
+          to="/wspolpraca"
+          className={`${linkBase} text-cream/50 hover:text-cream/85`}
+          activeProps={activeCls}
+        >
+          <Handshake size={18} className={iconCls} />
+          <span className="truncate">Współpraca</span>
         </Link>
         {user ? (
           <button type="button" onClick={signOut} className={`${linkBase} w-full text-left`}>
