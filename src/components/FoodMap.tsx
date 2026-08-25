@@ -5,6 +5,8 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { cuisineMeta } from "@/data/places";
 import type { Place } from "@/lib/places-api";
 import { trackEvent } from "@/lib/analytics";
+import { useUnlockManualAchievement } from "@/lib/achievements-api";
+import { toast } from "sonner";
 
 
 interface Props {
@@ -36,6 +38,9 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
 
   const selectRef = useRef(onSelect);
   selectRef.current = onSelect;
+
+  const unlockAchievement = useUnlockManualAchievement();
+  const achievementTried = useRef(false);
   const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
@@ -296,8 +301,27 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
         const marker = L.marker([userLocation.lat, userLocation.lng], {
           icon,
           zIndexOffset: 1000,
-          interactive: false,
           keyboard: false,
+        });
+        marker.bindTooltip("Hej, to Ty! 👋", {
+          direction: "top",
+          offset: [0, -10],
+          opacity: 0.98,
+          className: "pz-tooltip",
+        });
+        marker.on("mouseover", () => {
+          if (achievementTried.current) return;
+          achievementTried.current = true;
+          unlockAchievement.mutate("found_yourself", {
+            onSuccess: (unlocked) => {
+              if (unlocked) {
+                trackEvent("achievement_unlocked", { slug: "found_yourself" });
+                toast.success("Odznaka odblokowana: „To Ty!”", {
+                  description: "Znalazłeś swoją kropkę na mapie.",
+                });
+              }
+            },
+          });
         });
         marker.addTo(map);
         youAreHereRef.current = marker;

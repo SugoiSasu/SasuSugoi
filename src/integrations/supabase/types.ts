@@ -2543,6 +2543,7 @@ export type Database = {
         Args: { _event_id: string; _picks: Json }
         Returns: undefined
       }
+      unlock_manual_achievement: { Args: { _slug: string }; Returns: boolean }
       wall_item_owner: {
         Args: { _kind: string; _ref_id: string }
         Returns: string

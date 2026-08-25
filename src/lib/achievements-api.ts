@@ -95,6 +95,25 @@ export function useSaveAchievement() {
   });
 }
 
+/** One-time client-triggered unlocks for achievements that aren't a
+ * countable stat (criteria.type === "manual") - e.g. finding your own
+ * location dot on the map. Returns true only the first time it's called
+ * for a given slug+user; safe to call again, the RPC no-ops if already
+ * unlocked or the slug doesn't exist/isn't "manual". */
+export function useUnlockManualAchievement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (slug: string): Promise<boolean> => {
+      const { data, error } = await supabase.rpc("unlock_manual_achievement", { _slug: slug });
+      if (error) throw error;
+      return Boolean(data);
+    },
+    onSuccess: (unlocked) => {
+      if (unlocked) qc.invalidateQueries({ queryKey: ["user-achievements"] });
+    },
+  });
+}
+
 export function useDeleteAchievement() {
   const qc = useQueryClient();
   return useMutation({
