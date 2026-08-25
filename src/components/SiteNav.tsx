@@ -253,7 +253,6 @@ export function SiteNav() {
                 <span className="h-px flex-1 bg-border" />
               </div>
               <div className="flex flex-col divide-y divide-border/40">
-                {hashLink("mapa", "Mapa", true)}
                 {hashLink("miejscowki", "Miejscówki", true)}
                 <Link
                   to="/u"
@@ -280,18 +279,6 @@ export function SiteNav() {
                     className="min-h-11 py-2 text-base font-medium hover:text-tomato inline-flex items-center gap-2"
                   >
                     <Newspaper size={16} /> Pożeralnia
-                  </Link>
-                  <Link
-                    to="/friends"
-                    onClick={closeMobile}
-                    className="min-h-11 py-2 text-base font-medium hover:text-tomato inline-flex items-center gap-2"
-                  >
-                    <Users size={16} /> Znajomi
-                    {pendingFriends > 0 && (
-                      <span className="ml-1 min-w-[18px] h-[18px] px-1 rounded-full bg-tomato text-cream text-[10px] font-bold grid place-items-center">
-                        {pendingFriends > 9 ? "9+" : pendingFriends}
-                      </span>
-                    )}
                   </Link>
                   <Link
                     to="/osiagniecia"
