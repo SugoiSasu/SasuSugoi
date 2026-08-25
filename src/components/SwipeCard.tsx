@@ -85,19 +85,29 @@ export function SwipeCard({
           </div>
         )}
 
+        {/* Hierarchy tightened 2026-08-25: name -> description (the actual
+            "why visit" content) -> a small muted cuisine+address meta line,
+            replacing a stack of four same-weight lines (chip, name, address,
+            description) that read as cluttered/unrefined per live feedback. */}
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-5 pt-24 text-cream">
-          <span className="chip mb-2 bg-cream/15 text-cream">
-            {meta.emoji} {place.cuisine}
-          </span>
           <h2 className="font-display text-2xl font-extrabold leading-tight">{place.name}</h2>
-          <p className="mt-1.5 flex items-center gap-1.5 text-sm text-cream/80">
-            <MapPin size={13} className="shrink-0" /> {place.address}
-          </p>
           {place.description && (
             <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-cream/90">
               {place.description}
             </p>
           )}
+          <p className="mt-2 flex items-center gap-1.5 text-xs text-cream/60">
+            <span className="shrink-0">
+              {meta.emoji} {place.cuisine}
+            </span>
+            <span aria-hidden="true" className="shrink-0">
+              ·
+            </span>
+            <span className="inline-flex min-w-0 items-center gap-1 truncate">
+              <MapPin size={11} className="shrink-0" />
+              <span className="truncate">{place.address}</span>
+            </span>
+          </p>
         </div>
 
         <motion.div
