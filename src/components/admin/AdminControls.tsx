@@ -148,6 +148,46 @@ export function AdminStatusTag({
   );
 }
 
+/* --------------------------------------------------------------- toggle */
+
+/**
+ * Pill switch for on/off settings. A bare checkbox reads as "part of a form
+ * you still have to submit"; a switch reads as a state you are flipping,
+ * which is what these actually are.
+ */
+export function AdminToggle({
+  checked,
+  onChange,
+  label,
+  disabled = false,
+}: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  /** Accessible name - required, even when the visible label sits elsewhere. */
+  label: string;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={`relative w-11 h-6 rounded-full shrink-0 transition-colors disabled:opacity-50 ${
+        checked ? "bg-tomato" : "bg-muted-foreground/30"
+      }`}
+    >
+      <span
+        className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-cream shadow-sm transition-transform ${
+          checked ? "translate-x-5" : "translate-x-0"
+        }`}
+      />
+    </button>
+  );
+}
+
 /* ------------------------------------------------------------ empty state */
 
 export function AdminEmptyState({

@@ -10,6 +10,8 @@ import {
   useNotifications,
   type RealtimeStatus,
 } from "@/lib/notifications-api";
+import { AdminPageHeader } from "@/components/admin/AdminPageShell";
+import { AdminToggle } from "@/components/admin/AdminControls";
 
 export const Route = createFileRoute("/_authenticated/admin/ustawienia")({
   head: () => ({ meta: [{ title: "Ustawienia - Panel admina" }] }),
@@ -26,11 +28,12 @@ function AdminUstawienia() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="font-display text-3xl mb-1 inline-flex items-center gap-2"><Settings2 size={26} /> Ustawienia</h1>
-        <p className="text-sm text-muted-foreground">Globalne przełączniki i podgląd stanu systemu.</p>
-      </div>
-      <div className="flex gap-2 mb-6">
+      <AdminPageHeader
+        title="Ustawienia"
+        icon={<Settings2 size={26} />}
+        subtitle="Globalne przełączniki i podgląd stanu systemu."
+      />
+      <div className="flex gap-2 mb-6 flex-wrap">
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -103,15 +106,14 @@ function AlphaGateTab() {
       </p>
 
       <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
-        <label className="flex items-center gap-3">
-          <input
-            type="checkbox"
+        <div className="flex items-center gap-3">
+          <AdminToggle
             checked={enabled}
-            onChange={(e) => setEnabled(e.target.checked)}
-            className="w-5 h-5 accent-tomato"
+            onChange={setEnabled}
+            label="Wymagaj hasła dostępu (alpha)"
           />
           <span className="text-sm font-semibold">Wymagaj hasła dostępu (alpha)</span>
-        </label>
+        </div>
 
         <label className="block">
           <div className="text-xs font-semibold text-muted-foreground mb-1">Hasło dostępu</div>

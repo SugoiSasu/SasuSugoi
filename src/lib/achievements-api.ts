@@ -170,6 +170,23 @@ export function useSetActiveTitle() {
   });
 }
 
+/**
+ * Flip a single achievement on/off without opening the editor. Writes just
+ * the one column rather than reusing useSaveAchievement's full-row update -
+ * useAchievements() does not select `category`/`title`, so a full-row write
+ * from this list would be sending a payload that never had them.
+ */
+export function useToggleAchievement() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, enabled }: { id: string; enabled: boolean }) => {
+      const { error } = await supabase.from("achievements").update({ enabled }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["achievements"] }),
+  });
+}
+
 export function useDeleteAchievement() {
   const qc = useQueryClient();
   return useMutation({
