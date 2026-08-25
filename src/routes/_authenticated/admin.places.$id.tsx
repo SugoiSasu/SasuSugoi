@@ -830,9 +830,67 @@ function MenuItemsEditor({
           </div>
           <div className="space-y-1.5">
             {cat.items.map((item, ii) => (
-              <div key={ii} className="grid grid-cols-[1fr_5rem_auto] gap-1.5">
+              <div key={ii} className="space-y-1">
+                <div className="grid grid-cols-[1fr_5rem_auto] gap-1.5">
+                  <input
+                    value={item.name}
+                    onChange={(e) =>
+                      setCats(
+                        cats.map((c, i) =>
+                          i === ci
+                            ? {
+                                ...c,
+                                items: c.items.map((x, j) =>
+                                  j === ii ? { ...x, name: e.target.value } : x,
+                                ),
+                              }
+                            : c,
+                        ),
+                      )
+                    }
+                    placeholder="Nazwa dania"
+                    className="input py-1 text-sm"
+                  />
+                  <input
+                    value={item.price ?? ""}
+                    onChange={(e) =>
+                      setCats(
+                        cats.map((c, i) =>
+                          i === ci
+                            ? {
+                                ...c,
+                                items: c.items.map((x, j) =>
+                                  j === ii ? { ...x, price: e.target.value } : x,
+                                ),
+                              }
+                            : c,
+                        ),
+                      )
+                    }
+                    placeholder="28 zł"
+                    className="input py-1 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCats(
+                        cats.map((c, i) =>
+                          i === ci ? { ...c, items: c.items.filter((_, j) => j !== ii) } : c,
+                        ),
+                      )
+                    }
+                    className="text-destructive hover:opacity-70 px-1"
+                    aria-label="Usuń pozycję"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+                {/* Was missing entirely - AI-extracted descriptions (often
+                    garbled, see project_ai_menu_extraction_quality_todo)
+                    were invisible in this editor, so nobody could review or
+                    fix them before they shipped to the public menu. */}
                 <input
-                  value={item.name}
+                  value={item.description ?? ""}
                   onChange={(e) =>
                     setCats(
                       cats.map((c, i) =>
@@ -840,49 +898,16 @@ function MenuItemsEditor({
                           ? {
                               ...c,
                               items: c.items.map((x, j) =>
-                                j === ii ? { ...x, name: e.target.value } : x,
+                                j === ii ? { ...x, description: e.target.value } : x,
                               ),
                             }
                           : c,
                       ),
                     )
                   }
-                  placeholder="Nazwa dania"
-                  className="input py-1 text-sm"
+                  placeholder="Opis (opcjonalnie) - sprawdź, czy AI nie namieszało"
+                  className="input py-1 text-xs text-muted-foreground"
                 />
-                <input
-                  value={item.price ?? ""}
-                  onChange={(e) =>
-                    setCats(
-                      cats.map((c, i) =>
-                        i === ci
-                          ? {
-                              ...c,
-                              items: c.items.map((x, j) =>
-                                j === ii ? { ...x, price: e.target.value } : x,
-                              ),
-                            }
-                          : c,
-                      ),
-                    )
-                  }
-                  placeholder="28 zł"
-                  className="input py-1 text-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCats(
-                      cats.map((c, i) =>
-                        i === ci ? { ...c, items: c.items.filter((_, j) => j !== ii) } : c,
-                      ),
-                    )
-                  }
-                  className="text-destructive hover:opacity-70 px-1"
-                  aria-label="Usuń pozycję"
-                >
-                  <X size={14} />
-                </button>
               </div>
             ))}
             <button

@@ -78,10 +78,15 @@ export const extractMenuFromImage = createServerFn({ method: "POST" })
                 text:
                   "Wyodrębnij pełne menu z tego zdjęcia. Pogrupuj pozycje w logiczne kategorie " +
                   "zgodnie z tym co widać na zdjęciu (np. Przystawki, Dania główne, Desery, Napoje - " +
-                  "użyj nazw kategorii z samego zdjęcia, jeśli są). Dla każdej pozycji podaj nazwę, " +
-                  "cenę jeśli jest widoczna (jako tekst, np. '28 zł') i krótki opis jeśli jest na " +
-                  "zdjęciu - pomiń pole, którego nie widać, zamiast zgadywać. Zachowaj oryginalne " +
-                  "polskie nazwy dań i pisownię ze zdjęcia.",
+                  "użyj nazw kategorii z samego zdjęcia, jeśli są). Dla każdej pozycji podaj nazwę i " +
+                  "cenę jeśli jest widoczna (jako tekst, np. '28 zł'). Pole opisu (description) " +
+                  "wypełniaj TYLKO jeśli na zdjęciu jest wyraźnie czytelny, kompletny tekst opisu tej " +
+                  "pozycji, i wtedy przepisz go dokładnie tak jak jest napisany - nie parafrazuj, nie " +
+                  "składaj opisu z pojedynczych, rozmytych słów ani nie łącz fragmentów z różnych " +
+                  "dań. Jeśli tekst opisu jest niewyraźny, częściowo nieczytelny, albo go po prostu " +
+                  "nie ma - pomiń pole description całkowicie. Puste pole jest zawsze lepsze niż " +
+                  "przybliżony lub zmyślony opis. Zachowaj oryginalne polskie nazwy dań i pisownię ze " +
+                  "zdjęcia.",
               },
             ],
           },
