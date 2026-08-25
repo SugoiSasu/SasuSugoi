@@ -11,6 +11,7 @@ import {
   usePlaceRatingsMap,
   placesQueryOptions,
   placeRatingsMapQueryOptions,
+  isPlaceOpenNow,
   type Place,
 } from "@/lib/places-api";
 import { searchPlaces } from "@/lib/place-search";
@@ -26,6 +27,8 @@ import { useCutoutLogo } from "@/lib/chroma-cutout";
 import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import { OpenStatus, isNewPlace } from "@/components/OpenStatus";
 import { HomeSocialBand } from "@/components/HomeSocialBand";
+import { type QuickFilter } from "@/components/QuickFilters";
+import { useMyFavoritePlaceIds } from "@/lib/favorites-api";
 import logoDark from "@/assets/brand/po_zeramy-logo-dark.png.asset.json";
 import { BASE_URL } from "@/lib/site-config";
 import { trackEvent } from "@/lib/analytics";
@@ -76,6 +79,14 @@ function Index() {
   const [query, setQuery] = useState("");
   const debouncedQuery = useDebounced(query, 200);
   const [cuisine, setCuisine] = useState<string | null>(null);
+  const [quick, setQuick] = useState<QuickFilter>("all");
+  // "Otwarte teraz" and "Nowe" both depend on the current clock, and the
+  // server runs in UTC while the visitor is in Europe/Warsaw. Computing them
+  // during SSR would hand the client different chips than the markup it is
+  // hydrating - a place open 12:00-22:00 is "open" at 20:30 UTC and closed
+  // at 22:30 local, the same instant. So the row is client-only.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const { data: places, isLoading } = usePlaces();
   const { data: ratings } = usePlaceRatingsMap();
@@ -90,9 +101,54 @@ function Index() {
     [places],
   );
 
+  const { data: favIds } = useMyFavoritePlaceIds();
+
+  /** One predicate per intent filter, reused for both the filtering and the
+   *  chip counts so the badge can never disagree with the result. */
+  const quickTests = useMemo(() => {
+    const favSet = new Set(favIds ?? []);
+    return {
+      all: () => true,
+      open: (p: PlaceWithDate) => isPlaceOpenNow(p.opening_hours),
+      top: (p: PlaceWithDate) => (ratings?.get(p.id)?.avg ?? 0) >= 4.5,
+      new: (p: PlaceWithDate) => isNewPlace(p.created_at),
+      fav: (p: PlaceWithDate) => favSet.has(p.id),
+    } satisfies Record<QuickFilter, (p: PlaceWithDate) => boolean>;
+  }, [favIds, ratings]);
+
+  const quickCounts = useMemo(() => {
+    const out: Partial<Record<QuickFilter, number>> = {};
+    if (!mounted) return out;
+    for (const k of ["open", "top", "new", "fav"] as const) {
+      out[k] = published.filter(quickTests[k]).length;
+    }
+    return out;
+  }, [published, quickTests, mounted]);
+
+  /** Offer a chip only when it would return something. A filter that can
+   *  only produce an empty state is worse than no filter at all - and with
+   *  no reviews in the database yet, "Ocena 4,5+" is exactly that. */
+  const quickAvailable = useMemo(() => {
+    const s = new Set<QuickFilter>();
+    for (const k of ["open", "top", "new", "fav"] as const) {
+      if ((quickCounts[k] ?? 0) > 0) s.add(k);
+    }
+    return s;
+  }, [quickCounts]);
+
+  // If the active filter stops being offered (e.g. the last favourite was
+  // removed), fall back rather than showing an empty page under a chip that
+  // is no longer rendered.
+  useEffect(() => {
+    if (quick !== "all" && !quickAvailable.has(quick)) setQuick("all");
+  }, [quick, quickAvailable]);
+
   const byCuisine = useMemo(
-    () => published.filter((p) => (cuisine ? p.cuisine === cuisine : true)),
-    [published, cuisine],
+    () =>
+      published
+        .filter((p) => (cuisine ? p.cuisine === cuisine : true))
+        .filter(quickTests[quick]),
+    [published, cuisine, quick, quickTests],
   );
 
   const search = useMemo(
@@ -157,6 +213,10 @@ function Index() {
         onQueryChange={setQuery}
         cuisine={cuisine}
         onCuisineChange={setCuisine}
+        quick={quick}
+        onQuickChange={setQuick}
+        quickAvailable={quickAvailable}
+        quickCounts={quickCounts}
       />
 
       <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:max-w-7xl">
@@ -181,6 +241,7 @@ function Index() {
                 onClick={() => {
                   setQuery("");
                   setCuisine(null);
+                  setQuick("all");
                 }}
                 className="chip bg-navy text-cream"
               >

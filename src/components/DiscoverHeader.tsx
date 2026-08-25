@@ -4,12 +4,17 @@ import { useCuisines } from "@/lib/cuisines-api";
 import { useMyProfile } from "@/lib/profile-api";
 import { cuisineMeta } from "@/data/places";
 import { NotificationBell } from "@/components/NotificationBell";
+import { QuickFilters, type QuickFilter } from "@/components/QuickFilters";
 
 interface DiscoverHeaderProps {
   query: string;
   onQueryChange: (value: string) => void;
   cuisine: string | null;
   onCuisineChange: (value: string | null) => void;
+  quick: QuickFilter;
+  onQuickChange: (value: QuickFilter) => void;
+  quickAvailable: Set<QuickFilter>;
+  quickCounts: Partial<Record<QuickFilter, number>>;
 }
 
 /**
@@ -21,6 +26,10 @@ export function DiscoverHeader({
   onQueryChange,
   cuisine,
   onCuisineChange,
+  quick,
+  onQuickChange,
+  quickAvailable,
+  quickCounts,
 }: DiscoverHeaderProps) {
   const { data: profile } = useMyProfile();
   const { data: cuisines } = useCuisines();
@@ -76,6 +85,13 @@ export function DiscoverHeader({
             <SlidersHorizontal size={18} />
           </Link>
         </div>
+
+        <QuickFilters
+          value={quick}
+          onChange={onQuickChange}
+          available={quickAvailable}
+          counts={quickCounts}
+        />
 
         {!!list.length && (
           <div className="mt-8">
