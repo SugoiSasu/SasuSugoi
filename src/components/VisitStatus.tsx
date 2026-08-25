@@ -32,13 +32,19 @@ const META: Record<
 > = {
   want: {
     icon: Bookmark,
-    on: "Chcę odwiedzić",
+    on: "Na liście",
     off: "Chcę odwiedzić",
     toastOn: "Dodano do „Chcę odwiedzić”",
     toastOff: "Usunięto z „Chcę odwiedzić”",
-    // Stays an outline (never a solid fill) even when active, per the KV mockup - // only "Byłem tutaj" and "Ulubione" get a filled active state.
-    activeClass: "border-2 border-navy bg-navy/10 text-navy hover:bg-navy/15",
-    fillIconOnActive: false,
+    // Used to stay a barely-there outline (bg-navy/10) even when active, per
+    // an old KV-mockup note - reported live 2026-08-25 as unreadable ("nadal
+    // nie ma zadnego znaku ze jest zaznaczone"): the label text didn't even
+    // change (on === off), so a successful toggle gave no visible feedback
+    // at all beyond a toast that disappears. Now matches "visited"'s solid
+    // fill so a marked state is unmistakable, with its own label so the two
+    // aren't just distinguishable by icon/color alone.
+    activeClass: "bg-navy text-cream hover:bg-navy/90",
+    fillIconOnActive: true,
   },
   visited: {
     icon: CheckCircle2,
