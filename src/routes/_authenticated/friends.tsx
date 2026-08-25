@@ -16,18 +16,17 @@ import {
   Ban,
   Trophy,
   Users,
-  Folder,
   Link as LinkIcon,
   Mail,
   QrCode,
   Copy,
   ShieldOff,
-  Plus,
   Sparkles,
   Share2,
   Home,
   User as UserIcon,
   MoreVertical,
+  ArrowLeft,
 } from "lucide-react";
 import { useUser } from "@/lib/use-auth";
 import { useMyProfile } from "@/lib/profile-api";
@@ -40,11 +39,6 @@ import {
   useFriendshipWith,
   useFriendFavorites,
   useToggleFavorite,
-  useFriendLists,
-  useFriendListMembers,
-  useCreateFriendList,
-  useDeleteFriendList,
-  useToggleListMember,
   useFriendNote,
   useSetFriendNote,
   useBlockedUsers,
@@ -59,11 +53,11 @@ import {
   type FriendProfile,
 } from "@/lib/friends-api";
 import { useUserSearch } from "@/lib/wall-api";
-import { supabase } from "@/integrations/supabase/client";
 import { UserAvatar } from "@/components/UserAvatar";
 import { AsyncState, runWithToast } from "@/components/AsyncState";
 import { VipBadge, isVipActive, vipNameStyle } from "@/components/VipBadge";
 import { VipReferralProgress } from "@/components/VipReferralProgress";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -72,7 +66,14 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-const TAB_KEYS = ["friends", "requests", "find", "groups", "leaderboard", "blocked"] as const;
+// Redesigned 2026-08-25: was 6 flat tabs (incl. an unused-in-practice
+// "Grupy" feature) plus THREE separate search inputs across the page
+// (a global one, one inside "Znajomi", one inside "Znajdź") and the
+// suggestions block rendered twice. Down to 4 tabs + one search bar that
+// does double duty (finds people, shows "Znajomy"/"Wysłano" state inline).
+// "Zablokowani" is real but rarely used - reachable via a small header
+// link instead of taking a permanent slot in the main tab row.
+const TAB_KEYS = ["friends", "requests", "invite", "leaderboard", "blocked"] as const;
 type TabKey = (typeof TAB_KEYS)[number];
 
 const searchSchema = z.object({
@@ -84,7 +85,7 @@ export const Route = createFileRoute("/_authenticated/friends")({
   head: () => ({
     meta: [
       { title: "Znajomi - poŻeramy" },
-      { name: "description", content: "Twoi znajomi, zaproszenia, grupy i ranking w poŻeramy." },
+      { name: "description", content: "Twoi znajomi, zaproszenia i ranking w poŻeramy." },
     ],
   }),
   component: FriendsPage,
@@ -95,6 +96,7 @@ function FriendsPage() {
   const { data: myProfile } = useMyProfile();
   const { tab } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
+  const { data: blocked } = useBlockedUsers();
 
   const setTab = (next: TabKey) =>
     navigate({ search: (prev: { tab: TabKey }) => ({ ...prev, tab: next }), replace: true });
@@ -107,15 +109,35 @@ function FriendsPage() {
     );
   }
 
+  if (tab === "blocked") {
+    return (
+      <main className="min-h-dvh bg-background py-6 sm:py-8 px-3 sm:px-4">
+        <div className="mx-auto max-w-3xl">
+          <button
+            type="button"
+            onClick={() => setTab("friends")}
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-tomato transition-colors mb-4"
+          >
+            <ArrowLeft size={16} /> Wróć do znajomych
+          </button>
+          <h1 className="font-display text-3xl mb-4 flex items-center gap-2">
+            <ShieldOff size={26} /> Zablokowani
+          </h1>
+          <BlockedTab />
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className="min-h-dvh bg-background py-6 sm:py-8 px-3 sm:px-4">
+    <main id="main-content" className="min-h-dvh bg-background py-6 sm:py-8 px-3 sm:px-4">
       <div className="mx-auto max-w-3xl">
         <header className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
               <h1 className="font-display text-4xl mb-1">Znajomi</h1>
               <p className="text-muted-foreground text-sm">
-                Zarządzaj znajomymi, grupami, zaproszeniami i blokadami w jednym miejscu.
+                Znajdź, zaproś i śledź znajomych foodies.
               </p>
             </div>
             <div className="flex flex-wrap items-start gap-2">
@@ -142,19 +164,23 @@ function FriendsPage() {
 
         <SearchBar myId={user.id} />
 
-        <TabsBar tab={tab} onChange={setTab} />
+        <div className="flex items-center justify-between gap-2 mb-6">
+          <TabsBar tab={tab} onChange={setTab} />
+          {(blocked ?? []).length > 0 && (
+            <button
+              type="button"
+              onClick={() => setTab("blocked")}
+              className="shrink-0 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-tomato transition-colors"
+            >
+              <ShieldOff size={13} /> Zablokowani ({blocked!.length})
+            </button>
+          )}
+        </div>
 
-        {tab === "friends" && (
-          <>
-            <FriendsTab myId={user.id} />
-            <SuggestionsBlock />
-          </>
-        )}
+        {tab === "friends" && <FriendsTab myId={user.id} />}
         {tab === "requests" && <RequestsTab myId={user.id} />}
-        {tab === "find" && <FindTab myId={user.id} />}
-        {tab === "groups" && <GroupsTab />}
+        {tab === "invite" && <InviteTab />}
         {tab === "leaderboard" && <LeaderboardTab myId={user.id} />}
-        {tab === "blocked" && <BlockedTab />}
       </div>
     </main>
   );
@@ -171,13 +197,10 @@ function QuickBar({ onTab }: { onTab: (t: TabKey) => void }) {
   const incoming = (friendships ?? []).filter(
     (f) => f.status === "pending" && f.addressee_id === user?.id,
   ).length;
-  const outgoing = (friendships ?? []).filter(
-    (f) => f.status === "pending" && f.requester_id === user?.id,
-  ).length;
   const suggestionCount = suggestions?.length ?? 0;
 
   return (
-    <section className="mb-5 grid grid-cols-2 sm:grid-cols-4 gap-2">
+    <section className="mb-5 grid grid-cols-3 gap-2">
       <Stat label="Znajomych" value={friendsCount} onClick={() => onTab("friends")} />
       <Stat
         label="Do akceptacji"
@@ -185,8 +208,7 @@ function QuickBar({ onTab }: { onTab: (t: TabKey) => void }) {
         highlight={incoming > 0}
         onClick={() => onTab("requests")}
       />
-      <Stat label="Wysłane" value={outgoing} onClick={() => onTab("requests")} />
-      <Stat label="Sugestii" value={suggestionCount} onClick={() => onTab("find")} />
+      <Stat label="Może znasz" value={suggestionCount} onClick={() => onTab("invite")} />
     </section>
   );
 }
@@ -221,7 +243,9 @@ function Stat({
 }
 
 /* ============================================================
- * SEARCH BAR - zawsze widoczna, przechodzi do "find" z zapytaniem
+ * SEARCH BAR - jedyna wyszukiwarka na stronie. Szuka wśród
+ * wszystkich użytkowników; stan przycisku (Dodaj/Wysłano/Znajomy)
+ * mówi wprost, czy to już Twój znajomy.
  * ============================================================ */
 function SearchBar({ myId }: { myId: string }) {
   const [q, setQ] = useState("");
@@ -231,7 +255,7 @@ function SearchBar({ myId }: { myId: string }) {
   const filtered = useMemo(() => (results ?? []).filter((u) => u.id !== myId), [results, myId]);
 
   return (
-    <section className="mb-5">
+    <section className="mb-6">
       <div className="relative">
         <Search
           size={14}
@@ -276,7 +300,12 @@ function SearchBar({ myId }: { myId: string }) {
                 <ViewProfileLink username={u.username} userId={u.id} />
                 <SendFriendButton
                   targetId={u.id}
-                  onAdd={(id) => send.mutate(id)}
+                  onAdd={(id) =>
+                    runWithToast(() => send.mutateAsync(id), {
+                      success: "Zaproszenie wysłane",
+                      error: "Nie udało się wysłać zaproszenia",
+                    })
+                  }
                   pending={send.isPending}
                 />
               </div>
@@ -305,13 +334,11 @@ function TabsBar({ tab, onChange }: { tab: TabKey; onChange: (t: TabKey) => void
       icon: <UserPlus size={14} />,
       badge: incoming || undefined,
     },
-    { key: "find", label: "Znajdź", icon: <Search size={14} /> },
-    { key: "groups", label: "Grupy", icon: <Folder size={14} /> },
+    { key: "invite", label: "Zaproś", icon: <Share2 size={14} /> },
     { key: "leaderboard", label: "Ranking", icon: <Trophy size={14} /> },
-    { key: "blocked", label: "Zablokowani", icon: <ShieldOff size={14} /> },
   ];
   return (
-    <div className="-mx-4 px-4 mb-6 overflow-x-auto">
+    <div className="-mx-4 px-4 flex-1 min-w-0 overflow-x-auto">
       <div className="flex gap-2 min-w-max">
         {tabs.map((t) => (
           <button
@@ -344,69 +371,40 @@ function FriendsTab({ myId }: { myId: string }) {
   const friendsQ = useFriendProfiles(myId);
   const { data: friendships } = useMyFriendships();
   const { data: favorites } = useFriendFavorites();
-  const { data: lists } = useFriendLists();
-  const [filter, setFilter] = useState<"all" | "favorites" | string>("all");
-  const [q, setQ] = useState("");
-  const { data: listMembers } = useFriendListMembers(
-    filter !== "all" && filter !== "favorites" ? filter : null,
-  );
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
   const friends = friendsQ.data;
 
   const filtered = useMemo(() => {
     let arr = friends ?? [];
-    if (filter === "favorites" && favorites) {
+    if (onlyFavorites && favorites) {
       arr = arr.filter((f) => favorites.has(f.id));
-    } else if (filter !== "all" && listMembers) {
-      arr = arr.filter((f) => listMembers.has(f.id));
-    }
-    if (q.trim()) {
-      const qq = q.toLowerCase();
-      arr = arr.filter(
-        (f) =>
-          (f.display_name ?? "").toLowerCase().includes(qq) ||
-          (f.username ?? "").toLowerCase().includes(qq),
-      );
     }
     if (favorites) {
       arr = [...arr].sort((a, b) => Number(favorites.has(b.id)) - Number(favorites.has(a.id)));
     }
     return arr;
-  }, [friends, favorites, listMembers, filter, q]);
+  }, [friends, favorites, onlyFavorites]);
 
   return (
     <section>
-      <div className="flex flex-wrap gap-2 mb-3">
-        <button
-          type="button"
-          onClick={() => setFilter("all")}
-          className={`chip ${filter === "all" ? "bg-tomato text-cream" : "bg-card border border-border"}`}
-        >
-          Wszyscy ({(friends ?? []).length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setFilter("favorites")}
-          className={`chip ${filter === "favorites" ? "bg-tomato text-cream" : "bg-card border border-border"}`}
-        >
-          <Star size={12} /> Ulubieni ({favorites?.size ?? 0})
-        </button>
-        {(lists ?? []).map((l) => (
-          <ListChip key={l.id} list={l} active={filter === l.id} onClick={() => setFilter(l.id)} />
-        ))}
-      </div>
-
-      <div className="relative mb-3">
-        <Search
-          size={14}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-        />
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Szukaj wśród znajomych…"
-          className="w-full pl-9 pr-3 py-2.5 rounded-full bg-card border border-border focus:border-tomato outline-none text-sm"
-        />
-      </div>
+      {(friends ?? []).length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          <button
+            type="button"
+            onClick={() => setOnlyFavorites(false)}
+            className={`chip ${!onlyFavorites ? "bg-tomato text-cream" : "bg-card border border-border"}`}
+          >
+            Wszyscy ({(friends ?? []).length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setOnlyFavorites(true)}
+            className={`chip ${onlyFavorites ? "bg-tomato text-cream" : "bg-card border border-border"}`}
+          >
+            <Star size={12} /> Ulubieni ({favorites?.size ?? 0})
+          </button>
+        </div>
+      )}
 
       <AsyncState
         isLoading={friendsQ.isLoading}
@@ -416,8 +414,8 @@ function FriendsTab({ myId }: { myId: string }) {
         isEmpty={(friends ?? []).length === 0 || filtered.length === 0}
         emptyText={
           (friends ?? []).length === 0
-            ? 'Nikogo tu jeszcze nie ma. Wejdź w zakładkę „Znajdź".'
-            : "Nic nie pasuje do filtra."
+            ? "Nikogo tu jeszcze nie ma. Poszukaj kogoś w pasku wyżej, albo zajrzyj do zakładki „Zaproś”."
+            : "Nikogo z ulubionych."
         }
         onRetry={() => friendsQ.refetch()}
         skeletonRows={4}
@@ -443,27 +441,6 @@ function FriendsTab({ myId }: { myId: string }) {
   );
 }
 
-function ListChip({
-  list,
-  active,
-  onClick,
-}: {
-  list: { id: string; name: string; color: string | null };
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`chip ${active ? "bg-tomato text-cream" : "bg-card border border-border"}`}
-    >
-      <span className="w-2 h-2 rounded-full" style={{ background: list.color || "#888" }} />
-      {list.name}
-    </button>
-  );
-}
-
 function FriendRow({
   profile,
   isFavorite,
@@ -477,7 +454,6 @@ function FriendRow({
   const remove = useRemoveFriendship();
   const block = useBlockUser();
   const [openNote, setOpenNote] = useState(false);
-  const [openLists, setOpenLists] = useState(false);
 
   return (
     <li className="bg-card border border-border rounded-2xl p-3">
@@ -527,9 +503,6 @@ function FriendRow({
             <MoreVertical size={14} />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setOpenLists((v) => !v)} className="cursor-pointer">
-              <Folder size={14} className="mr-2" /> Grupy
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setOpenNote((v) => !v)} className="cursor-pointer">
               <StickyNote size={14} className="mr-2" /> Notatka
             </DropdownMenuItem>
@@ -574,7 +547,6 @@ function FriendRow({
       </div>
 
       {openNote && <NoteEditor friendId={profile.id} />}
-      {openLists && <ListsAssign friendId={profile.id} />}
     </li>
   );
 }
@@ -614,63 +586,6 @@ function NoteEditor({ friendId }: { friendId: string }) {
         </button>
       </div>
     </div>
-  );
-}
-
-function ListsAssign({ friendId }: { friendId: string }) {
-  const { data: lists } = useFriendLists();
-  return (
-    <div className="mt-3 pt-3 border-t border-border">
-      <div className="text-xs text-muted-foreground mb-2">Dodaj do grup:</div>
-      {(lists ?? []).length === 0 ? (
-        <p className="text-xs text-muted-foreground">
-          Nie masz jeszcze żadnych grup. Utwórz je w zakładce „Grupy".
-        </p>
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          {(lists ?? []).map((l) => (
-            <ListAssignToggle
-              key={l.id}
-              listId={l.id}
-              name={l.name}
-              color={l.color}
-              friendId={friendId}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ListAssignToggle({
-  listId,
-  name,
-  color,
-  friendId,
-}: {
-  listId: string;
-  name: string;
-  color: string | null;
-  friendId: string;
-}) {
-  const { data: members } = useFriendListMembers(listId);
-  const toggle = useToggleListMember();
-  const on = members?.has(friendId) ?? false;
-  return (
-    <button
-      type="button"
-      disabled={toggle.isPending}
-      onClick={() =>
-        runWithToast(() => toggle.mutateAsync({ listId, friendId, on: !on }), {
-          error: on ? "Nie udało się usunąć z grupy" : "Nie udało się dodać do grupy",
-        })
-      }
-      className={`chip disabled:opacity-50 ${on ? "bg-tomato text-cream" : "bg-card border border-border"}`}
-    >
-      <span className="w-2 h-2 rounded-full" style={{ background: color || "#888" }} />
-      {name}
-    </button>
   );
 }
 
@@ -812,85 +727,16 @@ function RequestsTab({ myId }: { myId: string }) {
 }
 
 /* ============================================================
- * FIND TAB
+ * ZAPROŚ TAB (dawniej "Znajdź" - wyszukiwarka wyżej jest wspólna
+ * dla całej strony, więc zostają tu tylko sugestie + zapraszanie
+ * spoza aplikacji, zamiast trzeciej kopii tego samego pola)
  * ============================================================ */
-function FindTab({ myId }: { myId: string }) {
+function InviteTab() {
   return (
     <>
-      <SearchUsers myId={myId} />
       <SuggestionsBlock />
       <InviteBlock />
     </>
-  );
-}
-
-function SearchUsers({ myId }: { myId: string }) {
-  const [q, setQ] = useState("");
-  const debounced = useDebounced(q, 250);
-  const { data: results, isFetching } = useUserSearch(debounced);
-  const send = useSendFriendRequest();
-  const filtered = useMemo(() => (results ?? []).filter((u) => u.id !== myId), [results, myId]);
-
-  return (
-    <section className="mb-8">
-      <h2 className="font-display text-xl mb-3">Wyszukaj</h2>
-      <div className="relative mb-3">
-        <Search
-          size={14}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-        />
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Nick, imię, e-mail…"
-          className="w-full pl-9 pr-3 py-2.5 rounded-full bg-card border border-border focus:border-tomato outline-none text-sm"
-        />
-      </div>
-      {debounced.length < 2 ? (
-        <p className="text-xs text-muted-foreground">Wpisz co najmniej 2 znaki.</p>
-      ) : isFetching ? (
-        <div className="text-sm text-muted-foreground">Szukam…</div>
-      ) : filtered.length === 0 ? (
-        <Empty text="Brak wyników." />
-      ) : (
-        <ul className="space-y-2">
-          {filtered.map((u) => (
-            <li
-              key={u.id}
-              className="bg-card border border-border rounded-2xl p-3 flex items-center gap-3"
-            >
-              <AvatarLink
-                username={u.username}
-                userId={u.id}
-                avatarUrl={u.avatar_url}
-                avatarSource={(u.avatar_source as FriendProfile["avatar_source"]) ?? "initials"}
-                displayName={u.display_name}
-                size={36}
-              />
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold truncate">
-                  {u.display_name || (u.username ? `@${u.username}` : "Użytkownik")}
-                </div>
-                {u.username && u.display_name && (
-                  <div className="text-xs text-muted-foreground truncate">@{u.username}</div>
-                )}
-              </div>
-              <ViewProfileLink username={u.username} userId={u.id} />
-              <SendFriendButton
-                targetId={u.id}
-                onAdd={(id) =>
-                  runWithToast(() => send.mutateAsync(id), {
-                    success: "Zaproszenie wysłane",
-                    error: "Nie udało się wysłać zaproszenia",
-                  })
-                }
-                pending={send.isPending}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
   );
 }
 
@@ -925,10 +771,9 @@ function SuggestionsBlock() {
   const suggQ = useFriendSuggestions();
   const send = useSendFriendRequest();
   const sugg = suggQ.data;
-  // Nic nie pokazuj jeśli pusto lub błąd - to blok pomocniczy
   if (suggQ.isLoading) {
     return (
-      <section className="mt-8">
+      <section className="mb-8">
         <h2 className="font-display text-xl mb-3 flex items-center gap-2">
           <Sparkles size={18} className="text-tomato" /> Może znasz
         </h2>
@@ -940,7 +785,7 @@ function SuggestionsBlock() {
   }
   if (suggQ.isError) {
     return (
-      <section className="mt-8">
+      <section className="mb-8">
         <h2 className="font-display text-xl mb-3 flex items-center gap-2">
           <Sparkles size={18} className="text-tomato" /> Może znasz
         </h2>
@@ -952,7 +797,7 @@ function SuggestionsBlock() {
   }
   if (!sugg || sugg.length === 0) return null;
   return (
-    <section className="mt-8">
+    <section className="mb-8">
       <h2 className="font-display text-xl mb-3 flex items-center gap-2">
         <Sparkles size={18} className="text-tomato" /> Może znasz
       </h2>
@@ -1022,7 +867,7 @@ function InviteBlock() {
   }
 
   return (
-    <section className="mt-8">
+    <section>
       <h2 className="font-display text-xl mb-3 flex items-center gap-2">
         <Share2 size={18} className="text-tomato" /> Zaproś spoza poŻeramy
       </h2>
@@ -1187,105 +1032,6 @@ function InviteBlock() {
 }
 
 /* ============================================================
- * GROUPS TAB
- * ============================================================ */
-function GroupsTab() {
-  const listsQ = useFriendLists();
-  const create = useCreateFriendList();
-  const del = useDeleteFriendList();
-  const [name, setName] = useState("");
-  const [color, setColor] = useState("#FF6B47");
-  const lists = listsQ.data;
-
-  return (
-    <section>
-      <div className="bg-card border border-border rounded-2xl p-4 mb-4">
-        <h3 className="font-semibold mb-2">Nowa grupa</h3>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="np. Ekipa na pizzę"
-            className="flex-1 rounded-full bg-background border border-border focus:border-tomato outline-none px-3 py-2 text-sm"
-          />
-          <input
-            type="color"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className="w-12 h-10 rounded border border-border bg-background"
-          />
-          <button
-            type="button"
-            disabled={!name.trim() || create.isPending}
-            onClick={async () => {
-              const ok = await runWithToast(
-                () => create.mutateAsync({ name: name.trim(), color }),
-                { success: "Grupa utworzona", error: "Nie udało się utworzyć grupy" },
-              );
-              if (ok !== undefined) setName("");
-            }}
-            className="inline-flex items-center justify-center gap-1 rounded-full bg-tomato text-cream px-4 py-2 text-sm font-semibold disabled:opacity-50"
-          >
-            {create.isPending ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}{" "}
-            Dodaj
-          </button>
-        </div>
-      </div>
-
-      <AsyncState
-        isLoading={listsQ.isLoading}
-        isError={listsQ.isError}
-        error={listsQ.error}
-        isFetching={listsQ.isFetching}
-        isEmpty={(lists ?? []).length === 0}
-        emptyText="Nie masz jeszcze żadnych grup."
-        onRetry={() => listsQ.refetch()}
-        skeletonRows={2}
-      >
-        <ul className="space-y-2">
-          {(lists ?? []).map((l) => (
-            <li
-              key={l.id}
-              className="bg-card border border-border rounded-2xl p-3 flex items-center gap-3"
-            >
-              <span className="w-3 h-3 rounded-full" style={{ background: l.color || "#888" }} />
-              <div className="flex-1 font-semibold">{l.name}</div>
-              <GroupMembersCount listId={l.id} />
-              <button
-                type="button"
-                disabled={del.isPending}
-                onClick={() => {
-                  if (!confirm(`Usunąć grupę "${l.name}"?`)) return;
-                  runWithToast(() => del.mutateAsync(l.id), {
-                    success: "Grupa usunięta",
-                    error: "Nie udało się usunąć grupy",
-                  });
-                }}
-                className="p-2 rounded-full border bg-card border-border hover:border-destructive hover:text-destructive disabled:opacity-50"
-              >
-                {del.isPending ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
-                  <Trash2 size={14} />
-                )}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </AsyncState>
-      <p className="text-xs text-muted-foreground mt-4">
-        Dodajesz znajomych do grup w zakładce „Znajomi" - kliknij ikonę folderu obok znajomego.
-      </p>
-    </section>
-  );
-}
-
-function GroupMembersCount({ listId }: { listId: string }) {
-  const { data } = useFriendListMembers(listId);
-  return <span className="text-xs text-muted-foreground">{data?.size ?? 0} osób</span>;
-}
-
-/* ============================================================
  * LEADERBOARD TAB
  * ============================================================ */
 function LeaderboardTab({ myId }: { myId: string }) {
@@ -1352,7 +1098,7 @@ function LeaderboardTab({ myId }: { myId: string }) {
 }
 
 /* ============================================================
- * BLOCKED TAB
+ * BLOCKED - reached via a small header link, not a main tab
  * ============================================================ */
 function BlockedTab() {
   const blockedQ = useBlockedUsers();

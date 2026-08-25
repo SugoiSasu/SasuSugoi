@@ -19,10 +19,8 @@ import {
   Facebook,
   Twitter,
   Ban,
-  Folder,
   ShieldOff,
   X,
-  Check,
   Bookmark,
   CheckCircle2,
   Heart,
@@ -52,9 +50,6 @@ import {
   useBlockedUsers,
   useBlockUser,
   useUnblockUser,
-  useFriendLists,
-  useFriendListMembers,
-  useToggleListMember,
   useUserFriendProfiles,
   useInviteStats,
 } from "@/lib/friends-api";
@@ -758,7 +753,6 @@ function FriendButton({
   const send = useSendFriendRequest();
   const respond = useRespondToFriendRequest();
   const remove = useRemoveFriendship();
-  const [openLists, setOpenLists] = useState(false);
   const isFav = favorites?.has(otherUserId) ?? false;
 
   if (isLoading) {
@@ -824,18 +818,6 @@ function FriendButton({
           <Star size={12} fill={isFav ? "currentColor" : "none"} />
           {isFav ? "Ulubiony" : "Ulubione"}
         </button>
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setOpenLists((v) => !v)}
-            className="chip bg-cream/15 text-cream hover:bg-cream/25"
-          >
-            <Folder size={12} /> Grupy
-          </button>
-          {openLists && (
-            <FriendListsPopover friendId={otherUserId} onClose={() => setOpenLists(false)} />
-          )}
-        </div>
       </>
     );
   }
@@ -897,74 +879,6 @@ function FriendButton({
         Odrzuć
       </button>
     </>
-  );
-}
-
-function FriendListsPopover({ friendId, onClose }: { friendId: string; onClose: () => void }) {
-  const { data: lists } = useFriendLists();
-  return (
-    <div
-      className="absolute z-30 mt-2 right-0 w-64 bg-card border border-border rounded-2xl shadow-xl p-3 text-foreground"
-      onMouseLeave={onClose}
-    >
-      <div className="text-xs font-semibold mb-2">Dodaj do grup</div>
-      {(lists ?? []).length === 0 ? (
-        <div className="text-xs text-muted-foreground">
-          Nie masz grup.{" "}
-          <Link to="/friends" search={{ tab: "groups" as const }} className="text-tomato underline">
-            Utwórz
-          </Link>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-1.5">
-          {(lists ?? []).map((l) => (
-            <ListToggleRow
-              key={l.id}
-              listId={l.id}
-              name={l.name}
-              color={l.color}
-              friendId={friendId}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ListToggleRow({
-  listId,
-  name,
-  color,
-  friendId,
-}: {
-  listId: string;
-  name: string;
-  color: string | null;
-  friendId: string;
-}) {
-  const { data: members } = useFriendListMembers(listId);
-  const toggle = useToggleListMember();
-  const on = members?.has(friendId) ?? false;
-  return (
-    <button
-      type="button"
-      disabled={toggle.isPending}
-      onClick={() =>
-        runWithToast(() => toggle.mutateAsync({ listId, friendId, on: !on }), {
-          error: on ? "Nie udało się usunąć z grupy" : "Nie udało się dodać do grupy",
-        })
-      }
-      className={`min-h-11 flex items-center gap-2 text-left rounded-lg px-2 py-1.5 text-xs border disabled:opacity-50 ${
-        on
-          ? "bg-tomato/10 border-tomato text-tomato"
-          : "bg-background border-border hover:border-tomato"
-      }`}
-    >
-      <span className="w-2 h-2 rounded-full" style={{ background: color || "#888" }} />
-      <span className="flex-1">{name}</span>
-      {on && <Check size={12} />}
-    </button>
   );
 }
 
