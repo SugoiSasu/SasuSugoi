@@ -27,6 +27,7 @@ export interface Profile {
   gender: "M" | "K" | null;
   onboarding_seen_at: string | null;
   ig_popup_dismissed_at: string | null;
+  notification_prefs: Record<string, boolean> | null;
 }
 
 export const POZNAN_DISTRICTS = [
@@ -103,6 +104,7 @@ export interface ProfileUpdate {
   gender?: "M" | "K" | null;
   onboarding_seen_at?: string;
   ig_popup_dismissed_at?: string;
+  notification_prefs?: Record<string, boolean>;
 }
 
 /**
@@ -138,6 +140,33 @@ export async function uploadAvatar(userId: string, file: File): Promise<string> 
     .upload(path, file, { upsert: true, contentType: file.type });
   if (error) throw error;
   return path;
+}
+
+/** Bundles everything RLS already scopes to the current user into one JSON
+ * object - no server function needed, every table here already restricts
+ * reads to auth.uid() at the database level. */
+export async function exportMyData(userId: string) {
+  const [profile, reviews, favorites, visits, friendships] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+    supabase.from("reviews").select("*").eq("user_id", userId),
+    supabase.from("place_favorites").select("*").eq("user_id", userId),
+    supabase.from("place_visits").select("*").eq("user_id", userId),
+    supabase
+      .from("friendships")
+      .select("*")
+      .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`),
+  ]);
+  for (const r of [profile, reviews, favorites, visits, friendships]) {
+    if (r.error) throw r.error;
+  }
+  return {
+    exported_at: new Date().toISOString(),
+    profile: profile.data,
+    reviews: reviews.data,
+    favorites: favorites.data,
+    visits: visits.data,
+    friendships: friendships.data,
+  };
 }
 
 /** Sign a private-bucket path. Cached for 30 min. */

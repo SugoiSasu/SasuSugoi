@@ -7,17 +7,20 @@ import { toast } from "sonner";
 import {
   Loader2,
   Upload,
-  ArrowLeft,
   Save,
   Eye,
   EyeOff,
   Users as UsersIcon,
-  Heart,
-  Bookmark,
-  CheckCircle2,
   Trash2,
   TriangleAlert,
   KeyRound,
+  User as UserIcon,
+  ShieldCheck,
+  Bell,
+  Database,
+  Ban,
+  Download,
+  MapPin,
 } from "lucide-react";
 import { useUser } from "@/lib/use-auth";
 import { deleteMyAccount } from "@/lib/admin-users.functions";
@@ -25,17 +28,15 @@ import {
   useMyProfile,
   useUpdateProfile,
   uploadAvatar,
+  exportMyData,
   POZNAN_DISTRICTS,
   type Profile,
 } from "@/lib/profile-api";
 import { useUserRanks } from "@/lib/ranks-api";
-import { useMyFriendships } from "@/lib/friends-api";
-import { useMyFavoritePlaces } from "@/lib/favorites-api";
-import { useUserVisitedPlaces } from "@/lib/visits-api";
+import { useMyFriendships, useBlockedUsers, useUnblockUser } from "@/lib/friends-api";
+import { NOTIFICATION_TYPES, type NotificationType } from "@/lib/notifications-api";
 import { RankBadge } from "@/components/RankBadge";
 import { UserAvatar } from "@/components/UserAvatar";
-import { PlaceListGrid } from "@/components/VisitStatus";
-import { CollapsiblePlaceList } from "@/components/CollapsiblePlaceList";
 import { CUISINES } from "@/data/places";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -43,15 +44,31 @@ import { isVipActive, VIP_NICK_COLORS, VipBadge } from "@/components/VipBadge";
 import { passwordStrengthError } from "@/lib/password";
 
 export const Route = createFileRoute("/_authenticated/profile")({
-  head: () => ({ meta: [{ title: "Mój profil - poŻeramy" }] }),
+  head: () => ({ meta: [{ title: "Ustawienia - poŻeramy" }] }),
   component: ProfilePage,
 });
+
+const TABS = [
+  { key: "profil", label: "Profil", icon: UserIcon },
+  { key: "prywatnosc", label: "Prywatność", icon: ShieldCheck },
+  { key: "powiadomienia", label: "Powiadomienia", icon: Bell },
+  { key: "konto", label: "Konto", icon: Database },
+] as const;
+type TabKey = (typeof TABS)[number]["key"];
+
+const NOTIF_LABELS: Record<NotificationType, { label: string; hint: string }> = {
+  friend_request: { label: "Zaproszenia do znajomych", hint: "Gdy ktoś chce Cię dodać." },
+  friend_accepted: { label: "Zaakceptowane zaproszenia", hint: "Gdy ktoś zaakceptuje Twoje zaproszenie." },
+  place_post: { label: "Nowości w ulubionych miejscach", hint: "Gdy ulubiony lokal doda coś nowego." },
+  achievement: { label: "Zdobyte odznaki", hint: "Gdy odblokujesz osiągnięcie." },
+};
 
 function ProfilePage() {
   const { user } = useUser();
   const { data: profile, isLoading } = useMyProfile();
   const updateProfile = useUpdateProfile();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [tab, setTab] = useState<TabKey>("profil");
 
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -92,7 +109,6 @@ function ProfilePage() {
 
   const { data: ranks } = useUserRanks(user?.id);
   const { data: friendships } = useMyFriendships();
-  const { data: favoritePlaces } = useMyFavoritePlaces();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pendingCount = (friendships ?? []).filter(
@@ -145,7 +161,6 @@ function ProfilePage() {
         bio: bio.trim() || null,
         district: district || null,
         favorite_cuisines: favCuisines,
-        is_public: isPublic,
         gender,
         instagram_url: instagramUrl.trim() || null,
         tiktok_url: tiktokUrl.trim() || null,
@@ -207,12 +222,10 @@ function ProfilePage() {
             <Skeleton className="h-9 w-32 rounded-full" />
             <Skeleton className="h-9 w-24 rounded-full" />
           </div>
-
           <Skeleton className="h-9 w-48 mb-2" />
           <Skeleton className="h-4 w-72 max-w-full mb-6" />
-
+          <Skeleton className="h-11 w-full rounded-full mb-6" />
           <div className="space-y-6">
-            {/* Avatar */}
             <section className="rounded-2xl bg-card border border-border p-5">
               <Skeleton className="h-3 w-32 mb-3" />
               <div className="flex items-center gap-4">
@@ -220,33 +233,10 @@ function ProfilePage() {
                 <Skeleton className="h-9 w-36 rounded-full" />
               </div>
             </section>
-
-            {/* Username + display name + bio + district */}
             <section className="rounded-2xl bg-card border border-border p-5 space-y-4">
               <Skeleton className="h-11 w-full rounded-xl" />
               <Skeleton className="h-11 w-full rounded-xl" />
               <Skeleton className="h-20 w-full rounded-xl" />
-              <Skeleton className="h-11 w-full rounded-xl" />
-            </section>
-
-            {/* Favorite cuisines */}
-            <section className="rounded-2xl bg-card border border-border p-5">
-              <Skeleton className="h-3 w-28 mb-3" />
-              <div className="flex flex-wrap gap-2">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <Skeleton key={i} className="h-8 w-20 rounded-full" />
-                ))}
-              </div>
-            </section>
-
-            {/* Place lists */}
-            <section className="rounded-2xl bg-card border border-border p-5 space-y-3">
-              <Skeleton className="h-6 w-40" />
-              <div className="grid grid-cols-6 sm:grid-cols-8 gap-2">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <Skeleton key={i} className="aspect-square rounded-xl" />
-                ))}
-              </div>
             </section>
           </div>
         </div>
@@ -255,7 +245,7 @@ function ProfilePage() {
   }
 
   return (
-    <main className="min-h-dvh bg-background py-6 sm:py-10 px-3 sm:px-4">
+    <main id="main-content" className="min-h-dvh bg-background py-6 sm:py-10 px-3 sm:px-4">
       <div className="mx-auto max-w-2xl">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
           <BackButton to="/" label="Strona główna" />
@@ -277,298 +267,366 @@ function ProfilePage() {
           </div>
         </div>
 
-        <h1 className="font-display text-3xl sm:text-4xl mb-2">Mój profil</h1>
-        <p className="text-muted-foreground mb-4 text-sm">
-          Skonfiguruj jak inni poŻeracze widzą Twój profil.
-        </p>
+        <div className="flex items-center gap-3 mb-2">
+          <UserAvatar
+            avatarUrl={avatarPath}
+            avatarSource={profile?.avatar_source}
+            displayName={displayName || profile?.display_name}
+            username={username || profile?.username}
+            gender={gender}
+            size={48}
+          />
+          <div className="min-w-0">
+            <h1 className="font-display text-2xl sm:text-3xl leading-tight truncate">
+              {displayName || profile?.display_name || `@${username || profile?.username}`}
+            </h1>
+            <p className="text-sm text-muted-foreground truncate">
+              @{username || profile?.username}
+            </p>
+          </div>
+        </div>
 
         {ranks && ranks.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-6">
+          <div className="flex flex-wrap gap-1.5 mb-4">
             {ranks.map((r) => (
               <RankBadge key={r.id} rank={r} />
             ))}
           </div>
         )}
 
-        <form onSubmit={handleSave} className="space-y-6">
-          {/* Avatar */}
-          <section className="rounded-2xl bg-card border border-border p-5">
-            <label className="block text-xs uppercase tracking-wider font-semibold mb-3">
-              Zdjęcie profilowe
-            </label>
-            <div className="flex items-center gap-4">
-              <UserAvatar
-                avatarUrl={avatarPath}
-                avatarSource={profile?.avatar_source}
-                displayName={displayName || profile?.display_name}
-                username={username || profile?.username}
-                gender={gender}
-                size={80}
-              />
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarChange}
-                className="hidden"
-              />
-              <div>
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  disabled={uploading}
-                  className="inline-flex items-center gap-2 rounded-full bg-navy text-cream px-4 py-2 text-sm font-semibold hover:bg-tomato transition disabled:opacity-50"
-                >
-                  {uploading ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <Upload size={14} />
-                  )}
-                  {uploading ? "Wgrywam..." : avatarPath ? "Zmień zdjęcie" : "Wgraj zdjęcie"}
-                </button>
-                {profile?.avatar_source === "google" && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Używasz zdjęcia z Google. Wgranie nowego zastąpi je.
-                  </p>
-                )}
-                {!avatarPath && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Bez zdjęcia pokazujemy inicjały na kolorowym tle.
-                  </p>
-                )}
-              </div>
-            </div>
-          </section>
+        {profile?.username && (
+          <Link
+            to="/u/$username"
+            params={{ username: profile.username }}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-tomato hover:underline mb-6"
+          >
+            Zobacz publiczny profil →
+          </Link>
+        )}
 
-          {profile && isVipActive(profile) && <VipNickColorSection profile={profile} />}
-
-          {/* Username + display name */}
-          <section className="rounded-2xl bg-card border border-border p-5 space-y-4">
-            <div>
-              <label className="block text-xs uppercase tracking-wider font-semibold mb-1.5">
-                Nick (@handle) *
-              </label>
-              <div className="flex items-center rounded-xl border-2 border-border focus-within:border-tomato">
-                <span className="pl-3 text-muted-foreground">@</span>
-                <input
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase())}
-                  placeholder="np. ania_pizza"
-                  className="flex-1 px-2 py-2.5 bg-transparent outline-none"
-                  maxLength={20}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                3-20 znaków: małe litery, cyfry, podkreślnik.
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-xs uppercase tracking-wider font-semibold mb-1.5">
-                Imię / nazwa wyświetlana
-              </label>
-              <input
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="np. Ania K."
-                className="w-full rounded-xl border-2 border-border px-4 py-2.5 outline-none focus:border-tomato"
-                maxLength={80}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs uppercase tracking-wider font-semibold mb-1.5">
-                Bio
-              </label>
-              <textarea
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="Co lubisz jeść?"
-                rows={3}
-                maxLength={500}
-                className="w-full rounded-xl border-2 border-border px-4 py-2.5 outline-none focus:border-tomato resize-none"
-              />
-              <p className="text-xs text-muted-foreground mt-1">{bio.length}/500</p>
-            </div>
-
-            <div>
-              <label className="block text-xs uppercase tracking-wider font-semibold mb-1.5">
-                Dzielnica
-              </label>
-              <select
-                value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-                className="w-full rounded-xl border-2 border-border px-4 py-2.5 outline-none focus:border-tomato bg-background"
+        <div
+          role="tablist"
+          className="mb-6 grid grid-cols-4 gap-1 rounded-full border border-border bg-card p-1"
+        >
+          {TABS.map((t) => {
+            const Icon = t.icon;
+            const active = tab === t.key;
+            return (
+              <button
+                key={t.key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setTab(t.key)}
+                className={`flex flex-col items-center justify-center gap-1 rounded-full px-1 py-2 text-[11px] font-semibold transition sm:flex-row sm:text-xs ${
+                  active
+                    ? "bg-navy text-cream"
+                    : "text-muted-foreground hover:text-foreground hover:bg-background"
+                }`}
               >
-                <option value=""> - wybierz - </option>
-                {POZNAN_DISTRICTS.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </section>
+                <Icon size={14} />
+                <span className="truncate">{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
 
-          {/* Favorite cuisines */}
-          <section className="rounded-2xl bg-card border border-border p-5">
-            <label className="block text-xs uppercase tracking-wider font-semibold mb-3">
-              Ulubione kuchnie
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {CUISINES.map((c) => {
-                const active = favCuisines.includes(c);
-                return (
+        {tab === "profil" && (
+          <form onSubmit={handleSave} className="space-y-6">
+            <section className="rounded-2xl bg-card border border-border p-5">
+              <label className="block text-xs uppercase tracking-wider font-semibold mb-3">
+                Zdjęcie profilowe
+              </label>
+              <div className="flex items-center gap-4">
+                <UserAvatar
+                  avatarUrl={avatarPath}
+                  avatarSource={profile?.avatar_source}
+                  displayName={displayName || profile?.display_name}
+                  username={username || profile?.username}
+                  gender={gender}
+                  size={80}
+                />
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+                <div>
                   <button
-                    key={c}
                     type="button"
-                    onClick={() => toggleCuisine(c)}
-                    className={`chip transition ${
-                      active
-                        ? "bg-tomato text-cream"
-                        : "bg-background border border-border hover:border-tomato"
-                    }`}
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading}
+                    className="inline-flex items-center gap-2 rounded-full bg-navy text-cream px-4 py-2 text-sm font-semibold hover:bg-tomato transition disabled:opacity-50"
                   >
-                    {c}
+                    {uploading ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Upload size={14} />
+                    )}
+                    {uploading ? "Wgrywam..." : avatarPath ? "Zmień zdjęcie" : "Wgraj zdjęcie"}
                   </button>
-                );
-              })}
-            </div>
-          </section>
+                  {profile?.avatar_source === "google" && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Używasz zdjęcia z Google. Wgranie nowego zastąpi je.
+                    </p>
+                  )}
+                  {!avatarPath && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Bez zdjęcia pokazujemy inicjały na kolorowym tle.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
 
-          {/* Socials */}
-          <section className="rounded-2xl bg-card border border-border p-5">
-            <label className="block text-xs uppercase tracking-wider font-semibold mb-3">
-              Moje social media
-            </label>
-            <div className="grid sm:grid-cols-2 gap-3">
-              <SocialInput
-                label="Instagram"
-                value={instagramUrl}
-                onChange={setInstagramUrl}
-                placeholder="https://instagram.com/twoj-nick"
-              />
-              <SocialInput
-                label="TikTok"
-                value={tiktokUrl}
-                onChange={setTiktokUrl}
-                placeholder="https://tiktok.com/@twoj-nick"
-              />
-              <SocialInput
-                label="YouTube"
-                value={youtubeUrl}
-                onChange={setYoutubeUrl}
-                placeholder="https://youtube.com/@twoj-kanal"
-              />
-              <SocialInput
-                label="Facebook"
-                value={facebookUrl}
-                onChange={setFacebookUrl}
-                placeholder="https://facebook.com/twoj-profil"
-              />
-              <SocialInput
-                label="X (Twitter)"
-                value={xUrl}
-                onChange={setXUrl}
-                placeholder="https://x.com/twoj-nick"
-              />
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-2">
-              Pełne URL-e. Linki pojawią się na Twoim publicznym profilu.
-            </p>
-          </section>
+            {profile && isVipActive(profile) && <VipNickColorSection profile={profile} />}
 
-          {/* Place lists */}
-          <MyPlaceLists />
-
-          {/* Default avatar */}
-          <section className="rounded-2xl bg-card border border-border p-5">
-            <p className="font-semibold mb-1">Domyślny awatar</p>
-            <p className="text-xs text-muted-foreground mb-3">
-              Dobiera kolor awatara, dopóki nie wgrasz własnego zdjęcia.
-            </p>
-            <div className="flex gap-2">
-              {([
-                ["M", "Mężczyzna"],
-                ["K", "Kobieta"],
-                [null, "Wolę nie podawać"],
-              ] as const).map(([value, label]) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => setGender(value)}
-                  aria-pressed={gender === value}
-                  className={`flex-1 rounded-xl border-2 px-2 py-2 text-xs font-semibold transition ${
-                    gender === value ? "border-navy bg-navy text-cream" : "border-border bg-background text-foreground hover:border-tomato"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Privacy */}
-          <section className="rounded-2xl bg-card border border-border p-5">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isPublic}
-                onChange={(e) => setIsPublic(e.target.checked)}
-                className="mt-1"
-              />
-              <div className="flex-1">
-                <div className="font-semibold flex items-center gap-2">
-                  {isPublic ? <Eye size={14} /> : <EyeOff size={14} />}
-                  Profil publiczny
+            <section className="rounded-2xl bg-card border border-border p-5 space-y-4">
+              <div>
+                <label className="block text-xs uppercase tracking-wider font-semibold mb-1.5">
+                  Nick (@handle) *
+                </label>
+                <div className="flex items-center rounded-xl border-2 border-border focus-within:border-tomato">
+                  <span className="pl-3 text-muted-foreground">@</span>
+                  <input
+                    required
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                    placeholder="np. ania_pizza"
+                    className="flex-1 px-2 py-2.5 bg-transparent outline-none"
+                    maxLength={20}
+                  />
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {isPublic
-                    ? "Każdy może wyświetlić Twój profil i wall."
-                    : "Tylko Twoi znajomi widzą wall i listy miejsc."}
+                  3-20 znaków: małe litery, cyfry, podkreślnik.
                 </p>
               </div>
-            </label>
-          </section>
 
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="submit"
-              disabled={updateProfile.isPending}
-              className="inline-flex items-center gap-2 rounded-full bg-tomato text-cream px-6 py-3 font-semibold hover:scale-[1.02] transition disabled:opacity-50"
-            >
-              {updateProfile.isPending ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <Save size={16} />
-              )}
-              Zapisz profil
-            </button>
-            {profile?.username && (
+              <div>
+                <label className="block text-xs uppercase tracking-wider font-semibold mb-1.5">
+                  Imię / nazwa wyświetlana
+                </label>
+                <input
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="np. Ania K."
+                  className="w-full rounded-xl border-2 border-border px-4 py-2.5 outline-none focus:border-tomato"
+                  maxLength={80}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wider font-semibold mb-1.5">
+                  Bio
+                </label>
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Co lubisz jeść?"
+                  rows={3}
+                  maxLength={500}
+                  className="w-full rounded-xl border-2 border-border px-4 py-2.5 outline-none focus:border-tomato resize-none"
+                />
+                <p className="text-xs text-muted-foreground mt-1">{bio.length}/500</p>
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wider font-semibold mb-1.5">
+                  Dzielnica
+                </label>
+                <select
+                  value={district}
+                  onChange={(e) => setDistrict(e.target.value)}
+                  className="w-full rounded-xl border-2 border-border px-4 py-2.5 outline-none focus:border-tomato bg-background"
+                >
+                  <option value=""> - wybierz - </option>
+                  {POZNAN_DISTRICTS.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </section>
+
+            <section className="rounded-2xl bg-card border border-border p-5">
+              <label className="block text-xs uppercase tracking-wider font-semibold mb-3">
+                Ulubione kuchnie
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {CUISINES.map((c) => {
+                  const active = favCuisines.includes(c);
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => toggleCuisine(c)}
+                      className={`chip transition ${
+                        active
+                          ? "bg-tomato text-cream"
+                          : "bg-background border border-border hover:border-tomato"
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="rounded-2xl bg-card border border-border p-5">
+              <label className="block text-xs uppercase tracking-wider font-semibold mb-3">
+                Moje social media
+              </label>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <SocialInput
+                  label="Instagram"
+                  value={instagramUrl}
+                  onChange={setInstagramUrl}
+                  placeholder="https://instagram.com/twoj-nick"
+                />
+                <SocialInput
+                  label="TikTok"
+                  value={tiktokUrl}
+                  onChange={setTiktokUrl}
+                  placeholder="https://tiktok.com/@twoj-nick"
+                />
+                <SocialInput
+                  label="YouTube"
+                  value={youtubeUrl}
+                  onChange={setYoutubeUrl}
+                  placeholder="https://youtube.com/@twoj-kanal"
+                />
+                <SocialInput
+                  label="Facebook"
+                  value={facebookUrl}
+                  onChange={setFacebookUrl}
+                  placeholder="https://facebook.com/twoj-profil"
+                />
+                <SocialInput
+                  label="X (Twitter)"
+                  value={xUrl}
+                  onChange={setXUrl}
+                  placeholder="https://x.com/twoj-nick"
+                />
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-2">
+                Pełne URL-e. Linki pojawią się na Twoim publicznym profilu.
+              </p>
+            </section>
+
+            <section className="rounded-2xl bg-card border border-border p-5">
+              <p className="font-semibold mb-1">Domyślny awatar</p>
+              <p className="text-xs text-muted-foreground mb-3">
+                Dobiera kolor awatara, dopóki nie wgrasz własnego zdjęcia.
+              </p>
+              <div className="flex gap-2">
+                {([
+                  ["M", "Mężczyzna"],
+                  ["K", "Kobieta"],
+                  [null, "Wolę nie podawać"],
+                ] as const).map(([value, label]) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => setGender(value)}
+                    aria-pressed={gender === value}
+                    className={`flex-1 rounded-xl border-2 px-2 py-2 text-xs font-semibold transition ${
+                      gender === value
+                        ? "border-navy bg-navy text-cream"
+                        : "border-border bg-background text-foreground hover:border-tomato"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-2xl bg-card border border-border p-4 flex items-center gap-3">
+              <MapPin size={16} className="text-muted-foreground shrink-0" />
+              <p className="text-xs text-muted-foreground flex-1">
+                Listy „Chcę odwiedzić”, „Odwiedziłem” i „Ulubione” przeniosły się do Moich miejsc.
+              </p>
               <Link
-                to="/u/$username"
-                params={{ username: profile.username }}
-                className="inline-flex items-center gap-2 rounded-full bg-card border border-border px-6 py-3 font-semibold hover:border-tomato transition"
+                to="/moje-miejsca"
+                className="chip bg-navy text-cream hover:bg-tomato shrink-0"
               >
-                Zobacz publiczny profil
+                Otwórz
               </Link>
-            )}
-          </div>
-          {updateProfile.isError && (
-            <p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-xl px-4 py-2">
-              {(updateProfile.error as Error).message}
-            </p>
-          )}
-          {updateProfile.isSuccess && !updateProfile.isPending && (
-            <p className="text-sm text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300/40 rounded-xl px-4 py-2">
-              ✓ Profil zapisany pomyślnie.
-            </p>
-          )}
-        </form>
+            </section>
 
-        <ChangePasswordSection />
-        <DeleteAccountSection />
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="submit"
+                disabled={updateProfile.isPending}
+                className="inline-flex items-center gap-2 rounded-full bg-tomato text-cream px-6 py-3 font-semibold hover:scale-[1.02] transition disabled:opacity-50"
+              >
+                {updateProfile.isPending ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Save size={16} />
+                )}
+                Zapisz profil
+              </button>
+            </div>
+            {updateProfile.isError && (
+              <p className="text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-xl px-4 py-2">
+                {(updateProfile.error as Error).message}
+              </p>
+            )}
+          </form>
+        )}
+
+        {tab === "prywatnosc" && (
+          <div className="space-y-6">
+            <section className="rounded-2xl bg-card border border-border p-5">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isPublic}
+                  onChange={async (e) => {
+                    const value = e.target.checked;
+                    setIsPublic(value);
+                    try {
+                      await updateProfile.mutateAsync({ is_public: value });
+                      toast.success(value ? "Profil jest teraz publiczny" : "Profil jest teraz prywatny");
+                    } catch (err) {
+                      setIsPublic(!value);
+                      toast.error(err instanceof Error ? err.message : "Nie udało się zapisać");
+                    }
+                  }}
+                  className="mt-1"
+                />
+                <div className="flex-1">
+                  <div className="font-semibold flex items-center gap-2">
+                    {isPublic ? <Eye size={14} /> : <EyeOff size={14} />}
+                    Profil publiczny
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {isPublic
+                      ? "Każdy może wyświetlić Twój profil i wall."
+                      : "Tylko Twoi znajomi widzą wall i listy miejsc."}
+                  </p>
+                </div>
+              </label>
+            </section>
+
+            <ChangePasswordSection />
+            <BlockedUsersSection />
+          </div>
+        )}
+
+        {tab === "powiadomienia" && <NotificationsSection profile={profile ?? null} />}
+
+        {tab === "konto" && (
+          <div className="space-y-6">
+            <DataExportSection />
+            <DeleteAccountSection />
+          </div>
+        )}
       </div>
     </main>
   );
@@ -598,57 +656,6 @@ function SocialInput({
         className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-tomato outline-none"
       />
     </label>
-  );
-}
-
-function MyPlaceLists() {
-  const { user } = useUser();
-  const want = useUserVisitedPlaces(user?.id, "want");
-  const visited = useUserVisitedPlaces(user?.id, "visited");
-  const favorites = useMyFavoritePlaces();
-
-  return (
-    <section className="rounded-2xl bg-card border border-border p-5 space-y-8">
-      <CollapsiblePlaceList
-        icon={<Bookmark size={20} className="text-amber-500" />}
-        title="Chcę odwiedzić"
-        places={want.data}
-        loading={want.isLoading}
-        emptyText="Zapisuj knajpy, do których chcesz się wybrać - pojawią się tutaj."
-        variant="icons"
-        isMe={true}
-        emptyIcon={<Bookmark size={24} className="text-amber-500" />}
-        emptyTitle="Chcę odwiedzić"
-        emptyTip="Zapisuj knajpy, do których chcesz się wybrać - pojawią się tutaj."
-        emptyCta={{ to: "/", label: "Przeglądaj lokale" }}
-      />
-      <CollapsiblePlaceList
-        icon={<CheckCircle2 size={20} className="text-emerald-600" />}
-        title="Odwiedziłem"
-        places={visited.data}
-        loading={visited.isLoading}
-        emptyText="Oznaczaj knajpy, w których byłeś - zbierzesz tu swoją mapę PoŻerania."
-        variant="icons"
-        isMe={true}
-        emptyIcon={<CheckCircle2 size={24} className="text-emerald-600" />}
-        emptyTitle="Odwiedziłem"
-        emptyTip="Oznaczaj knajpy, w których byłeś - zbierzesz tu swoją mapę PoŻerania."
-        emptyCta={{ to: "/", label: "Przeglądaj lokale" }}
-      />
-      <CollapsiblePlaceList
-        icon={<Heart size={20} className="text-tomato fill-tomato" />}
-        title="Ulubione"
-        places={favorites.data}
-        loading={favorites.isLoading}
-        emptyText="Klikaj serduszko na knajpie, do której chcesz wracać."
-        variant="icons"
-        isMe={true}
-        emptyIcon={<Heart size={24} className="text-tomato fill-tomato" />}
-        emptyTitle="Ulubione"
-        emptyTip="Klikaj serduszko na knajpie, do której chcesz wracać."
-        emptyCta={{ to: "/", label: "Przeglądaj lokale" }}
-      />
-    </section>
   );
 }
 
@@ -701,7 +708,7 @@ function ChangePasswordSection() {
   }
 
   return (
-    <section className="mt-8 rounded-2xl bg-card border border-border p-5">
+    <section className="rounded-2xl bg-card border border-border p-5">
       <div className="flex items-center gap-2 mb-1">
         <KeyRound size={18} className="text-navy" />
         <h2 className="font-display text-lg">Hasło</h2>
@@ -771,6 +778,184 @@ function ChangePasswordSection() {
   );
 }
 
+function BlockedUsersSection() {
+  const { data: blocked, isLoading } = useBlockedUsers();
+  const unblock = useUnblockUser();
+
+  return (
+    <section className="rounded-2xl bg-card border border-border p-5">
+      <div className="flex items-center gap-2 mb-1">
+        <Ban size={18} className="text-navy" />
+        <h2 className="font-display text-lg">Zablokowani</h2>
+      </div>
+      <p className="text-sm text-muted-foreground mb-3">
+        Zablokowane osoby nie mogą Cię znaleźć ani zapraszać do znajomych.
+      </p>
+      {isLoading ? (
+        <Skeleton className="h-12 w-full rounded-xl" />
+      ) : !blocked || blocked.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nikogo nie masz zablokowanego.</p>
+      ) : (
+        <ul className="space-y-2">
+          {blocked.map((p) => (
+            <li
+              key={p.id}
+              className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <UserAvatar
+                  avatarUrl={p.avatar_url}
+                  avatarSource={p.avatar_source}
+                  displayName={p.display_name}
+                  username={p.username}
+                  size={32}
+                />
+                <span className="text-sm font-semibold truncate">
+                  {p.display_name || `@${p.username}`}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  toast.promise(unblock.mutateAsync(p.id), {
+                    loading: "Odblokowywanie…",
+                    success: "Odblokowano użytkownika",
+                    error: "Nie udało się odblokować",
+                  })
+                }
+                disabled={unblock.isPending}
+                className="shrink-0 rounded-full border border-border px-3 py-1.5 text-xs font-semibold hover:border-tomato hover:text-tomato disabled:opacity-50"
+              >
+                Odblokuj
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function NotificationsSection({ profile }: { profile: Profile | null }) {
+  const updateProfile = useUpdateProfile();
+  const prefs = profile?.notification_prefs;
+
+  async function toggle(type: NotificationType, value: boolean) {
+    try {
+      await updateProfile.mutateAsync({
+        notification_prefs: { ...(prefs ?? {}), [type]: value },
+      });
+      toast.success(value ? "Włączono" : "Wyłączono");
+    } catch (err) {
+      // Supabase's PostgrestError is a plain object, not an Error instance -
+      // read .message/.code directly rather than gating on `instanceof Error`.
+      const e = err as { message?: string; code?: string };
+      const msg = e?.message ?? "";
+      // A missing column shows up as PostgREST's "unknown column" 42703 -
+      // this feature ships its own migration; surface a clear message
+      // instead of a raw Postgres error if it hasn't been applied yet.
+      if (e?.code === "PGRST204" || msg.includes("column") || msg.includes("schema cache")) {
+        toast.error("Ta funkcja jeszcze nie jest w pełni skonfigurowana po stronie bazy danych.");
+      } else {
+        toast.error(msg || "Nie udało się zapisać ustawienia");
+      }
+    }
+  }
+
+  return (
+    <section className="rounded-2xl bg-card border border-border p-5">
+      <div className="flex items-center gap-2 mb-1">
+        <Bell size={18} className="text-navy" />
+        <h2 className="font-display text-lg">Powiadomienia</h2>
+      </div>
+      <p className="text-sm text-muted-foreground mb-4">
+        Wybierz, o czym chcesz dostawać powiadomienia w dzwoneczku.
+      </p>
+      <ul className="space-y-1">
+        {NOTIFICATION_TYPES.map((type) => {
+          const enabled = prefs?.[type] ?? true;
+          return (
+            <li
+              key={type}
+              className="flex items-center justify-between gap-3 py-2.5 border-b border-border last:border-0"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">{NOTIF_LABELS[type].label}</p>
+                <p className="text-xs text-muted-foreground">{NOTIF_LABELS[type].hint}</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={enabled}
+                onClick={() => toggle(type, !enabled)}
+                disabled={updateProfile.isPending}
+                className={`shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition disabled:opacity-50 ${
+                  enabled ? "bg-tomato" : "bg-border"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4.5 w-4.5 transform rounded-full bg-white shadow transition ${
+                    enabled ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+function DataExportSection() {
+  const { user } = useUser();
+  const [busy, setBusy] = useState(false);
+
+  async function handleExport() {
+    if (!user) return;
+    setBusy(true);
+    try {
+      const data = await exportMyData(user.id);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `pozeramy-moje-dane-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Pobrano Twoje dane");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nie udało się pobrać danych");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="rounded-2xl bg-card border border-border p-5">
+      <div className="flex items-center gap-2 mb-1">
+        <Download size={18} className="text-navy" />
+        <h2 className="font-display text-lg">Eksport danych</h2>
+      </div>
+      <p className="text-sm text-muted-foreground mb-3">
+        Pobierz plik JSON ze swoim profilem, recenzjami, ulubionymi, odwiedzonymi miejscami i
+        znajomościami.
+      </p>
+      <button
+        type="button"
+        onClick={handleExport}
+        disabled={busy}
+        className="inline-flex items-center gap-2 rounded-full border-2 border-navy text-navy px-4 py-2 text-sm font-semibold hover:bg-navy/5 disabled:opacity-50"
+      >
+        {busy ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+        Pobierz moje dane
+      </button>
+    </section>
+  );
+}
+
 function DeleteAccountSection() {
   const [open, setOpen] = useState(false);
   const [confirmText, setConfirmText] = useState("");
@@ -795,7 +980,7 @@ function DeleteAccountSection() {
   }
 
   return (
-    <section className="mt-8 rounded-2xl border-2 border-destructive/30 bg-destructive/5 p-5">
+    <section className="rounded-2xl border-2 border-destructive/30 bg-destructive/5 p-5">
       <div className="flex items-start gap-3">
         <TriangleAlert className="text-destructive shrink-0 mt-0.5" size={18} />
         <div className="flex-1 min-w-0">

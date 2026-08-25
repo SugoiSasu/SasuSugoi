@@ -1718,6 +1718,7 @@ export type Database = {
           is_beta_tester: boolean
           is_public: boolean
           is_vip: boolean
+          notification_prefs: Json
           onboarding_seen_at: string | null
           points_total: number
           returned_after_break_at: string | null
@@ -1745,6 +1746,7 @@ export type Database = {
           is_beta_tester?: boolean
           is_public?: boolean
           is_vip?: boolean
+          notification_prefs?: Json
           onboarding_seen_at?: string | null
           points_total?: number
           returned_after_break_at?: string | null
@@ -1772,6 +1774,7 @@ export type Database = {
           is_beta_tester?: boolean
           is_public?: boolean
           is_vip?: boolean
+          notification_prefs?: Json
           onboarding_seen_at?: string | null
           points_total?: number
           returned_after_break_at?: string | null
