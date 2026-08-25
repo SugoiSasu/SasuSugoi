@@ -179,32 +179,47 @@ function AdminShell() {
           pathname={pathname}
           navigate={navigate}
         />
-        <nav className="hidden sm:flex items-start gap-0 overflow-x-auto border-t border-border pt-2">
-          {NAV_GROUPS.map((group, gi) => {
-            const items = group.items.filter((it) => !it.superOnly || isSuper);
-            if (items.length === 0) return null;
-            return (
-              <div
-                key={group.title}
-                className={`flex shrink-0 flex-col gap-1 ${gi > 0 ? "ml-3 border-l border-border pl-3" : ""}`}
-              >
-                <span className="px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
-                  {group.title}
-                </span>
-                <div className="flex shrink-0">
-                  {items.map((it) => (
-                    <AdminTab
-                      key={it.to}
-                      to={it.to}
-                      icon={it.icon}
-                      label={it.label}
-                      pathname={pathname}
-                    />
-                  ))}
+        {/* The nav used to sit flush at x=0 while the logo row above and the
+            page content below both live in a centered max-w-6xl column - at
+            1440 it started 161px to their left, which is what read as "off".
+            It can't just join that column: the full tab row is ~1205px wide
+            and the column's inner width is only ~1104, so it would always
+            scroll. Centering on the full width instead.
+
+            The centering is `mx-auto` on an inner `w-max` block rather than
+            `justify-center` on the scroll container: with justify-center,
+            content wider than the viewport overflows in BOTH directions and
+            the left-hand tabs become unreachable by scrolling. Auto margins
+            collapse to 0 in that case, so narrow screens still start at the
+            first tab and scroll normally. */}
+        <nav className="hidden sm:flex overflow-x-auto border-t border-border pt-2">
+          <div className="mx-auto flex w-max items-start px-4 sm:px-6">
+            {NAV_GROUPS.map((group, gi) => {
+              const items = group.items.filter((it) => !it.superOnly || isSuper);
+              if (items.length === 0) return null;
+              return (
+                <div
+                  key={group.title}
+                  className={`flex shrink-0 flex-col gap-1 ${gi > 0 ? "ml-3 border-l border-border pl-3" : ""}`}
+                >
+                  <span className="px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                    {group.title}
+                  </span>
+                  <div className="flex shrink-0">
+                    {items.map((it) => (
+                      <AdminTab
+                        key={it.to}
+                        to={it.to}
+                        icon={it.icon}
+                        label={it.label}
+                        pathname={pathname}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </nav>
       </header>
       <main id="main-content" className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
