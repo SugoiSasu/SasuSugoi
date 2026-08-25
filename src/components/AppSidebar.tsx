@@ -40,11 +40,14 @@ const coreItems = [
   { to: "/moje-miejsca", label: "Moje miejsca", icon: Bookmark },
 ] as const;
 
+// exact:true on all of these - without it, /u fuzzy-matches /u/$username
+// (the "Profil" link below), so Ranking and Profil both highlighted at
+// once while viewing your own profile - reported live 2026-08-25.
 const socialItems = [
-  { to: "/friends", label: "Znajomi", icon: Users },
-  { to: "/osiagniecia", label: "Osiągnięcia", icon: Trophy },
-  { to: "/wall", label: "Pożeralnia", icon: Newspaper },
-  { to: "/u", label: "Ranking", icon: Award },
+  { to: "/friends", label: "Znajomi", icon: Users, exact: true },
+  { to: "/osiagniecia", label: "Osiągnięcia", icon: Trophy, exact: true },
+  { to: "/wall", label: "Pożeralnia", icon: Newspaper, exact: true },
+  { to: "/u", label: "Ranking", icon: Award, exact: true },
 ] as const;
 
 const linkBase =
@@ -183,8 +186,14 @@ export function AppSidebar() {
           </div>
 
           <nav className={sectionPanel}>
-            {socialItems.map(({ to, label, icon: Icon }) => (
-              <Link key={to} to={to} className={linkBase} activeProps={activeCls}>
+            {socialItems.map(({ to, label, icon: Icon, exact }) => (
+              <Link
+                key={to}
+                to={to}
+                activeOptions={{ exact }}
+                className={linkBase}
+                activeProps={activeCls}
+              >
                 <Icon size={18} className={iconCls} />
                 <span className="truncate">{label}</span>
               </Link>
