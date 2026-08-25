@@ -26,6 +26,7 @@ import { EditableImageButton } from "@/components/EditableImageButton";
 import { Bell, BellOff, ShieldCheck, Trophy, Settings2 } from "lucide-react";
 import { usePlaceAwardWins } from "@/lib/awards-api";
 import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
+import { ShareModal } from "@/components/ShareModal";
 import { VisitStatusButton } from "@/components/VisitStatus";
 import { InstagramReelPoster } from "@/components/InstagramReelEmbed";
 import sadPizza from "@/assets/brand/sad-pizza-404.png";
@@ -311,6 +312,7 @@ function PlaceProfile() {
   const { data: isAdmin } = useIsAdmin();
   const isSuper = useIsSuperAdmin();
   const canEditImages = !!isOwnerOfPlace || !!isAdmin;
+  const [shareOpen, setShareOpen] = useState(false);
 
   // The mobile sticky action bar (Nawiguj/ulubione/udostępnij) floats above
   // the bottom tab bar on this page only - push the global scroll-to-top
@@ -334,8 +336,6 @@ function PlaceProfile() {
   const openInfo = isOpenNow(place.opening_hours);
   const showPromo = !!place.promo_active && !!place.promo_label?.trim();
 
-  const badges = [place.cuisine, place.district].filter(Boolean).join(" · ");
-
   async function copyAddress() {
     try {
       await navigator.clipboard.writeText(place!.address);
@@ -343,23 +343,9 @@ function PlaceProfile() {
     } catch { toast.error("Nie udało się skopiować"); }
   }
 
-  async function share() {
-    const url = window.location.href;
-    trackEvent("share", {
-      method: typeof navigator.share === "function" ? "native" : "copy_link",
-      content_type: "place",
-      item_id: place!.id,
-    });
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: place!.name, url });
-      } catch {
-        // user cancelled the native share sheet - not an error
-      }
-      return;
-    }
-    try { await navigator.clipboard.writeText(url); toast.success("Skopiowano link"); }
-    catch { toast.error("Nie udało się skopiować"); }
+  function share() {
+    trackEvent("share", { method: "share_modal", content_type: "place", item_id: place!.id });
+    setShareOpen(true);
   }
 
   return (
@@ -439,8 +425,13 @@ function PlaceProfile() {
                 <SmartText as="h1" className="font-persona text-3xl sm:text-5xl text-balance leading-tight mb-2">{place.name}</SmartText>
                 <div className="flex flex-wrap gap-2 items-center mb-2">
                   <span className="chip text-cream text-xs" style={{ backgroundColor: meta.color }}>
-                    {meta.emoji} {badges}
+                    {meta.emoji} {place.cuisine}
                   </span>
+                  {place.district && (
+                    <span className="chip bg-navy/10 text-navy text-xs inline-flex items-center gap-1">
+                      <MapPin size={11} /> {place.district}
+                    </span>
+                  )}
                   {verifiedOwner && (
                     <span className="chip bg-emerald-600 text-white text-xs inline-flex items-center gap-1" title="Profil zarządzany przez zweryfikowanego właściciela">
                       <ShieldCheck size={12} /> Zweryfikowany właściciel
@@ -672,6 +663,15 @@ function PlaceProfile() {
           </button>
         </div>
       </div>
+
+      <ShareModal
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        url={typeof window !== "undefined" ? window.location.href : ""}
+        title={place.name}
+        subtitle={`Podziel się ${place.name} ze znajomymi.`}
+        shareText={`Sprawdź ${place.name} na poŻeramy!`}
+      />
     </div>
 
   );
