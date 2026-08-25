@@ -488,7 +488,7 @@ function RankingSection() {
           {/* Podium - top 3 (only in points+all mode) */}
           {podium.length > 0 && (
             <ol
-              className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4"
+              className="grid grid-cols-3 gap-2 sm:gap-3 mb-4"
               aria-label="Top 3 użytkowników"
             >
               {podium.map((p, i) => (
@@ -559,11 +559,11 @@ function PodiumCard({ profile, place }: { profile: BrowseProfile; place: number 
       <Link
         to="/u/$username"
         params={{ username: profile.username ?? profile.id }}
-        className={`relative flex flex-col items-center text-center gap-2 rounded-2xl bg-card border border-border p-4 pt-7 hover:border-tomato transition ${styles.glow}`}
+        className={`relative flex flex-col items-center text-center gap-1 sm:gap-2 rounded-2xl bg-card border border-border p-2 pt-6 sm:p-4 sm:pt-7 hover:border-tomato transition ${styles.glow}`}
         aria-label={`${styles.label}: ${profile.display_name || profile.username || "użytkownik"}`}
       >
         <span
-          className={`absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ${styles.badge}`}
+          className={`absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-bold ${styles.badge}`}
         >
           {place === 1 && <Crown size={12} />} #{place}
         </span>
@@ -572,23 +572,33 @@ function PodiumCard({ profile, place }: { profile: BrowseProfile; place: number 
           avatarSource={profile.avatar_source}
           displayName={profile.display_name}
           username={profile.username}
+          size={place === 1 ? 56 : 44}
+          className={`${styles.ring} sm:hidden`}
+        />
+        <UserAvatar
+          avatarUrl={profile.avatar_url}
+          avatarSource={profile.avatar_source}
+          displayName={profile.display_name}
+          username={profile.username}
           size={place === 1 ? 72 : 56}
-          className={styles.ring}
+          className={`${styles.ring} hidden sm:block`}
         />
         <div className="min-w-0 w-full">
-          <div className="text-sm font-semibold truncate" style={vipNameStyle(profile)}>
+          <div className="text-xs sm:text-sm font-semibold truncate" style={vipNameStyle(profile)}>
             {profile.display_name || `@${profile.username ?? "user"}`}
           </div>
           {profile.username && profile.display_name && (
-            <div className="text-[11px] text-muted-foreground truncate">@{profile.username}</div>
+            <div className="hidden sm:block text-[11px] text-muted-foreground truncate">
+              @{profile.username}
+            </div>
           )}
         </div>
         <div>
-          <div className="font-display text-2xl leading-none text-tomato">
+          <div className="font-display text-base sm:text-2xl leading-none text-tomato">
             {profile.points_total}
           </div>
-          <div className="text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5">
-            pkt PoŻarcia
+          <div className="text-[8px] sm:text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5">
+            pkt
           </div>
         </div>
       </Link>
