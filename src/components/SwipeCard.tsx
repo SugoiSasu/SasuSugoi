@@ -11,10 +11,17 @@ const VELOCITY_THRESHOLD = 500;
 export function SwipeCard({
   place,
   isTop,
+  onSwipeCommit,
   onSwipe,
 }: {
   place: Place;
   isTop: boolean;
+  /** Fires the instant a drag passes the threshold - this is what actually
+   * writes the decision, so it can never be lost to the user navigating
+   * away before the (purely cosmetic) exit animation below finishes. */
+  onSwipeCommit: (direction: "left" | "right") => void;
+  /** Fires after the ~700ms fly-away animation completes - visual-only
+   * bookkeeping (removing the card from the stack, the emoji burst). */
   onSwipe: (direction: "left" | "right") => void;
 }) {
   const x = useMotionValue(0);
@@ -37,6 +44,7 @@ export function SwipeCard({
           Math.abs(info.velocity.x) > VELOCITY_THRESHOLD;
         if (passed) {
           const direction = info.offset.x > 0 ? "right" : "left";
+          onSwipeCommit(direction);
           animate(x, direction === "right" ? 700 : -700, {
             type: "spring",
             stiffness: 250,

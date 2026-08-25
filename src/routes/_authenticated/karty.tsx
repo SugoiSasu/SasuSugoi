@@ -36,9 +36,15 @@ function KartyPage() {
   const stack = visible.slice(0, VISIBLE_STACK);
   const top = stack[0];
 
-  function handleSwipe(direction: "left" | "right", place: Place) {
-    setHiddenIds((prev) => new Set(prev).add(place.id));
-    setBurst({ id: Date.now(), type: direction === "right" ? "like" : "nope" });
+  // Fires the instant a drag passes the threshold - guarantees the write
+  // happens even if the user navigates away from /karty before the
+  // ~700ms fly-away animation below finishes. That animation's promise
+  // gates onSwipeEnd, not this: a component unmount mid-animation (a fast
+  // route change, or a backgrounded/throttled tab) can silently kill an
+  // in-flight animation's .then() callback, which is where this used to
+  // live - confirmed live that a swipe followed by an immediate navigate
+  // away dropped the write entirely with this in the animation callback.
+  function handleSwipeCommit(direction: "left" | "right", place: Place) {
     if (direction === "right") {
       toggleVisit.mutate(
         { placeId: place.id, status: "want", on: true },
@@ -54,6 +60,13 @@ function KartyPage() {
       trackEvent("karty_skip", { item_id: place.id });
       skipPlace.mutate(place.id);
     }
+  }
+
+  // Fires after the fly-away animation completes - purely visual
+  // bookkeeping (remove the card from the stack, show the emoji burst).
+  function handleSwipeEnd(direction: "left" | "right", place: Place) {
+    setHiddenIds((prev) => new Set(prev).add(place.id));
+    setBurst({ id: Date.now(), type: direction === "right" ? "like" : "nope" });
   }
 
   return (
@@ -101,7 +114,8 @@ function KartyPage() {
                     <SwipeCard
                       place={place}
                       isTop={idxFromTop === 0}
-                      onSwipe={(dir) => handleSwipe(dir, place)}
+                      onSwipeCommit={(dir) => handleSwipeCommit(dir, place)}
+                      onSwipe={(dir) => handleSwipeEnd(dir, place)}
                     />
                   </div>
                 );
@@ -122,7 +136,10 @@ function KartyPage() {
             <button
               type="button"
               aria-label="Pomiń"
-              onClick={() => handleSwipe("left", top)}
+              onClick={() => {
+                handleSwipeCommit("left", top);
+                handleSwipeEnd("left", top);
+              }}
               className="grid h-16 w-16 place-items-center rounded-full border-2 border-navy/15 bg-card shadow-md transition hover:-translate-y-0.5 hover:border-navy/40 hover:shadow-lg active:scale-95"
             >
               <NopeFace size={34} />
@@ -130,7 +147,10 @@ function KartyPage() {
             <button
               type="button"
               aria-label="Chcę odwiedzić"
-              onClick={() => handleSwipe("right", top)}
+              onClick={() => {
+                handleSwipeCommit("right", top);
+                handleSwipeEnd("right", top);
+              }}
               className="grid h-16 w-16 place-items-center rounded-full border-2 border-tomato/25 bg-card shadow-md transition hover:-translate-y-0.5 hover:border-tomato hover:shadow-lg active:scale-95"
             >
               <YummyFace size={34} />
