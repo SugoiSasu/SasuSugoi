@@ -140,7 +140,7 @@ function FriendsPage() {
         <header className="mb-6">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
-              <h1 className="font-display text-4xl mb-1">Znajomi</h1>
+              <h1 className="font-display text-4xl mb-1">Znajomi 👥</h1>
               <p className="text-muted-foreground text-sm">
                 Znajdź, zaproś i śledź znajomych foodies.
               </p>

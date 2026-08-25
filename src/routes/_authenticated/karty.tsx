@@ -75,7 +75,7 @@ function KartyPage() {
       className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 py-10"
     >
       <div className="mx-auto w-full max-w-md text-center">
-        <h1 className="font-display text-3xl font-extrabold sm:text-4xl">Karty</h1>
+        <h1 className="font-display text-3xl font-extrabold sm:text-4xl">Karty 🎴</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           Przesuń w prawo - trafi do „Chcę odwiedzić”. W lewo - pomiń, wróci za 5 dni.
         </p>

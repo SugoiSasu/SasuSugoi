@@ -82,7 +82,7 @@ function AchievementsPage() {
 
   return (
     <main id="main-content" className="mx-auto max-w-3xl px-4 py-6 sm:py-10 lg:max-w-6xl lg:px-6">
-      <h1 className="font-display text-2xl font-extrabold sm:text-3xl">Osiągnięcia</h1>
+      <h1 className="font-display text-2xl font-extrabold sm:text-3xl">Osiągnięcia 🏅</h1>
 
       <div className="lg:grid lg:grid-cols-[1.5fr_1fr] lg:items-start lg:gap-8">
       <div>

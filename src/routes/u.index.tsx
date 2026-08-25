@@ -171,7 +171,7 @@ function UsersBrowse() {
               </Link>
             )}
           </div>
-          <h1 className="font-display text-3xl sm:text-4xl leading-tight">Ranking poŻeraczy</h1>
+          <h1 className="font-display text-3xl sm:text-4xl leading-tight">Ranking poŻeraczy 🏆</h1>
           <p className="text-cream/80 text-sm mt-2 max-w-prose">
             Top pożeracze wg punktów poŻarcia, Twoi znajomi i wyszukiwanie po nicku - wszystko w
             jednym.
@@ -482,7 +482,7 @@ function RankingSection() {
         </div>
 
         {myProfile && scope === "all" && myRankQ.data && (
-          <div className="flex items-center gap-2 rounded-2xl border border-tomato/40 bg-tomato/10 px-3 py-2">
+          <div className="pz-fade-in flex items-center gap-2 rounded-2xl border border-tomato/40 bg-tomato/10 px-3 py-2">
             <span className="text-[10px] uppercase tracking-wider text-tomato font-semibold">
               Twoja pozycja
             </span>
@@ -547,7 +547,13 @@ function RankingSection() {
           {podium.length > 0 && (
             <ol className="grid grid-cols-3 gap-2 sm:gap-3 mb-4" aria-label="Top 3 użytkowników">
               {podium.map((p, i) => (
-                <PodiumCard key={p.id} profile={p} place={i + 1} isMe={p.id === user?.id} />
+                <PodiumCard
+                  key={p.id}
+                  profile={p}
+                  place={i + 1}
+                  isMe={p.id === user?.id}
+                  delay={i * 0.06}
+                />
               ))}
             </ol>
           )}
@@ -564,6 +570,7 @@ function RankingSection() {
                   profile={p}
                   place={podium.length + i + 1}
                   isMe={p.id === user?.id}
+                  delay={0.18 + i * 0.04}
                 />
               ))}
             </ol>
@@ -596,10 +603,12 @@ function PodiumCard({
   profile,
   place,
   isMe,
+  delay = 0,
 }: {
   profile: RankProfile;
   place: number;
   isMe?: boolean;
+  delay?: number;
 }) {
   const styles =
     place === 1
@@ -623,7 +632,7 @@ function PodiumCard({
             label: "3. miejsce",
           };
   return (
-    <li>
+    <li className="pz-fade-in" style={{ animationDelay: `${delay}s` }}>
       <Link
         to="/u/$username"
         params={{ username: profile.username ?? profile.id }}
@@ -679,13 +688,15 @@ function RankRow({
   profile,
   place,
   isMe,
+  delay = 0,
 }: {
   profile: RankProfile;
   place: number;
   isMe?: boolean;
+  delay?: number;
 }) {
   return (
-    <li>
+    <li className="pz-fade-in" style={{ animationDelay: `${delay}s` }}>
       <Link
         to="/u/$username"
         params={{ username: profile.username ?? profile.id }}

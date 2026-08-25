@@ -35,7 +35,7 @@ export function DiscoverHeader({
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               {name ? `Cześć, ${name}` : "Cześć, poŻeraczu"}
             </p>
-            <h1 className="font-display text-3xl leading-tight sm:text-4xl">Co dziś jemy?</h1>
+            <h1 className="font-display text-3xl leading-tight sm:text-4xl">Co dziś jemy? 😋</h1>
           </div>
           <div className="shrink-0 pt-1">
             <NotificationBell />

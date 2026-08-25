@@ -133,7 +133,7 @@ function MyPlacesPage() {
 
   return (
     <main id="main-content" className="mx-auto max-w-3xl px-4 py-6 sm:py-10 lg:max-w-6xl lg:px-6">
-      <h1 className="font-display text-2xl font-extrabold sm:text-3xl">Moje miejsca</h1>
+      <h1 className="font-display text-2xl font-extrabold sm:text-3xl">Moje miejsca 📍</h1>
       <p className="mt-1 text-sm text-muted-foreground">Wszystko, co zapisałeś w jednym miejscu.</p>
 
       <div className="-mx-4 mt-4 flex gap-6 overflow-x-auto border-b border-border px-4 scrollbar-none">
