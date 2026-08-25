@@ -30,6 +30,7 @@ import { installPolishStripper } from "@/lib/polish-stripper";
 import { VisitEventListener } from "@/components/VisitStatus";
 import { AuthAnalytics } from "@/components/AuthAnalytics";
 import { AlphaGate } from "@/components/AlphaGate";
+import { supabase } from "@/integrations/supabase/client";
 import { SiteNav } from "@/components/SiteNav";
 import { AppSidebar } from "@/components/AppSidebar";
 import { BottomTabBar } from "@/components/BottomTabBar";
@@ -141,7 +142,33 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+// Defined inline (not imported from AlphaGate.tsx) so the root loader's own
+// chunk owns this call directly - a cross-file import here previously
+// resolved to undefined at runtime (`fetchAlphaGateEnabled is not defined`),
+// suspected to be a route-splitting interaction with this file's guarded
+// dynamic `instrument.client` import above.
+async function fetchAlphaGateEnabled(): Promise<boolean> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any).rpc("alpha_gate_enabled");
+    if (error) throw error;
+    return Boolean(data);
+  } catch {
+    return false;
+  }
+}
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  // AlphaGate used to start every render in a client-only "loading" state -
+  // fine for a logged-in browser, but it meant SSR shipped nothing but a
+  // spinner to every crawler and link-preview bot, gate on or off. Routed
+  // through TanStack Router's own loaderData (not react-query) so the value
+  // is identical on the server's render and the client's first hydration
+  // pass - going through queryClient.ensureQueryData looked equivalent but
+  // wasn't: the client's fresh queryClient starts empty, so its first
+  // render still saw "loading" while the server (with a warm cache) had
+  // already rendered real children, a genuine hydration mismatch.
+  loader: async () => ({ alphaGateEnabled: await fetchAlphaGateEnabled() }),
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -254,6 +281,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { alphaGateEnabled } = Route.useLoaderData();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAdmin = pathname.startsWith("/admin");
   const isAuth =
@@ -268,7 +296,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AlphaGate>
+      <AlphaGate enabled={alphaGateEnabled}>
         {showShell ? (
           <div className="min-h-dvh lg:pl-[236px]">
             <AppSidebar />
