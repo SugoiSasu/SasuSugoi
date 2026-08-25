@@ -28,6 +28,7 @@ import {
   Store,
 } from "lucide-react";
 import { useProfileByUsername, useUpdateProfile, uploadAvatar } from "@/lib/profile-api";
+import { cuisineMeta } from "@/data/places";
 import { usePlacesOwnedByUser } from "@/lib/owners-api";
 import { useUserRanks } from "@/lib/ranks-api";
 import { useUserReviewStats, useUserReviews, useReviewPhotoUrl } from "@/lib/reviews-api";
@@ -327,10 +328,14 @@ function PublicProfile() {
               </div>
             )}
             {profile.favorite_cuisines.length > 0 && (
-              <div className="mt-3 rounded-2xl border border-cream/15 bg-cream/[0.06] px-4 py-3 flex flex-wrap gap-2">
-                {profile.favorite_cuisines.map((c) => (
-                  <span key={c} className="chip bg-cream/15 text-cream">
-                    {c}
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {profile.favorite_cuisines.slice(0, 5).map((c) => (
+                  <span
+                    key={c}
+                    title={c}
+                    className="grid h-9 w-9 place-items-center rounded-full bg-cream/15 text-lg"
+                  >
+                    {cuisineMeta(c).emoji}
                   </span>
                 ))}
               </div>
