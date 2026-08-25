@@ -25,6 +25,7 @@ import { pickSeeded } from "@/lib/seeded-pick";
 import { useCutoutLogo } from "@/lib/chroma-cutout";
 import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import { OpenStatus, isNewPlace } from "@/components/OpenStatus";
+import { HomeSocialBand } from "@/components/HomeSocialBand";
 import logoDark from "@/assets/brand/po_zeramy-logo-dark.png.asset.json";
 import { BASE_URL } from "@/lib/site-config";
 import { trackEvent } from "@/lib/analytics";
@@ -221,6 +222,8 @@ function Index() {
             />
           </>
         )}
+
+        <HomeSocialBand />
 
         <section id="zglos-lokal" className="scroll-mt-24 py-8">
           <SuggestPlacePanel />
