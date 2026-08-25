@@ -208,9 +208,20 @@ function MapaPage() {
                   >
                     <div
                       className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl text-2xl"
-                      style={p.cover_image_url ? undefined : { background: `${cuisineMeta(p.cuisine).color}26` }}
+                      style={
+                        p.avatar_url || p.cover_image_url
+                          ? { backgroundColor: p.avatar_url ? "#ffffff" : undefined }
+                          : { background: `${cuisineMeta(p.cuisine).color}26` }
+                      }
                     >
-                      {p.cover_image_url ? (
+                      {p.avatar_url ? (
+                        <img
+                          src={p.avatar_url}
+                          alt=""
+                          className="h-full w-full object-contain p-1.5"
+                          loading="lazy"
+                        />
+                      ) : p.cover_image_url ? (
                         <img
                           src={p.cover_image_url}
                           alt=""
@@ -316,9 +327,20 @@ function SelectedCard({
     >
       <div
         className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl text-2xl"
-        style={place.cover_image_url ? undefined : { background: `${cuisineMeta(place.cuisine).color}26` }}
+        style={
+          place.avatar_url || place.cover_image_url
+            ? { backgroundColor: place.avatar_url ? "#ffffff" : undefined }
+            : { background: `${cuisineMeta(place.cuisine).color}26` }
+        }
       >
-        {place.cover_image_url ? (
+        {place.avatar_url ? (
+          <img
+            src={place.avatar_url}
+            alt=""
+            className="h-full w-full object-contain p-1.5"
+            loading="lazy"
+          />
+        ) : place.cover_image_url ? (
           <img
             src={place.cover_image_url}
             alt=""
