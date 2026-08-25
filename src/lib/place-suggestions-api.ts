@@ -70,7 +70,13 @@ export function useApproveSuggestion() {
           // publishing - that's the actual editorial review, not this insert.
           description: "",
           website: s.website || null,
-          instagram: s.instagram || null,
+          // NO `instagram` field here: `places` has no such column, only
+          // `website`. Inserting it made every approval fail with PGRST204
+          // ("Could not find the 'instagram' column"), i.e. approving a place
+          // suggestion was completely broken - found 2026-08-25. The
+          // submitted Instagram URL is not lost: the suggestion row survives
+          // in the archive with `approved_place_id` pointing at this draft,
+          // so it can still be read while finishing the place in Lokale.
           lat: 52.4082,
           lng: 16.9335,
           is_published: false,

@@ -25,6 +25,7 @@ export interface OwnerRequest {
   status: "pending" | "approved" | "rejected";
   created_at: string;
   reviewed_at: string | null;
+  reviewed_by: string | null;
   place?: { id: string; name: string; slug: string } | null;
 }
 
