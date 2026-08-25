@@ -459,7 +459,10 @@ export function useCreateInvite() {
       if (error) throw error;
       return data as FriendInvite;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["friend-invites"] }),
+    onSuccess: (_data, email) => {
+      trackEvent("invite_friend_sent", { method: email ? "email" : "link" });
+      qc.invalidateQueries({ queryKey: ["friend-invites"] });
+    },
   });
 }
 
