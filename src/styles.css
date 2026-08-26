@@ -100,7 +100,11 @@
      fighting it. Attention/warning reuses --tomato (already the accent). */
   --ok: oklch(0.55 0.13 155);
 
-  --background: var(--cream);
+  /* Deliberately a step below --cream. --card is pure white, so at cream's own
+     0.975 the gap between page and card was 0.025 - invisible, which made whole
+     screens read as one flat sheet of near-white. 0.951 doubles the separation
+     and takes the glare off large empty areas, without going grey. */
+  --background: oklch(0.951 0.014 60);
   --foreground: var(--navy);
   --card: oklch(1 0 0);
   --card-foreground: var(--navy);

@@ -335,7 +335,7 @@ function MapaPage() {
                       setFocusTick((t) => t + 1);
                       setMobileView("map");
                     }}
-                    className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition hover:border-tomato hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tomato ${
+                    className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left shadow-sm transition hover:border-tomato hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tomato ${
                       isActive ? "border-tomato bg-blush/40" : "border-border bg-card"
                     }`}
                   >
@@ -416,7 +416,14 @@ function MapaPage() {
           </div>
 
           {(canSearchArea || areaActive) && (
-            <div className="absolute inset-x-0 top-4 z-20 flex justify-center gap-2 px-4">
+            <div
+              className={`absolute inset-x-0 top-4 z-20 justify-center gap-2 px-4 ${
+                // These act on the map, so on mobile they belong to the map view. The list
+                // panel shares this z-index and comes earlier in the DOM, so without this
+                // the pills paint straight over the sort controls.
+                mobileView === "list" ? "hidden lg:flex" : "flex"
+              }`}
+            >
               {canSearchArea && (
                 <button
                   type="button"
