@@ -21,9 +21,19 @@ interface Props {
   ratings?: Map<string, { avg: number; count: number }>;
   /** Visitor's browser geolocation, if granted - shown as a pulsing "you are here" dot. */
   userLocation?: { lat: number; lng: number } | null;
+  /** Fired when the visitor themselves pans/zooms - not when we fly to a pin.
+   *  Drives the "Szukaj w tym obszarze" affordance in the parent. */
+  onUserMove?: (bounds: MapBounds) => void;
 }
 
-export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, query = "", variant = "full", ratings, userLocation }: Props) {
+export interface MapBounds {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+}
+
+export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, query = "", variant = "full", ratings, userLocation, onUserMove }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -38,6 +48,12 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
 
   const selectRef = useRef(onSelect);
   selectRef.current = onSelect;
+  const userMoveRef = useRef(onUserMove);
+  userMoveRef.current = onUserMove;
+  // Leaflet reports "moveend" identically whether the visitor dragged the map
+  // or we flew it to a pin. Only the former should offer to re-search, so we
+  // mark our own moves and let the flag outlive the animation.
+  const programmaticMoveRef = useRef(false);
 
   const unlockAchievement = useUnlockManualAchievement();
   const achievementTried = useRef(false);
@@ -72,6 +88,16 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
         const anyMap = map as any;
         map.on("click focus", () => anyMap.scrollWheelZoom?.enable?.());
         map.on("mouseout blur", () => anyMap.scrollWheelZoom?.disable?.());
+        map.on("moveend", () => {
+          if (programmaticMoveRef.current) return;
+          const b = map.getBounds();
+          userMoveRef.current?.({
+            north: b.getNorth(),
+            south: b.getSouth(),
+            east: b.getEast(),
+            west: b.getWest(),
+          });
+        });
         L.tileLayer(
           "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
           {
@@ -262,6 +288,12 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
     const latlng = marker.getLatLng();
     const cluster = clusterRef.current;
     const openAndPulse = () => {
+      programmaticMoveRef.current = true;
+      // flyTo runs 600ms; clear a little after so the trailing moveend that
+      // ends the animation is still recognised as ours.
+      window.setTimeout(() => {
+        programmaticMoveRef.current = false;
+      }, 900);
       map.flyTo(latlng, Math.max(map.getZoom(), 15), { duration: 0.6 });
       // Parent owns the "selected place" UI when onSelect is wired (see marker
       // click handler above) - don't also pop our own duplicate info bubble.

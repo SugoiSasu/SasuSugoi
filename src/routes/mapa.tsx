@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, ChevronDown, ChevronRight, Clock, List, Map as MapIcon, Search, Star } from "lucide-react";
-import FoodMap from "@/components/FoodMap";
+import { Check, ChevronDown, ChevronRight, Clock, List, Map as MapIcon, Search, Star, X } from "lucide-react";
+import FoodMap, { type MapBounds } from "@/components/FoodMap";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { usePlaces, usePlaceRatingsMap, isPlaceOpenNow, type Place } from "@/lib/places-api";
 import { useCuisines } from "@/lib/cuisines-api";
@@ -41,6 +41,16 @@ function MapaPage() {
   const [mobileView, setMobileView] = useState<"map" | "list">("map");
   const userLoc = useUserLocation();
 
+  /** The viewport the visitor last asked us to search in, and the one they
+   *  have panned to since. Two separate things: panning alone must not
+   *  silently re-filter the list under them - it only offers the button. */
+  const [areaBounds, setAreaBounds] = useState<MapBounds | null>(null);
+  const [pendingBounds, setPendingBounds] = useState<MapBounds | null>(null);
+  const areaActive = areaBounds !== null;
+  const canSearchArea =
+    pendingBounds !== null &&
+    (areaBounds === null || JSON.stringify(pendingBounds) !== JSON.stringify(areaBounds));
+
   const filtered = useMemo(() => {
     const list = (places ?? []).filter((p) => p.is_published !== false);
     return list.filter((p) => {
@@ -50,9 +60,19 @@ function MapaPage() {
         if (avg < minRating) return false;
       }
       if (openNow && !isPlaceOpenNow(p.opening_hours)) return false;
+      if (areaBounds) {
+        if (typeof p.lat !== "number" || typeof p.lng !== "number") return false;
+        if (
+          p.lat > areaBounds.north ||
+          p.lat < areaBounds.south ||
+          p.lng > areaBounds.east ||
+          p.lng < areaBounds.west
+        )
+          return false;
+      }
       return true;
     });
-  }, [places, cuisine, minRating, openNow, ratings]);
+  }, [places, cuisine, minRating, openNow, ratings, areaBounds]);
 
   // Desktop list mirrors the map filters, plus the text query from the search box.
   const listResults = useMemo(() => searchPlaces(filtered, query).results, [filtered, query]);
@@ -275,8 +295,35 @@ function MapaPage() {
               focusTick={focusTick}
               onSelect={(p) => setSelected(p)}
               userLocation={userLoc}
+              onUserMove={setPendingBounds}
             />
           </div>
+
+          {(canSearchArea || areaActive) && (
+            <div className="absolute inset-x-0 top-4 z-20 flex justify-center gap-2 px-4">
+              {canSearchArea && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAreaBounds(pendingBounds);
+                    setSelected(null);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-full bg-tomato px-4 py-2.5 text-xs font-bold text-cream shadow-xl transition hover:bg-tomato/90 active:scale-95"
+                >
+                  <Search size={14} /> Szukaj w tym obszarze
+                </button>
+              )}
+              {areaActive && (
+                <button
+                  type="button"
+                  onClick={() => setAreaBounds(null)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2.5 text-xs font-semibold shadow-xl transition hover:border-tomato active:scale-95"
+                >
+                  <X size={13} /> Cały Poznań
+                </button>
+              )}
+            </div>
+          )}
 
           {!selected && mobileView === "map" && (
             <button
