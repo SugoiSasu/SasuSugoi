@@ -595,7 +595,7 @@ function FirstVisitPopup() {
           </a>
           <button
             onClick={close}
-            className="mt-3 text-xs text-muted-foreground underline hover:text-navy"
+            className="pz-hit mt-3 text-xs text-muted-foreground underline hover:text-navy"
           >
             może później
           </button>
