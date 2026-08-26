@@ -629,8 +629,10 @@ function PodiumCard({
             label: "2. miejsce",
           }
         : {
-            ring: "ring-2 ring-amber-600/70",
-            badge: "bg-amber-600 text-cream",
+            // amber-600 with cream measured 2.96:1; amber-700 reaches 4.66
+            // and still reads as bronze next to the gold and silver above.
+            ring: "ring-2 ring-amber-700/70",
+            badge: "bg-amber-700 text-cream",
             glow: "shadow-[0_8px_24px_-12px_rgba(217,119,6,0.5)]",
             label: "3. miejsce",
           };

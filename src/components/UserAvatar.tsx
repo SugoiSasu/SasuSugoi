@@ -1,6 +1,7 @@
 import { User } from "lucide-react";
 import { useAvatarUrl } from "@/lib/profile-api";
 import { initialsFromName, colorFromKey } from "@/lib/avatar-utils";
+import { readableTextClass } from "@/lib/readable-text";
 import { avatarRingForLevel } from "@/components/LevelProgress";
 
 const GENDER_AVATAR_BG: Record<"M" | "K", string> = {
@@ -68,17 +69,25 @@ export function UserAvatar({
       />
     </div>
   ) : (
+    (() => {
+      // The generated palette spans yellows to deep blues. Fixed white
+      // initials measured 1.80:1 on #f0b840 - effectively illegible - so the
+      // label colour follows the fill instead of the other way round.
+      const fill = colorFromKey(username || displayName);
+      return (
     <div
       style={{
         width: size,
         height: size,
-        backgroundColor: colorFromKey(username || displayName),
+        backgroundColor: fill,
         fontSize: Math.max(10, size * 0.4),
       }}
-      className={`rounded-full grid place-items-center text-white font-bold tracking-tight select-none ${ring ? "" : className}`}
+      className={`rounded-full grid place-items-center font-bold tracking-tight select-none ${readableTextClass(fill)} ${ring ? "" : className}`}
     >
       {initialsFromName(displayName, username)}
     </div>
+      );
+    })()
   );
 
   if (!ring) return inner;
