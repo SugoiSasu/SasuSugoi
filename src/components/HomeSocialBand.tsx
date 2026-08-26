@@ -15,6 +15,7 @@ import {
   type CriteriaType,
 } from "@/lib/achievements-api";
 import { useUserReviewStats } from "@/lib/reviews-api";
+import { badgesLabel } from "@/lib/plural-pl";
 
 
 /**
@@ -52,19 +53,6 @@ function Band() {
 
 /* ------------------------------------------------------------- feed */
 
-/**
- * Polish counts take three forms, not two: 1 odznakę, 2-4 odznaki,
- * 5+ odznak - and the teens (12-14) go back to the "many" form despite
- * ending in 2-4. Saying "5 odznaki" is plainly wrong to a Polish reader.
- */
-function odznakiLabel(n: number): string {
-  if (n === 1) return "odznakę";
-  const last = n % 10;
-  const lastTwo = n % 100;
-  if (last >= 2 && last <= 4 && !(lastTwo >= 12 && lastTwo <= 14)) return `${n} odznaki`;
-  return `${n} odznak`;
-}
-
 /** Matches the phrasing already used on /wall so the two never diverge. */
 function feedLabel(item: WallItem): { action: string; object: string | null } {
   switch (item.kind) {
@@ -75,7 +63,7 @@ function feedLabel(item: WallItem): { action: string; object: string | null } {
     case "achievement_group": {
       const n = item.achievements?.length ?? 1;
       return {
-        action: `zdobył(a) ${odznakiLabel(n)}`,
+        action: `zdobył(a) ${badgesLabel(n)}`,
         object: n === 1 ? (item.achievements?.[0]?.name ?? null) : null,
       };
     }

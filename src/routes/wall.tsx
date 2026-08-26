@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useWallFeed, useForYouFeed, useCreateWallPost, type WallItem } from "@/lib/wall-api";
 import { usePlaces, type Place } from "@/lib/places-api";
+import { badgesLabel } from "@/lib/plural-pl";
 import { useMyProfile } from "@/lib/profile-api";
 import { useStorageImageUpload } from "@/components/admin/useStorageImageUpload";
 import { useCreateList } from "@/lib/lists-api";
@@ -969,7 +970,7 @@ function HeaderLine({ item }: { item: WallItem }) {
     const n = item.achievements?.length ?? 1;
     return (
       <>
-        {authorLink} zdobył(a) {n > 1 ? `${n} odznaki` : "odznakę"}
+        {authorLink} zdobył(a) {badgesLabel(n)}
         {n === 1 && item.achievements?.[0] ? (
           <>
             {" "}
