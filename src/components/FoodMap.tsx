@@ -38,6 +38,9 @@ interface Props {
   onUserMove?: (bounds: MapBounds) => void;
   /** How many of my friends favourited each place - drawn as a badge on the pin. */
   friendCounts?: Map<string, number>;
+  /** The area the visitor chose to search in, drawn on the map so the filter is
+   *  visible rather than invisible state. Null means the whole city. */
+  areaBounds?: MapBounds | null;
 }
 
 export interface MapBounds {
@@ -47,7 +50,7 @@ export interface MapBounds {
   west: number;
 }
 
-export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, query = "", variant = "full", ratings, userLocation, onUserMove, friendCounts }: Props) {
+export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, query = "", variant = "full", ratings, userLocation, onUserMove, friendCounts, areaBounds }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -59,6 +62,8 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
   const markerByPlaceRef = useRef<Map<string, any>>(new Map());
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const youAreHereRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const areaLayersRef = useRef<any[]>([]);
 
   const selectRef = useRef(onSelect);
   selectRef.current = onSelect;
@@ -406,6 +411,71 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
   if (variant === "mini") {
     return <div ref={containerRef} className="w-full h-full" />;
   }
+
+  // Draws the searched area: a dashed outline plus a veil over everything outside
+  // it. Sitting inside the area you only see the border; pan away and the region
+  // you are filtering by stays visible, which is the moment the filter otherwise
+  // becomes invisible state.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+    let cancelled = false;
+    (async () => {
+      const L = (await import("leaflet")).default;
+      if (cancelled) return;
+
+      for (const layer of areaLayersRef.current) map.removeLayer(layer);
+      areaLayersRef.current = [];
+      if (!areaBounds) return;
+
+      const { north, south, east, west } = areaBounds;
+      // An outer ring around the whole world with the searched area as a hole:
+      // Leaflet renders the gap unfilled, which dims everything except the area.
+      const veil = L.polygon(
+        [
+          [
+            [90, -180],
+            [90, 180],
+            [-90, 180],
+            [-90, -180],
+          ],
+          [
+            [north, west],
+            [north, east],
+            [south, east],
+            [south, west],
+          ],
+        ] as unknown as L.LatLngExpression[][],
+        {
+          color: "transparent",
+          fillColor: "#141c3a",
+          fillOpacity: 0.28,
+          interactive: false,
+        },
+      ).addTo(map);
+
+      const outline = L.rectangle(
+        [
+          [south, west],
+          [north, east],
+        ],
+        {
+          // Leaflet writes this as an SVG presentation attribute, and var() does not
+          // resolve there - it has to be a literal. This is --tomato at 0.56 lightness.
+          color: "#d12e00",
+          weight: 2,
+          dashArray: "7 5",
+          fill: false,
+          interactive: false,
+        },
+      ).addTo(map);
+
+      areaLayersRef.current = [veil, outline];
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [areaBounds, mapReady]);
 
   return (
     <div

@@ -372,6 +372,7 @@ function MapaPage() {
               userLocation={userLoc}
               onUserMove={setPendingBounds}
               friendCounts={friendCounts}
+              areaBounds={areaBounds}
             />
           </div>
 
