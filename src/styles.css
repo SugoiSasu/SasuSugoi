@@ -205,6 +205,25 @@
     transition: transform .2s ease-out;
     display: flex; align-items: center; justify-content: center;
   }
+  .pz-pin-wrap {
+    position: relative;
+    width: 28px; height: 28px;
+  }
+  /* Sits outside .pz-pin so it escapes that element's -45deg rotation. */
+  .pz-pin-friends {
+    position: absolute;
+    top: -7px; right: -9px;
+    min-width: 17px; height: 17px;
+    padding: 0 4px;
+    box-sizing: border-box;
+    border-radius: 9px;
+    background: var(--tomato);
+    border: 2px solid var(--cream);
+    color: var(--cream);
+    font-size: 10px; font-weight: 800; line-height: 13px;
+    text-align: center;
+    pointer-events: none;
+  }
   .pz-pin-emoji {
     transform: rotate(45deg);
     font-size: 14px;

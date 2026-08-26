@@ -24,6 +24,8 @@ interface Props {
   /** Fired when the visitor themselves pans/zooms - not when we fly to a pin.
    *  Drives the "Szukaj w tym obszarze" affordance in the parent. */
   onUserMove?: (bounds: MapBounds) => void;
+  /** How many of my friends favourited each place - drawn as a badge on the pin. */
+  friendCounts?: Map<string, number>;
 }
 
 export interface MapBounds {
@@ -33,7 +35,7 @@ export interface MapBounds {
   west: number;
 }
 
-export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, query = "", variant = "full", ratings, userLocation, onUserMove }: Props) {
+export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, query = "", variant = "full", ratings, userLocation, onUserMove, friendCounts }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -186,10 +188,19 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
         ];
 
         const emoji = cuisineMeta(p.cuisine).emoji;
+        const friends = friendCounts?.get(p.id) ?? 0;
         pins.forEach((pin) => {
+          // The badge sits in a wrapper, not inside .pz-pin: that element is
+          // rotated -45deg to make the teardrop shape, and a digit inheriting
+          // that rotation would sit on its side. Only the main pin carries it -
+          // a place with several locations should not claim the count twice.
+          const badge =
+            friends > 0 && pin.main
+              ? `<span class="pz-pin-friends" aria-hidden="true">${friends > 9 ? "9+" : friends}</span>`
+              : "";
           const icon = L.divIcon({
             className: "",
-            html: `<div class="pz-pin" style="background:${color};${pin.main ? "" : "opacity:.85"}"><span class="pz-pin-emoji">${emoji}</span></div>`,
+            html: `<div class="pz-pin-wrap"><div class="pz-pin" style="background:${color};${pin.main ? "" : "opacity:.85"}"><span class="pz-pin-emoji">${emoji}</span></div>${badge}</div>`,
             iconSize: [28, 28],
             iconAnchor: [14, 28],
             popupAnchor: [0, -26],
@@ -273,7 +284,7 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
     return () => {
       cancelled = true;
     };
-  }, [places, variant, query, ratings]);
+  }, [places, variant, query, ratings, friendCounts]);
 
   useEffect(() => {
     // Clear pulse from every marker, then apply to the focused one.

@@ -371,6 +371,7 @@ function MapaPage() {
               onSelect={(p) => setSelected(p)}
               userLocation={userLoc}
               onUserMove={setPendingBounds}
+              friendCounts={friendCounts}
             />
           </div>
 
