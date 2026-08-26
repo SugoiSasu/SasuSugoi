@@ -10,16 +10,16 @@ import { toast } from "sonner";
 
 
 /** CARTO started watermarking unauthenticated raster tiles with "API KEY REQUIRED"
- *  baked into the pixels. The key is free (5M tiles/month) and belongs in the URL as
- *  ?key= - it is a public, domain-restricted token, so shipping it in the bundle is fine.
- *  Without the variable set the map still works, just watermarked, so dev and preview
- *  environments do not need the key to run. */
-function cartoTileUrl() {
-  const base =
-    "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
-  const key = import.meta.env.VITE_CARTO_API_KEY as string | undefined;
-  return key ? `${base}?key=${key}` : base;
-}
+ *  burnt into the pixels, and its free key is aimed at non-commercial use. OpenFreeMap
+ *  needs no key at all, sets no request limits, and allows commercial use outright.
+ *  These are vector tiles, so the whole basemap restyles at runtime from one URL -
+ *  which is what a light/dark switch needs. `fiord` is the dark counterpart and sits
+ *  close to our own --navy. */
+const BASEMAP_STYLE = "https://tiles.openfreemap.org/styles/positron";
+const BASEMAP_ATTRIBUTION =
+  '&copy; <a href="https://openfreemap.org">OpenFreeMap</a> ' +
+  '&copy; <a href="https://openmaptiles.org">OpenMapTiles</a> ' +
+  '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>';
 
 interface Props {
   places: Place[];
@@ -78,6 +78,11 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
     (async () => {
       if (!containerRef.current) return;
       const L = (await import("leaflet")).default;
+      // The bridge augments the Leaflet namespace in place, so it has to land after
+      // Leaflet itself. Both stay inside the effect to keep maplibre out of the SSR
+      // pass and out of every chunk that is not the map.
+      await import("maplibre-gl/dist/maplibre-gl.css");
+      await import("@maplibre/maplibre-gl-leaflet");
       if (variant === "full") {
         await import("leaflet.markercluster");
       }
@@ -88,6 +93,10 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
         const map = L.map(containerRef.current, {
           center: [52.4082, 16.9335],
           zoom: 13,
+          // markercluster refuses to run on a map with no maxZoom, and it used to pick
+          // one up from the raster tile layer. The vector layer supplies none, so the map
+          // has to state it itself - otherwise every marker silently fails to attach.
+          maxZoom: 19,
           scrollWheelZoom: false,
           doubleClickZoom: variant === "full",
           zoomControl: variant === "full",
@@ -112,11 +121,14 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
             west: b.getWest(),
           });
         });
-        L.tileLayer(cartoTileUrl(), {
-          attribution:
-            '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-          maxZoom: 19,
-        }).addTo(map);
+        L.maplibreGL({ style: BASEMAP_STYLE }).addTo(map);
+        // The bridge types only cover maplibre's own options, so attribution goes
+        // through the control directly. OpenFreeMap requires it to stay visible.
+        map.attributionControl.addAttribution(BASEMAP_ATTRIBUTION);
+        // Three credits do not fit on a 375px screen next to Leaflet's own "Leaflet"
+        // prefix, and the line was clipping. OpenFreeMap, OpenMapTiles and OSM all have
+        // to stay; the library plug is the only part nobody requires.
+        map.attributionControl.setPrefix(false);
 
         if (variant === "full") {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
