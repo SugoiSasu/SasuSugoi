@@ -41,6 +41,9 @@ interface Props {
   /** The area the visitor chose to search in, drawn on the map so the filter is
    *  visible rather than invisible state. Null means the whole city. */
   areaBounds?: MapBounds | null;
+  /** Where to open the map, when we have somewhere better than the city centre.
+   *  Applied once, and only while the visitor has not moved the map themselves. */
+  autoCenter?: { lat: number; lng: number } | null;
 }
 
 export interface MapBounds {
@@ -50,7 +53,7 @@ export interface MapBounds {
   west: number;
 }
 
-export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, query = "", variant = "full", ratings, userLocation, onUserMove, friendCounts, areaBounds }: Props) {
+export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, query = "", variant = "full", ratings, userLocation, onUserMove, friendCounts, areaBounds, autoCenter }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -73,6 +76,11 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
   // or we flew it to a pin. Only the former should offer to re-search, so we
   // mark our own moves and let the flag outlive the animation.
   const programmaticMoveRef = useRef(false);
+  // Geolocation resolves after the map is already on screen, so recentring has to
+  // stop the moment the visitor takes over - having the map jump out from under a
+  // drag is worse than opening on the wrong part of town.
+  const userMovedRef = useRef(false);
+  const autoCenteredRef = useRef(false);
 
   const unlockAchievement = useUnlockManualAchievement();
   const achievementTried = useRef(false);
@@ -118,6 +126,7 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
         map.on("mouseout blur", () => anyMap.scrollWheelZoom?.disable?.());
         map.on("moveend", () => {
           if (programmaticMoveRef.current) return;
+          userMovedRef.current = true;
           const b = map.getBounds();
           userMoveRef.current?.({
             north: b.getNorth(),
@@ -476,6 +485,21 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
       cancelled = true;
     };
   }, [areaBounds, mapReady]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady || !autoCenter) return;
+    if (autoCenteredRef.current || userMovedRef.current || focusPlaceId) return;
+    autoCenteredRef.current = true;
+    // Flagged as ours, or the resulting moveend reads as a drag and pops the
+    // "search this area" button on a view nobody asked for.
+    programmaticMoveRef.current = true;
+    map.setView([autoCenter.lat, autoCenter.lng], 14, { animate: false });
+    const t = setTimeout(() => {
+      programmaticMoveRef.current = false;
+    }, 300);
+    return () => clearTimeout(t);
+  }, [autoCenter, mapReady, focusPlaceId]);
 
   return (
     <div

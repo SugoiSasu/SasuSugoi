@@ -31,6 +31,10 @@ export const Route = createFileRoute("/mapa")({
   component: MapaPage,
 });
 
+/** How close a visitor has to be to one of our places before we open the map on
+ *  them rather than on the city. Roughly the Poznan agglomeration. */
+const COVERAGE_KM = 20;
+
 function MapaPage() {
   const { data: places } = usePlaces();
   const { data: ratings } = usePlaceRatingsMap();
@@ -105,6 +109,21 @@ function MapaPage() {
     pendingBounds !== null &&
     areaHits > 0 &&
     (areaBounds === null || JSON.stringify(pendingBounds) !== JSON.stringify(areaBounds));
+
+  // Open the map where the visitor is - but only if we cover it. Someone opening
+  // the app from Krakow would otherwise land on an empty field, which is worse
+  // than landing on the city this app is actually about.
+  const autoCenter = useMemo(() => {
+    if (!userLoc) return null;
+    const covered = (places ?? []).some(
+      (p) =>
+        p.is_published !== false &&
+        typeof p.lat === "number" &&
+        typeof p.lng === "number" &&
+        haversineKm(userLoc, { lat: p.lat, lng: p.lng }) <= COVERAGE_KM,
+    );
+    return covered ? userLoc : null;
+  }, [userLoc, places]);
 
   const distanceFor = (p: Place): number | null => {
     if (!userLoc || typeof p.lat !== "number" || typeof p.lng !== "number") return null;
@@ -392,6 +411,7 @@ function MapaPage() {
               onUserMove={setPendingBounds}
               friendCounts={friendCounts}
               areaBounds={areaBounds}
+              autoCenter={autoCenter}
             />
           </div>
 
