@@ -1,12 +1,15 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, ChevronDown, ChevronRight, Clock, List, Map as MapIcon, Search, Star, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Clock, Heart, List, Map as MapIcon, Search, Star, Users, X } from "lucide-react";
 import FoodMap, { type MapBounds } from "@/components/FoodMap";
+import { useMyFavoritePlaceIds, useFriendFavoriteCounts } from "@/lib/favorites-api";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { usePlaces, usePlaceRatingsMap, isPlaceOpenNow, type Place } from "@/lib/places-api";
 import { useCuisines } from "@/lib/cuisines-api";
 import { searchPlaces } from "@/lib/place-search";
 import { useUserLocation, haversineKm, formatDistancePl } from "@/lib/geo";
+import { useUser } from "@/lib/use-auth";
+import { pluralPl } from "@/lib/plural-pl";
 import { cuisineMeta } from "@/data/places";
 
 export const Route = createFileRoute("/mapa")({
@@ -40,10 +43,18 @@ function MapaPage() {
   const [focusTick, setFocusTick] = useState(0);
   const [mobileView, setMobileView] = useState<"map" | "list">("map");
   const userLoc = useUserLocation();
+  const { user } = useUser();
 
   /** The viewport the visitor last asked us to search in, and the one they
    *  have panned to since. Two separate things: panning alone must not
    *  silently re-filter the list under them - it only offers the button. */
+  /** Layers answer a different question from the cuisine/rating filters:
+   *  not "what kind of food" but "whose". They stack with the filters. */
+  const [layer, setLayer] = useState<"all" | "fav" | "friends">("all");
+  const [sort, setSort] = useState<"dist" | "rating">("dist");
+  const { data: favIds } = useMyFavoritePlaceIds();
+  const { data: friendCounts } = useFriendFavoriteCounts();
+
   const [areaBounds, setAreaBounds] = useState<MapBounds | null>(null);
   const [pendingBounds, setPendingBounds] = useState<MapBounds | null>(null);
   const areaActive = areaBounds !== null;
@@ -60,6 +71,8 @@ function MapaPage() {
         if (avg < minRating) return false;
       }
       if (openNow && !isPlaceOpenNow(p.opening_hours)) return false;
+      if (layer === "fav" && !(favIds ?? []).includes(p.id)) return false;
+      if (layer === "friends" && !(friendCounts?.get(p.id) ?? 0)) return false;
       if (areaBounds) {
         if (typeof p.lat !== "number" || typeof p.lng !== "number") return false;
         if (
@@ -72,15 +85,31 @@ function MapaPage() {
       }
       return true;
     });
-  }, [places, cuisine, minRating, openNow, ratings, areaBounds]);
-
-  // Desktop list mirrors the map filters, plus the text query from the search box.
-  const listResults = useMemo(() => searchPlaces(filtered, query).results, [filtered, query]);
+  }, [places, cuisine, minRating, openNow, ratings, areaBounds, layer, favIds, friendCounts]);
 
   const distanceFor = (p: Place): number | null => {
     if (!userLoc || typeof p.lat !== "number" || typeof p.lng !== "number") return null;
     return haversineKm(userLoc, { lat: p.lat, lng: p.lng });
   };
+
+  // Desktop list mirrors the map filters, plus the text query from the search box.
+  const listResults = useMemo(() => {
+    const found = searchPlaces(filtered, query).results;
+    if (sort === "rating") {
+      return found
+        .slice()
+        .sort((a, c) => (ratings?.get(c.id)?.avg ?? 0) - (ratings?.get(a.id)?.avg ?? 0));
+    }
+    // Distance sort is only meaningful once geolocation has been granted;
+    // without it every place scores the same and the order would look random,
+    // so fall back to the search relevance order we already have.
+    if (!userLoc) return found;
+    return found.slice().sort((a, c) => {
+      const da = haversineKm(userLoc, { lat: a.lat as number, lng: a.lng as number });
+      const dc = haversineKm(userLoc, { lat: c.lat as number, lng: c.lng as number });
+      return da - dc;
+    });
+  }, [filtered, query, sort, ratings, userLoc]);
 
   const selRating = selected ? ratings?.get(selected.id) : undefined;
 
@@ -188,6 +217,30 @@ function MapaPage() {
             <Clock size={13} className="shrink-0" />
             <span className="truncate">Otwarte teraz</span>
           </button>
+
+          {/* Layers are a different axis from the filters above: not what kind
+              of food, but whose. Only offered when signed in - both depend on
+              your own favourites. */}
+          {user && (
+            <>
+              <span className="mx-1 hidden h-6 w-px shrink-0 self-center bg-border sm:block" />
+              {([
+                { key: "fav", label: "Ulubione", icon: <Heart size={13} /> },
+                { key: "friends", label: "U znajomych", icon: <Users size={13} /> },
+              ] as const).map((l) => (
+                <button
+                  key={l.key}
+                  type="button"
+                  aria-pressed={layer === l.key}
+                  onClick={() => setLayer((v) => (v === l.key ? "all" : l.key))}
+                  className={trigger(layer === l.key)}
+                >
+                  {l.icon}
+                  <span className="truncate">{l.label}</span>
+                </button>
+              ))}
+            </>
+          )}
         </div>
       </div>
 
@@ -198,8 +251,30 @@ function MapaPage() {
         >
           <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
             <p className="text-sm font-bold">
-              {listResults.length} {listResults.length === 1 ? "lokal" : "lokali"}
+              {listResults.length}{" "}
+              {pluralPl(listResults.length, "lokal", "lokale", "lokali")}
             </p>
+            <div className="flex items-center gap-1.5">
+              <span className="hidden text-[11px] text-muted-foreground sm:inline">Sortuj</span>
+              {([
+                { key: "dist", label: "Odległość" },
+                { key: "rating", label: "Ocena" },
+              ] as const).map((o) => (
+                <button
+                  key={o.key}
+                  type="button"
+                  aria-pressed={sort === o.key}
+                  onClick={() => setSort(o.key)}
+                  disabled={o.key === "dist" && !userLoc}
+                  title={o.key === "dist" && !userLoc ? "Włącz lokalizację, aby sortować po odległości" : undefined}
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                    sort === o.key ? "bg-navy text-cream" : "bg-muted text-navy hover:bg-muted/70"
+                  }`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
             <button
               type="button"
               onClick={() => setMobileView("map")}

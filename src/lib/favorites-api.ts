@@ -130,6 +130,43 @@ export function useFavoriteCount(placeId: string) {
 }
 
 /** Friends (accepted) who favorited a given place. */
+/**
+ * How many of my friends favourited each place, for every place at once.
+ *
+ * useFriendsWhoFavorited answers the same question for a single place, which
+ * is right on a place profile and wrong on a map: one query per pin would be
+ * dozens of round trips. This is two queries total, and feeds both the
+ * "U znajomych" map layer and the count badge on the pins.
+ */
+export function useFriendFavoriteCounts() {
+  const { user } = useUser();
+  return useQuery({
+    queryKey: ["friend-favorite-counts", user?.id ?? null],
+    enabled: !!user,
+    queryFn: async (): Promise<Map<string, number>> => {
+      const { data: fs, error: fErr } = await supabase
+        .from("friendships")
+        .select("requester_id, addressee_id")
+        .eq("status", "accepted");
+      if (fErr) throw fErr;
+      const friendIds = (fs ?? [])
+        .map((f) => (f.requester_id === user!.id ? f.addressee_id : f.requester_id))
+        .filter((id): id is string => !!id);
+      if (friendIds.length === 0) return new Map();
+      const { data: favs, error } = await supabase
+        .from("place_favorites")
+        .select("place_id")
+        .in("user_id", friendIds);
+      if (error) throw error;
+      const counts = new Map<string, number>();
+      (favs ?? []).forEach((f) => {
+        counts.set(f.place_id, (counts.get(f.place_id) ?? 0) + 1);
+      });
+      return counts;
+    },
+  });
+}
+
 export function useFriendsWhoFavorited(placeId: string) {
   const { user } = useUser();
   return useQuery({
