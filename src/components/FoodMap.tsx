@@ -9,6 +9,18 @@ import { useUnlockManualAchievement } from "@/lib/achievements-api";
 import { toast } from "sonner";
 
 
+/** CARTO started watermarking unauthenticated raster tiles with "API KEY REQUIRED"
+ *  baked into the pixels. The key is free (5M tiles/month) and belongs in the URL as
+ *  ?key= - it is a public, domain-restricted token, so shipping it in the bundle is fine.
+ *  Without the variable set the map still works, just watermarked, so dev and preview
+ *  environments do not need the key to run. */
+function cartoTileUrl() {
+  const base =
+    "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png";
+  const key = import.meta.env.VITE_CARTO_API_KEY as string | undefined;
+  return key ? `${base}?key=${key}` : base;
+}
+
 interface Props {
   places: Place[];
   onSelect?: (p: Place) => void;
@@ -100,14 +112,11 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
             west: b.getWest(),
           });
         });
-        L.tileLayer(
-          "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-          {
-            attribution:
-              '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-            maxZoom: 19,
-          },
-        ).addTo(map);
+        L.tileLayer(cartoTileUrl(), {
+          attribution:
+            '&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+          maxZoom: 19,
+        }).addTo(map);
 
         if (variant === "full") {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
