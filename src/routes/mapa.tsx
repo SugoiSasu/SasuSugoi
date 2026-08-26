@@ -58,11 +58,20 @@ function MapaPage() {
   const [areaBounds, setAreaBounds] = useState<MapBounds | null>(null);
   const [pendingBounds, setPendingBounds] = useState<MapBounds | null>(null);
   const areaActive = areaBounds !== null;
-  const canSearchArea =
-    pendingBounds !== null &&
-    (areaBounds === null || JSON.stringify(pendingBounds) !== JSON.stringify(areaBounds));
 
-  const filtered = useMemo(() => {
+  /** True when the place falls inside the box. Places with no coordinates can
+   *  never be inside one, so an area search drops them. */
+  const inBounds = (p: Place, b: MapBounds) =>
+    typeof p.lat === "number" &&
+    typeof p.lng === "number" &&
+    p.lat <= b.north &&
+    p.lat >= b.south &&
+    p.lng <= b.east &&
+    p.lng >= b.west;
+
+  // Everything except the area filter. Kept separate so we can ask how many places
+  // a candidate area would actually return before offering to search it.
+  const filteredNoArea = useMemo(() => {
     const list = (places ?? []).filter((p) => p.is_published !== false);
     return list.filter((p) => {
       if (cuisine && p.cuisine !== cuisine) return false;
@@ -73,19 +82,29 @@ function MapaPage() {
       if (openNow && !isPlaceOpenNow(p.opening_hours)) return false;
       if (layer === "fav" && !(favIds ?? []).includes(p.id)) return false;
       if (layer === "friends" && !(friendCounts?.get(p.id) ?? 0)) return false;
-      if (areaBounds) {
-        if (typeof p.lat !== "number" || typeof p.lng !== "number") return false;
-        if (
-          p.lat > areaBounds.north ||
-          p.lat < areaBounds.south ||
-          p.lng > areaBounds.east ||
-          p.lng < areaBounds.west
-        )
-          return false;
-      }
       return true;
     });
-  }, [places, cuisine, minRating, openNow, ratings, areaBounds, layer, favIds, friendCounts]);
+  }, [places, cuisine, minRating, openNow, ratings, layer, favIds, friendCounts]);
+
+  const filtered = useMemo(
+    () => (areaBounds ? filteredNoArea.filter((p) => inBounds(p, areaBounds)) : filteredNoArea),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [filteredNoArea, areaBounds],
+  );
+
+  // How many places this candidate area would actually return. Offering to search
+  // an empty stretch of countryside is offering an action we already know yields
+  // nothing - so the button only appears where there is something to find.
+  const areaHits = useMemo(
+    () => (pendingBounds ? filteredNoArea.filter((p) => inBounds(p, pendingBounds)).length : 0),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [filteredNoArea, pendingBounds],
+  );
+
+  const canSearchArea =
+    pendingBounds !== null &&
+    areaHits > 0 &&
+    (areaBounds === null || JSON.stringify(pendingBounds) !== JSON.stringify(areaBounds));
 
   const distanceFor = (p: Place): number | null => {
     if (!userLoc || typeof p.lat !== "number" || typeof p.lng !== "number") return null;
@@ -388,6 +407,9 @@ function MapaPage() {
                   className="inline-flex items-center gap-2 rounded-full bg-tomato px-4 py-2.5 text-xs font-bold text-cream shadow-xl transition hover:bg-tomato/90 active:scale-95"
                 >
                   <Search size={14} /> Szukaj w tym obszarze
+                  <span className="rounded-full bg-cream/25 px-1.5 py-0.5 tabular-nums">
+                    {areaHits}
+                  </span>
                 </button>
               )}
               {areaActive && (
