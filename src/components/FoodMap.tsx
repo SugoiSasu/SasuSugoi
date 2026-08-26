@@ -15,7 +15,7 @@ import { toast } from "sonner";
  *  These are vector tiles, so the whole basemap restyles at runtime from one URL -
  *  which is what a light/dark switch needs. `fiord` is the dark counterpart and sits
  *  close to our own --navy. */
-const BASEMAP_STYLE = "https://tiles.openfreemap.org/styles/bright";
+const BASEMAP_STYLE = "/map/pozeramy-light.json";
 const BASEMAP_ATTRIBUTION =
   '&copy; <a href="https://openfreemap.org">OpenFreeMap</a> ' +
   '&copy; <a href="https://openmaptiles.org">OpenMapTiles</a> ' +

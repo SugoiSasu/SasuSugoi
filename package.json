@@ -15,7 +15,8 @@
     "lint": "eslint .",
     "test:domains": "node scripts/check-domains.mjs",
     "predeploy": "node scripts/check-domains.mjs",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "map:style": "node scripts/build-map-style.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
