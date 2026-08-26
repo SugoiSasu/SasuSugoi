@@ -8,6 +8,7 @@ import type { Place, OpeningHours } from "@/lib/places-api";
 
 import { cuisineMeta, CUISINES } from "@/data/places";
 import { recordPlaceView } from "@/lib/recently-viewed";
+import { readableTextClass } from "@/lib/readable-text";
 import {
   ArrowLeft, Star, MapPin, Loader2, BookOpen, ExternalLink, Home,
   Map as MapIcon, Heart, Play, Navigation, Phone, Globe, Clock, Wallet,
@@ -158,7 +159,7 @@ function PlaceNotFound({ id }: { id: string }) {
             {CUISINES.map((c) => {
               const meta = cuisineMeta(c);
               return (
-                <Link key={c} to="/" hash="mapa" className="chip text-cream" style={{ backgroundColor: meta.color }}>
+                <Link key={c} to="/" hash="mapa" className={`chip ${readableTextClass(meta.color)}`} style={{ backgroundColor: meta.color }}>
                   <span>{meta.emoji}</span> {c}
                 </Link>
               );
@@ -431,7 +432,7 @@ function PlaceProfile() {
               <div className="min-w-0 flex-1">
                 <SmartText as="h1" className="font-persona text-3xl sm:text-5xl text-balance leading-tight mb-2">{place.name}</SmartText>
                 <div className="flex flex-wrap gap-2 items-center mb-2">
-                  <span className="chip text-cream text-xs" style={{ backgroundColor: meta.color }}>
+                  <span className={`chip text-xs ${readableTextClass(meta.color)}`} style={{ backgroundColor: meta.color }}>
                     {meta.emoji} {place.cuisine}
                   </span>
                   {place.district && (

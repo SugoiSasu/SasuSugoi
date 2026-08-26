@@ -26,6 +26,7 @@ import { pickSeeded } from "@/lib/seeded-pick";
 import { useCutoutLogo } from "@/lib/chroma-cutout";
 import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import { OpenStatus, isNewPlace } from "@/components/OpenStatus";
+import { readableTextClass } from "@/lib/readable-text";
 import { HomeSocialBand } from "@/components/HomeSocialBand";
 import { RandomPlaceCard } from "@/components/RandomPlaceCard";
 import { RecentlyViewedStrip } from "@/components/RecentlyViewedStrip";
@@ -470,7 +471,7 @@ function DiscoverCard({ place, stat }: { place: Place; stat?: { avg: number; cou
             </span>
           )}
           <span
-            className="absolute bottom-3 left-3 chip text-cream shadow-sm"
+            className={`absolute bottom-3 left-3 chip shadow-sm ${readableTextClass(meta.color)}`}
             style={{ backgroundColor: meta.color }}
           >
             {meta.emoji} {place.cuisine}
