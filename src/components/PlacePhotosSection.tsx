@@ -61,7 +61,7 @@ export function PlacePhotosSection({ placeId, canManage }: { placeId: string; ca
   if (photos.length === 0 && !canManage) return null;
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-4 space-y-3">
+    <section className="surface rounded-2xl border border-border bg-card p-4 space-y-3">
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-display text-xl inline-flex items-center gap-2">
           <ImageIcon size={18} /> Zdjęcia

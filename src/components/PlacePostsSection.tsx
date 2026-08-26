@@ -62,7 +62,7 @@ export function PlacePostsSection({ placeId, placeName }: { placeId: string; pla
   const [editing, setEditing] = useState<PlacePost | null>(null);
 
   return (
-    <section className="mb-6 rounded-2xl border border-border bg-card overflow-hidden">
+    <section className="surface mb-6 rounded-2xl border border-border bg-card overflow-hidden">
       <div className="px-4 sm:px-5 py-3 sm:py-4 flex items-center gap-3 border-b border-border/60">
         <div className="grid place-items-center w-9 h-9 rounded-full bg-tomato/10 text-tomato">
           <Megaphone size={18} />

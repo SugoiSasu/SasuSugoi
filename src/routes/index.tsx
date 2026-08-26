@@ -231,7 +231,7 @@ function Index() {
         )}
 
         {empty && (
-          <div className="rounded-3xl border border-border bg-card p-8 text-center">
+          <div className="surface rounded-3xl border border-border bg-card p-8 text-center">
             <p className="font-display text-xl">Nic nie znaleźliśmy</p>
             <p className="mt-1 text-sm text-muted-foreground">
               {debouncedQuery
@@ -376,7 +376,7 @@ function PlaceRail({
           ? Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="w-[15rem] shrink-0 overflow-hidden rounded-3xl border border-border bg-card lg:w-auto lg:shrink"
+                className="surface w-[15rem] shrink-0 overflow-hidden rounded-3xl border border-border bg-card lg:w-auto lg:shrink"
               >
                 <div className="pz-skel aspect-[5/4] w-full" />
                 <div className="space-y-2 p-4">

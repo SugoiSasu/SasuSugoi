@@ -61,7 +61,7 @@ export function PlaceReviewsSection({ placeId }: { placeId: string }) {
       </div>
 
       {breakdownTotal > 0 && (
-        <div className="mb-6 rounded-2xl border border-border bg-card p-4 sm:p-5">
+        <div className="surface mb-6 rounded-2xl border border-border bg-card p-4 sm:p-5">
           <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-4 sm:gap-6 items-center">
             <div className="text-center sm:text-left sm:border-r sm:border-border sm:pr-6">
               <div className="font-display text-5xl leading-none text-navy">

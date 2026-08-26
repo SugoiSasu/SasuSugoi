@@ -106,7 +106,7 @@ function FriendsFeedCard() {
   const items = (feed ?? []).slice(0, 4);
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-5">
+    <div className="surface rounded-3xl border border-border bg-card p-5">
       <div className="mb-4 flex items-baseline justify-between gap-3">
         <h2 className="font-display text-lg">Aktywność znajomych</h2>
         <Link to="/wall" className="text-xs font-semibold text-tomato hover:underline">
@@ -277,7 +277,7 @@ function NextBadgeCard() {
   }, [all, mine, reviewStats, friendsCount, inviteStats, profile]);
 
   return (
-    <div className="rounded-3xl border border-border bg-card p-5">
+    <div className="surface rounded-3xl border border-border bg-card p-5">
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <h2 className="font-display text-lg">Najbliższa odznaka</h2>
         <Link to="/osiagniecia" className="text-xs font-semibold text-tomato hover:underline">

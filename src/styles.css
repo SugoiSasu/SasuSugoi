@@ -86,8 +86,13 @@
   /* Darkened from 0.615 on 2026-08-26. At 0.615 cream-on-tomato measured
      3.77:1 - below WCAG AA (4.5) - and tomato-as-text on cream was the same
      3.77, so the brand accent failed contrast in BOTH of its text roles.
-     0.56 puts cream-on-tomato at 4.73. */
-  --tomato: oklch(0.56 0.205 36);
+
+     Darkened again to 0.545 when --background dropped to 0.938: the accent is
+     used as small link text directly on the page ground ("Zobacz wszystkie",
+     "Zobacz na mapie"), and at 0.56 that measured 4.26 against the new ground.
+     The accent has to follow the ground down or it stops being readable on it.
+     Now 4.53 on the page, 5.45 on a card, and cream-on-tomato improves to 5.06. */
+  --tomato: oklch(0.545 0.205 36);
   /* The same darkening makes tomato unreadable ON navy (3.36 -> 2.68), so
      dark surfaces get their own lighter variant: 4.67:1 against the lightest
      point of the sidebar gradient. One accent, two surfaces. */
@@ -104,7 +109,7 @@
      0.975 the gap between page and card was 0.025 - invisible, which made whole
      screens read as one flat sheet of near-white. 0.951 doubles the separation
      and takes the glare off large empty areas, without going grey. */
-  --background: oklch(0.951 0.014 60);
+  --background: oklch(0.938 0.014 60);
   --foreground: var(--navy);
   --card: oklch(1 0 0);
   --card-foreground: var(--navy);
@@ -175,6 +180,18 @@
 
   .blob { border-radius: 62% 38% 55% 45% / 50% 60% 40% 50%; }
 
+  /* Cards used to be flat until hovered, which meant they were flat FOREVER on a
+     phone - there is no hover there. Combined with a page ground barely distinct
+     from the card, whole screens read as one sheet of near-white. The resting
+     shadow is the fix; the hover lift stays as the extra.
+
+     Tinted with the brand navy rather than neutral black: a grey shadow over warm
+     cream reads as dirt, the same hue reads as depth. */
+  .card-hover, .surface {
+    box-shadow:
+      0 1px 2px oklch(0.22 0.09 270 / 0.06),
+      0 4px 12px -6px oklch(0.22 0.09 270 / 0.14);
+  }
   .card-hover {
     transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease;
   }
