@@ -117,7 +117,7 @@ export function DiscoverHeader({
                     cuisine ? "border-transparent" : "border-tomato"
                   }`}
                 >
-                  <Star size={20} className="text-tomato" fill="currentColor" />
+                  <Star size={20} className="text-tomato-on-dark" fill="currentColor" />
                 </span>
                 <span className="text-center leading-tight text-muted-foreground">Wszystko</span>
               </button>

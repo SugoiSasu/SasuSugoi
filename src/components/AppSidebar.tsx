@@ -248,7 +248,7 @@ export function AppSidebar() {
             type="button"
             onClick={inviteFriends}
             disabled={inviteLink.isLoading}
-            className={`${linkBase} w-full text-left text-tomato hover:bg-tomato/10 hover:text-tomato disabled:opacity-50`}
+            className={`${linkBase} w-full text-left text-tomato-on-dark hover:bg-tomato-on-dark/10 hover:text-tomato-on-dark disabled:opacity-50`}
           >
             <UserPlus2 size={18} className={iconCls} />
             <span className="truncate">Zaproś znajomych</span>
@@ -305,7 +305,7 @@ function StatChip({
       search={search}
       className="flex flex-col items-center gap-0.5 rounded-xl py-1 text-center transition-colors duration-150 hover:bg-cream/10"
     >
-      <Icon size={15} className="text-tomato" />
+      <Icon size={15} className="text-tomato-on-dark" />
       <p className="font-display text-sm font-extrabold leading-none text-cream">{value}</p>
       <p className="truncate text-[9px] font-semibold uppercase tracking-wide text-cream/45">
         {label}
