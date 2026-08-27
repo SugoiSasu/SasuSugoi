@@ -1,8 +1,8 @@
-﻿import { useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2, PartyPopper } from "lucide-react";
+import { Loader2, PartyPopper, Undo2 } from "lucide-react";
 import { toast } from "sonner";
-import { useSwipeDeck, useSkipPlace } from "@/lib/swipe-api";
+import { useSwipeDeck, useSkipPlace, useUnskipPlace } from "@/lib/swipe-api";
 import { useToggleVisit } from "@/lib/visits-api";
 import { trackEvent } from "@/lib/analytics";
 import { SwipeCard } from "@/components/SwipeCard";
@@ -29,8 +29,13 @@ function KartyPage() {
   const { deck, isLoading } = useSwipeDeck();
   const toggleVisit = useToggleVisit();
   const skipPlace = useSkipPlace();
+  const unskipPlace = useUnskipPlace();
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [burst, setBurst] = useState<{ id: number; type: "like" | "nope" } | null>(null);
+  // Every decision is reversible, so each one is remembered with the direction it
+  // went. Newest last. A skip used to exile a place for the full five-day cooldown
+  // with no way back, which made a mis-swipe genuinely costly.
+  const [history, setHistory] = useState<{ place: Place; direction: "left" | "right" }[]>([]);
 
   const visible = deck.filter((p) => !hiddenIds.has(p.id));
   const stack = visible.slice(0, VISIBLE_STACK);
@@ -67,7 +72,62 @@ function KartyPage() {
   function handleSwipeEnd(direction: "left" | "right", place: Place) {
     setHiddenIds((prev) => new Set(prev).add(place.id));
     setBurst({ id: Date.now(), type: direction === "right" ? "like" : "nope" });
+    setHistory((prev) => [...prev, { place, direction }]);
   }
+
+  // Buttons and keys both take the same path a completed drag does, so a decision
+  // is written and recorded identically however it was made.
+  function decide(direction: "left" | "right", place: Place) {
+    handleSwipeCommit(direction, place);
+    handleSwipeEnd(direction, place);
+  }
+
+  // The mutation and the toast stay OUT of the setState updater: React calls those
+  // twice under StrictMode, which would fire the write and the toast twice each.
+  const undoLast = useCallback(() => {
+    const last = history[history.length - 1];
+    if (!last) return;
+    // A failed reversal must not look like a successful one: the card would come
+    // back on screen while the row that hides it is still in the database, and it
+    // would vanish again on the next refetch with no explanation.
+    const onError = (err: unknown) => {
+      setHiddenIds((ids) => new Set(ids).add(last.place.id));
+      setHistory((prev) => [...prev, last]);
+      toast.error(err instanceof Error ? err.message : "Nie udało się cofnąć");
+    };
+    if (last.direction === "right") {
+      toggleVisit.mutate({ placeId: last.place.id, status: "want", on: false }, { onError });
+    } else {
+      unskipPlace.mutate(last.place.id, { onError });
+    }
+    setHiddenIds((ids) => {
+      const next = new Set(ids);
+      next.delete(last.place.id);
+      return next;
+    });
+    setHistory((prev) => prev.slice(0, -1));
+    toast(`Cofnięto: ${last.place.name}`);
+  }, [history, toggleVisit, unskipPlace]);
+
+  // Arrow keys on desktop. The deck was mouse-drag only, which left it unusable
+  // for anyone navigating by keyboard even though the two buttons underneath do
+  // exactly the same thing.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const el = document.activeElement;
+      if (el instanceof HTMLElement && ["INPUT", "TEXTAREA"].includes(el.tagName)) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === "ArrowRight" && top) {
+        e.preventDefault();
+        decide("right", top);
+      } else if (e.key === "ArrowLeft" && top) {
+        e.preventDefault();
+        decide("left", top);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
 
   return (
     <main
@@ -136,21 +196,24 @@ function KartyPage() {
             <button
               type="button"
               aria-label="Pomiń"
-              onClick={() => {
-                handleSwipeCommit("left", top);
-                handleSwipeEnd("left", top);
-              }}
+              onClick={() => decide("left", top)}
               className="grid h-16 w-16 place-items-center rounded-full border-2 border-navy/15 bg-card shadow-md transition hover:-translate-y-0.5 hover:border-navy/40 hover:shadow-lg active:scale-95"
             >
               <NopeFace size={34} />
             </button>
             <button
               type="button"
+              aria-label="Cofnij ostatnią decyzję"
+              onClick={undoLast}
+              disabled={history.length === 0}
+              className="grid h-12 w-12 place-items-center rounded-full border-2 border-navy/15 bg-card text-navy/70 shadow-sm transition hover:-translate-y-0.5 hover:border-navy/40 hover:text-navy hover:shadow-md active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+            >
+              <Undo2 size={20} />
+            </button>
+            <button
+              type="button"
               aria-label="Chcę odwiedzić"
-              onClick={() => {
-                handleSwipeCommit("right", top);
-                handleSwipeEnd("right", top);
-              }}
+              onClick={() => decide("right", top)}
               className="grid h-16 w-16 place-items-center rounded-full border-2 border-tomato/25 bg-card shadow-md transition hover:-translate-y-0.5 hover:border-tomato hover:shadow-lg active:scale-95"
             >
               <YummyFace size={34} />

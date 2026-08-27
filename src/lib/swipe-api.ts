@@ -44,6 +44,27 @@ export function useSkipPlace() {
   });
 }
 
+/** Reverses a skip. A mis-swipe used to exile a place for the full cooldown with
+ *  no way back, so undo has to delete the row rather than shorten it. */
+export function useUnskipPlace() {
+  const qc = useQueryClient();
+  const { user } = useUser();
+  return useMutation({
+    mutationFn: async (placeId: string) => {
+      if (!user) throw new Error("Musisz być zalogowany");
+      const { error } = await supabase
+        .from("place_swipe_skips")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("place_id", placeId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["swipe-skips"] });
+    },
+  });
+}
+
 /** Small deterministic PRNG-based shuffle - stable per seed, no Math.random(). */
 function seededShuffle<T>(items: T[], seed: string): T[] {
   let h = 0;
