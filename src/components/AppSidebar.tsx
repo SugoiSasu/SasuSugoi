@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import {
@@ -254,6 +255,7 @@ export function AppSidebar() {
             <span className="truncate">Zaproś znajomych</span>
           </button>
         )}
+        <ThemeToggle variant="sidebar" className="mb-1" />
         <Link to="/profile" className={linkBase} activeProps={activeCls}>
           <Settings size={18} className={iconCls} />
           <span className="truncate">Ustawienia</span>

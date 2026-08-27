@@ -20,6 +20,7 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { levelInfo } from "@/components/LevelProgress";
 import { VipBadge, isVipActive, vipNameStyle } from "@/components/VipBadge";
 import { InviteFriendsModal } from "@/components/InviteFriendsModal";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useUser } from "@/lib/use-auth";
 import { useMyProfile } from "@/lib/profile-api";
 import { useUserVisitedPlaces, useUserFavoritePlaces } from "@/lib/visits-api";
@@ -328,6 +329,11 @@ export function SiteNav() {
                 <UserPlus2 size={16} /> Zaproś znajomych
               </button>
             )}
+
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-3 py-2.5">
+              <span className="text-sm font-semibold">Motyw</span>
+              <ThemeToggle />
+            </div>
           </div>
         </nav>
       )}

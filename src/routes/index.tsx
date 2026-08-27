@@ -561,7 +561,7 @@ function FirstVisitPopup() {
       onClick={close}
     >
       <div
-        className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-cream shadow-2xl"
+        className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-card shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -581,7 +581,7 @@ function FirstVisitPopup() {
           </p>
         </div>
         <div className="p-6 text-center">
-          <p className="mb-4 font-semibold text-navy">
+          <p className="mb-4 font-semibold text-foreground">
             Obserwuj nas na Instagramie i nie przegap nowych rolek 🍕
           </p>
           <a
@@ -595,7 +595,7 @@ function FirstVisitPopup() {
           </a>
           <button
             onClick={close}
-            className="pz-hit mt-3 text-xs text-muted-foreground underline hover:text-navy"
+            className="pz-hit mt-3 text-xs text-muted-foreground underline hover:text-foreground"
           >
             może później
           </button>

@@ -109,6 +109,10 @@
      0.975 the gap between page and card was 0.025 - invisible, which made whole
      screens read as one flat sheet of near-white. 0.951 doubles the separation
      and takes the glare off large empty areas, without going grey. */
+  /* Declared here rather than as an inline style on <html>: React does not
+     render that style, so setting it from the boot script would read as a
+     permanent hydration mismatch. */
+  color-scheme: light;
   --background: oklch(0.938 0.014 60);
   --foreground: var(--navy);
   --card: oklch(1 0 0);
@@ -535,13 +539,82 @@
   ::view-transition-old(pz-route), ::view-transition-new(pz-route) { animation: none; }
 }
 
+/* Dark theme.
+
+   The app leans overwhelmingly on the semantic tokens - roughly 1450 uses of
+   bg-card / text-muted-foreground / border-border and friends against 744 raw
+   brand classes - so redefining the semantic layer flips most of the interface
+   without touching a single component.
+
+   The ground is the same navy the dark basemap style uses, so the map does not
+   sit on the page like a hole. Every pair below was measured rather than
+   guessed; the numbers are the contrast ratios against the surface named. */
 .dark {
-  --sidebar: hsl(240 5.9% 10%);
-  --sidebar-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-primary: hsl(224.3 76.3% 48%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 3.7% 15.9%);
-  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-border: hsl(240 3.7% 15.9%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  color-scheme: dark;
+  --background: oklch(0.205 0.045 268);
+  --foreground: oklch(0.965 0.012 60); /* 16.2 on background */
+  --card: oklch(0.25 0.042 268); /* one step up, so cards read as raised */
+  --card-foreground: oklch(0.965 0.012 60); /* 14.5 */
+  --popover: oklch(0.25 0.042 268);
+  --popover-foreground: oklch(0.965 0.012 60);
+
+  /* Primary sits in a narrow window: dark enough that cream stays readable on
+     it, light enough to be visible against the navy ground at all. Below 0.52
+     the button disappears into the page (2.2 at the original navy); above 0.55
+     cream on it drops under AA. 0.53 gives 3.3 against the ground and 5.0 for
+     the label - and lands close to --cobalt, so it still reads as ours. */
+  --primary: oklch(0.53 0.14 268);
+  --primary-foreground: oklch(0.975 0.012 60);
+
+  --secondary: oklch(0.33 0.06 25); /* --blush inverted into a deep plum */
+  --secondary-foreground: oklch(0.965 0.012 60); /* 11.3 */
+  --muted: oklch(0.29 0.04 268);
+  --muted-foreground: oklch(0.735 0.028 268); /* 7.6 on background, 6.8 on card */
+
+  /* The accent is the existing --tomato-on-dark, added during the contrast audit
+     for exactly this surface. The light theme's --tomato would read 2.7 here. */
+  --accent: var(--tomato-on-dark);
+  --accent-foreground: oklch(0.2 0.05 268); /* 7.3 - dark text on a light accent */
+
+  --destructive: oklch(0.62 0.2 27);
+  --destructive-foreground: oklch(0.12 0.02 268); /* 5.1 */
+  --border: oklch(0.33 0.035 268);
+  --input: oklch(0.31 0.035 268);
+  --ring: oklch(0.62 0.15 268);
+
+  /* --ok is a text colour on light surfaces at 0.55; on navy it needs lifting. */
+  --ok: oklch(0.72 0.13 155); /* 6.8 on card */
+
+  --sidebar: oklch(0.205 0.045 268);
+  --sidebar-foreground: oklch(0.965 0.012 60);
+  --sidebar-primary: oklch(0.53 0.14 268);
+  --sidebar-primary-foreground: oklch(0.975 0.012 60);
+  --sidebar-accent: oklch(0.29 0.04 268);
+  --sidebar-accent-foreground: oklch(0.965 0.012 60);
+  --sidebar-border: oklch(0.33 0.035 268);
+  --sidebar-ring: oklch(0.62 0.15 268);
+}
+
+/* The accent as TEXT on a dark ground. --tomato is tuned to be readable on cream
+   (0.545); on the dark background it measures 2.95, well under AA. The lighter
+   --tomato-on-dark already exists for exactly this and was added during the
+   contrast audit. This has to be a rule rather than a token swap because the same
+   token also paints bg-tomato, where cream sits ON the accent and needs it dark -
+   one token, two opposite requirements, so the split happens at the class. */
+.dark .text-tomato { color: var(--tomato-on-dark); }
+.dark .hover\:text-tomato:hover { color: var(--tomato-on-dark); }
+
+/* Shadows are tuned for dark ink on a light page. On a dark ground they are
+   invisible, so depth comes from a light top edge instead - the same trick a
+   physical surface uses when lit from above. */
+.dark .card-hover,
+.dark .surface {
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.06),
+    0 4px 14px -6px oklch(0 0 0 / 0.5);
+}
+.dark .card-hover:hover {
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.09),
+    0 18px 40px -20px oklch(0 0 0 / 0.7);
 }

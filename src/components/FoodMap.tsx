@@ -6,6 +6,7 @@ import { cuisineMeta } from "@/data/places";
 import type { Place } from "@/lib/places-api";
 import { trackEvent } from "@/lib/analytics";
 import { useUnlockManualAchievement } from "@/lib/achievements-api";
+import { useTheme } from "@/lib/theme";
 import { toast } from "sonner";
 
 
@@ -15,7 +16,10 @@ import { toast } from "sonner";
  *  These are vector tiles, so the whole basemap restyles at runtime from one URL -
  *  which is what a light/dark switch needs. `fiord` is the dark counterpart and sits
  *  close to our own --navy. */
-const BASEMAP_STYLE = "/map/pozeramy-light.json";
+const BASEMAP_STYLE = {
+  light: "/map/pozeramy-light.json",
+  dark: "/map/pozeramy-dark.json",
+} as const;
 const BASEMAP_ATTRIBUTION =
   '&copy; <a href="https://openfreemap.org">OpenFreeMap</a> ' +
   '&copy; <a href="https://openmaptiles.org">OpenMapTiles</a> ' +
@@ -67,6 +71,8 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
   const youAreHereRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const areaLayersRef = useRef<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const glLayerRef = useRef<any>(null);
 
   const selectRef = useRef(onSelect);
   selectRef.current = onSelect;
@@ -82,6 +88,7 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
   const userMovedRef = useRef(false);
   const autoCenteredRef = useRef(false);
 
+  const { resolved: theme } = useTheme();
   const unlockAchievement = useUnlockManualAchievement();
   const achievementTried = useRef(false);
   const [mapReady, setMapReady] = useState(false);
@@ -135,7 +142,7 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
             west: b.getWest(),
           });
         });
-        L.maplibreGL({ style: BASEMAP_STYLE }).addTo(map);
+        glLayerRef.current = L.maplibreGL({ style: BASEMAP_STYLE[theme] }).addTo(map);
         // The bridge types only cover maplibre's own options, so attribution goes
         // through the control directly. OpenFreeMap requires it to stay visible.
         map.attributionControl.addAttribution(BASEMAP_ATTRIBUTION);
@@ -500,6 +507,17 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
     }, 300);
     return () => clearTimeout(t);
   }, [autoCenter, mapReady, focusPlaceId]);
+
+  // Vector tiles are the whole reason the basemap can follow the theme at all:
+  // the style is data, so switching it is a URL swap rather than a second set of
+  // images. Guarded on mapReady so it never runs before the layer exists.
+  useEffect(() => {
+    const gl = glLayerRef.current;
+    if (!gl || !mapReady) return;
+    const m = gl.getMaplibreMap?.();
+    if (!m) return;
+    m.setStyle(BASEMAP_STYLE[theme]);
+  }, [theme, mapReady]);
 
   return (
     <div

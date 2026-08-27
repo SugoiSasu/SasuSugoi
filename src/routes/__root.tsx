@@ -58,6 +58,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { readThemeCookies } from "@/lib/theme";
 import { Home, MapPin } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 
@@ -269,6 +270,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     scripts: [
       {
+        // Applies the saved theme before the first paint - without it the page
+        // renders light and flips once React hydrates, which is worse than having
+        // no dark theme at all.
+        //
+        // It also writes the RESOLVED value back, because "system" is only knowable
+        // in the browser and the server has to render the same class on <html> or
+        // React reports a hydration mismatch it explicitly will not reconcile. So a
+        // brand-new visitor on a dark OS gets one mismatched load; from the second
+        // request on, the server already knows. Same cookie names and same rules as
+        // src/lib/theme.ts - if one changes, both must.
+        children: `(function(){try{var g=function(n){var m=document.cookie.match(new RegExp('(?:^|; )'+n+'=([^;]*)'));return m?decodeURIComponent(m[1]):null;};var c=g('pz-theme');var d=c==='dark'||((!c||c==='system')&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);var v=d?'dark':'light';if(g('pz-theme-resolved')!==v){document.cookie='pz-theme-resolved='+v+'; path=/; max-age=31536000; samesite=lax';}}catch(e){}})();`,
+      },
+      {
         // Google Consent Mode v2 - ustaw defaulty PRZED jakimikolwiek tagami reklamowo-analitycznymi.
         // Skrypt gtag.js jest ładowany dynamicznie z src/lib/analytics.ts dopiero po zgodzie na analytics_storage.
         children: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',functionality_storage:'granted',security_storage:'granted',wait_for_update:500});`,
@@ -308,8 +322,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  // The resolved theme travels in a cookie so the server can render the same
+  // class the boot script already applied - see src/lib/theme.ts.
+  const { resolved: theme } = readThemeCookies();
   return (
-    <html lang="pl">
+    // The boot script in the route's `scripts` stamps class="dark" and the
+    // color-scheme onto this element before React runs, so the server markup and
+    // the live DOM deliberately differ here. Without this, React warns on every
+    // load and - by its own message - does not reconcile the attributes at all.
+    // Rendered from the cookie so it matches exactly what the boot script has
+    // already put on the element - see readResolvedTheme above.
+    <html lang="pl" className={theme === "dark" ? "dark" : undefined}>
       <head>
         <HeadContent />
       </head>

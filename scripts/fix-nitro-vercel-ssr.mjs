@@ -39,13 +39,18 @@ function patchSsrExports() {
     console.log("[fix-nitro-vercel-ssr] ssr.mjs already patched");
     return;
   }
-  const target = "export { ssr_exports as a,";
-  if (!content.includes(target)) {
+  // Neither the alias nor the position is ours to rely on: the minifier assigns the
+  // alias (it was `a`, then `o` once an unrelated import changed the module graph)
+  // and it sorts the export list, so ssr_exports can sit anywhere in it. Match the
+  // export statement that mentions it and insert the namespace object in front.
+  const match = /export \{[^}]*\bssr_exports as [A-Za-z0-9_$]+[^}]*\};?/.exec(content);
+  if (!match) {
     throw new Error(
       "[fix-nitro-vercel-ssr] expected broken 'ssr_exports' export not found in _ssr/ssr.mjs -- " +
       "nitro output shape changed, review this script (may mean the upstream bug is fixed).",
     );
   }
+  const target = match[0];
   const namespaceObject =
     "var ssr_exports = { createServerEntry, default: server_default, getRequest, TSS_SERVER_FUNCTION, createMiddleware, getServerFnById, createServerFn };\n";
   content = content.replace(target, namespaceObject + target);

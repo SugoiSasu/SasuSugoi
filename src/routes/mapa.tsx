@@ -168,7 +168,7 @@ function MapaPage() {
 
   const optionRow = (active: boolean) =>
     `flex min-h-11 w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition ${
-      active ? "bg-navy/10 font-semibold text-navy" : "hover:bg-muted"
+      active ? "bg-primary/15 font-semibold text-foreground" : "hover:bg-muted"
     }`;
 
   return (
@@ -306,7 +306,9 @@ function MapaPage() {
                   disabled={o.key === "dist" && !userLoc}
                   title={o.key === "dist" && !userLoc ? "Włącz lokalizację, aby sortować po odległości" : undefined}
                   className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${
-                    sort === o.key ? "bg-navy text-cream" : "bg-muted text-navy hover:bg-muted/70"
+                    sort === o.key
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-foreground hover:bg-muted/70"
                   }`}
                 >
                   {o.label}

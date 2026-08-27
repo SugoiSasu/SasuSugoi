@@ -59,7 +59,7 @@ export function QuickFilters({
             className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-2 text-xs font-semibold transition active:scale-95 ${
               active
                 ? "border-navy bg-navy text-cream"
-                : "border-border bg-card text-navy hover:border-tomato"
+                : "border-border bg-card text-foreground hover:border-accent"
             }`}
           >
             {f.icon}
