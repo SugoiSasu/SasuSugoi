@@ -243,7 +243,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         name: "twitter:image",
         content: `${BASE_URL}/brand/po_zeramy-logo-dark.png`,
       },
+      // Two tokens, deliberately. The first belongs to whichever Google account
+      // originally claimed the site; the second is sugoi.biznes@gmail.com, which is
+      // the account that owns the OAuth app. Google's brand verification refuses to
+      // show our name and logo on the sign-in screen until the account behind the
+      // OAuth client can prove it owns the homepage, and removing either tag
+      // un-verifies whoever it belongs to.
       { name: "google-site-verification", content: "otoVs-bqss54Ne6ibX-Y8ik3re9mnh-tGFJ-TQbA0Ac" },
+      { name: "google-site-verification", content: "jFdXoxCFp47bXmfH86zDEKB7QoYxC1rsVpAhyoOd1Zs" },
     ],
     links: [
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
