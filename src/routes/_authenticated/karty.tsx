@@ -4,6 +4,9 @@ import { Loader2, PartyPopper, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSwipeDeck, useSkipPlace, useUnskipPlace } from "@/lib/swipe-api";
 import { useToggleVisit } from "@/lib/visits-api";
+import { usePlaceRatingsMap } from "@/lib/places-api";
+import { useFriendFavoriteCounts } from "@/lib/favorites-api";
+import { pluralPl } from "@/lib/plural-pl";
 import { trackEvent } from "@/lib/analytics";
 import { SwipeCard } from "@/components/SwipeCard";
 import { SwipeBurst } from "@/components/SwipeBurst";
@@ -30,6 +33,10 @@ function KartyPage() {
   const toggleVisit = useToggleVisit();
   const skipPlace = useSkipPlace();
   const unskipPlace = useUnskipPlace();
+  // Both of these are already fetched for the map and the homepage, so putting
+  // them on the card costs no extra request.
+  const { data: ratings } = usePlaceRatingsMap();
+  const { data: friendCounts } = useFriendFavoriteCounts();
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [burst, setBurst] = useState<{ id: number; type: "like" | "nope" } | null>(null);
   // Every decision is reversible, so each one is remembered with the direction it
@@ -139,6 +146,12 @@ function KartyPage() {
         <p className="mt-1.5 text-sm text-muted-foreground">
           Przesuń w prawo - trafi do „Chcę odwiedzić”. W lewo - pomiń, wróci za 5 dni.
         </p>
+        {!isLoading && visible.length > 0 && (
+          <p className="mt-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            {visible.length}{" "}
+            {pluralPl(visible.length, "karta", "karty", "kart")} do przejrzenia
+          </p>
+        )}
 
         <div className="relative mx-auto mt-6 aspect-[3/4] w-full max-w-[340px]">
           {isLoading ? (
@@ -174,6 +187,8 @@ function KartyPage() {
                     <SwipeCard
                       place={place}
                       isTop={idxFromTop === 0}
+                      rating={ratings?.get(place.id)}
+                      friendCount={friendCounts?.get(place.id) ?? 0}
                       onSwipeCommit={(dir) => handleSwipeCommit(dir, place)}
                       onSwipe={(dir) => handleSwipeEnd(dir, place)}
                     />

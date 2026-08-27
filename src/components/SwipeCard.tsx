@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { motion, useMotionValue, useTransform, animate } from "motion/react";
-import { MapPin } from "lucide-react";
+import { MapPin, Star, Users } from "lucide-react";
 import { cuisineMeta } from "@/data/places";
 import { YummyFace, NopeFace } from "@/components/SwipeFaces";
+import { placeOpenState } from "@/lib/places-api";
 import type { Place } from "@/lib/places-api";
 
 const SWIPE_THRESHOLD = 120;
@@ -10,11 +12,18 @@ const VELOCITY_THRESHOLD = 500;
 export function SwipeCard({
   place,
   isTop,
+  rating,
+  friendCount = 0,
   onSwipeCommit,
   onSwipe,
 }: {
   place: Place;
   isTop: boolean;
+  /** Real aggregated rating, when the place has any reviews at all. */
+  rating?: { avg: number; count: number };
+  /** How many of my friends already want to go here - the strongest single
+   *  reason to swipe right, so it earns a place on the card. */
+  friendCount?: number;
   /** Fires the instant a drag passes the threshold - this is what actually
    * writes the decision, so it can never be lost to the user navigating
    * away before the (purely cosmetic) exit animation below finishes. */
@@ -28,6 +37,17 @@ export function SwipeCard({
   const likeOpacity = useTransform(x, [20, 120], [0, 1]);
   const nopeOpacity = useTransform(x, [-120, -20], [1, 0]);
   const meta = cuisineMeta(place.cuisine);
+
+  // Time-dependent state must not be computed during SSR or the first client
+  // render: the server runs in UTC and the visitor does not, so the two would
+  // disagree about whether a place is open and hydration would mismatch.
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  const open = now ? placeOpenState(place.opening_hours, now) : { status: "unknown" as const };
 
   return (
     <motion.div
@@ -90,6 +110,57 @@ export function SwipeCard({
             replacing a stack of four same-weight lines (chip, name, address,
             description) that read as cluttered/unrefined per live feedback. */}
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-5 pt-24 text-cream">
+          {/* Decision signals, above the name and visually distinct from it. Each one
+              renders only when it has something to say, so a place with no reviews,
+              no opening hours and no friends shows no row at all - the same rule the
+              homepage quick filters follow. Stacking them as more text lines was
+              tried and read as clutter. */}
+          {(friendCount > 0 || rating || open.status !== "unknown") && (
+            <div className="mb-2 flex flex-wrap items-center gap-1.5">
+              {friendCount > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-tomato px-2 py-1 text-[11px] font-bold text-cream">
+                  <Users size={11} aria-hidden="true" />
+                  {friendCount === 1
+                    ? "1 znajomy chce tu iść"
+                    : `${friendCount} znajomych chce tu iść`}
+                </span>
+              )}
+              {rating && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-cream/20 px-2 py-1 text-[11px] font-bold text-cream backdrop-blur-sm">
+                  <Star size={11} className="fill-mustard text-mustard" aria-hidden="true" />
+                  {rating.avg.toFixed(1).replace(".", ",")}
+                  <span className="font-semibold text-cream/70">({rating.count})</span>
+                </span>
+              )}
+              {open.status !== "unknown" && (
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-bold backdrop-blur-sm ${
+                    open.status === "closed"
+                      ? "bg-cream/15 text-cream/70"
+                      : "bg-cream/20 text-cream"
+                  }`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      open.status === "open"
+                        ? "bg-ok"
+                        : open.status === "closing-soon"
+                          ? "bg-tomato"
+                          : "bg-cream/40"
+                    }`}
+                    aria-hidden="true"
+                  />
+                  {open.status === "open"
+                    ? `Otwarte do ${open.closesAt}`
+                    : open.status === "closing-soon"
+                      ? open.minutesToClose <= 1
+                        ? "Zamyka się"
+                        : `Zamyka za ${open.minutesToClose} min`
+                      : "Zamknięte"}
+                </span>
+              )}
+            </div>
+          )}
           <h2 className="font-display text-2xl font-extrabold leading-tight">{place.name}</h2>
           {place.description && (
             <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-cream/90">
