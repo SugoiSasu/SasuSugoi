@@ -9,6 +9,7 @@ import { useFriendFavoriteCounts } from "@/lib/favorites-api";
 import { pluralPl } from "@/lib/plural-pl";
 import { trackEvent } from "@/lib/analytics";
 import { SwipeCard } from "@/components/SwipeCard";
+import { SwipeHistoryRail } from "@/components/SwipeHistoryRail";
 import { SwipeBurst } from "@/components/SwipeBurst";
 import { YummyFace, NopeFace } from "@/components/SwipeFaces";
 import type { Place } from "@/lib/places-api";
@@ -141,7 +142,8 @@ function KartyPage() {
       id="main-content"
       className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 py-10"
     >
-      <div className="mx-auto w-full max-w-md text-center">
+      <div className="flex w-full items-start justify-center gap-10">
+      <div className="w-full max-w-md text-center">
         <h1 className="font-display text-3xl font-extrabold sm:text-4xl">Karty 🎴</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           Przesuń w prawo - trafi do „Chcę odwiedzić”. W lewo - pomiń, wróci za 5 dni.
@@ -212,7 +214,7 @@ function KartyPage() {
               type="button"
               aria-label="Pomiń"
               onClick={() => decide("left", top)}
-              className="grid h-16 w-16 place-items-center rounded-full border-2 border-navy/15 bg-card shadow-md transition hover:-translate-y-0.5 hover:border-navy/40 hover:shadow-lg active:scale-95"
+              className="grid h-16 w-16 place-items-center rounded-full border-2 border-foreground/15 bg-card shadow-md transition hover:-translate-y-0.5 hover:border-foreground/40 hover:shadow-lg active:scale-95"
             >
               <NopeFace size={34} />
             </button>
@@ -235,6 +237,9 @@ function KartyPage() {
             </button>
           </div>
         )}
+      </div>
+
+        <SwipeHistoryRail history={history} onUndo={undoLast} />
       </div>
     </main>
   );
