@@ -75,46 +75,59 @@ export function SwipeCard({
       }}
     >
       <div className="relative h-full w-full touch-pan-y overflow-hidden rounded-3xl border border-border bg-card shadow-xl">
-        <div className="absolute inset-0">
-          {place.cover_image_url ? (
-            <img
-              src={place.cover_image_url}
-              alt=""
-              className="h-full w-full object-cover"
-              aria-hidden="true"
-            />
-          ) : (
-            // No real photo yet: a lone giant cuisine emoji here (used to be
-            // text-[12rem], nearly half the card) read as a cheap placeholder
-            // sticker (flagged live 2026-08-25 - "wygląda tandetnie"). Reuse
-            // the same illustrated brand pattern already used for the
-            // homepage's cuisine chips instead - designed, tileable art that
-            // was otherwise sitting unused at chip scale only.
-            <div
-              className="h-full w-full bg-cover bg-center"
-              style={{
-                backgroundImage: `linear-gradient(180deg, ${meta.color}00 0%, ${meta.color}3d 55%, #17143d 100%), url(${meta.chipBackground ?? meta.cover})`,
-              }}
-            />
-          )}
+        {/* The card is built out of the logo now: the same image twice, once
+            blown past the card bounds and blurred into a wash of its own
+            colours, once crisp in the middle. The old card led with a tileable
+            cuisine pattern, which meant every burger place looked identical -
+            the brand was the one thing that could tell them apart, and it was a
+            56px badge in a corner.
+            The blurred copy is scaled well over 100% because a blur samples
+            transparent pixels past the edge and would otherwise fade the frame
+            to nothing. The cuisine colour sits underneath so a logo that is
+            mostly transparent still lands on something. */}
+        <div className="absolute inset-0 overflow-hidden" style={{ backgroundColor: meta.color }}>
+          <img
+            src={place.avatar_url ?? undefined}
+            alt=""
+            aria-hidden="true"
+            className="absolute left-1/2 top-1/2 h-full w-full object-cover"
+            style={{ filter: "blur(44px) saturate(2)", transform: "translate(-50%, -50%) scale(1.6)" }}
+          />
+          {/* A monochrome logo blurs to grey or near-black - Gemüse Spot and
+              Parabar both do - and the card loses all colour. Soft-light lifts a
+              neutral wash towards the cuisine hue while barely touching one that
+              is already saturated, so a red logo stays red. */}
+          <div
+            className="absolute inset-0"
+            style={{ backgroundColor: meta.color, mixBlendMode: "soft-light", opacity: 0.85 }}
+          />
+          {/* Enough scrim for cream text on any logo, not so much that the
+              colour wash stops reading as colour. */}
+          <div className="absolute inset-0 bg-navy/45" />
         </div>
 
-        {place.avatar_url && (
-          <div className="absolute left-5 top-5 h-14 w-14 overflow-hidden rounded-2xl border-2 border-cream/80 bg-cream shadow-lg">
-            <img src={place.avatar_url} alt="" className="h-full w-full object-contain p-1" aria-hidden="true" />
+        {/* Centre block: the logo at a size you can actually read, and the name
+            directly under it. */}
+        <div className="absolute inset-x-0 top-[24%] flex flex-col items-center gap-3 px-6 text-center">
+          <div className="h-28 w-28 overflow-hidden rounded-3xl bg-cream shadow-2xl ring-2 ring-navy/25">
+            <img
+              src={place.avatar_url ?? undefined}
+              alt=""
+              aria-hidden="true"
+              className="h-full w-full object-contain p-2"
+            />
           </div>
-        )}
+          <h2 className="font-display text-2xl font-extrabold leading-tight text-cream drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)]">
+            {place.name}
+          </h2>
+        </div>
 
-        {/* Hierarchy tightened 2026-08-25: name -> description (the actual
-            "why visit" content) -> a small muted cuisine+address meta line,
-            replacing a stack of four same-weight lines (chip, name, address,
-            description) that read as cluttered/unrefined per live feedback. */}
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-5 pt-24 text-cream">
-          {/* Decision signals, above the name and visually distinct from it. Each one
-              renders only when it has something to say, so a place with no reviews,
-              no opening hours and no friends shows no row at all - the same rule the
-              homepage quick filters follow. Stacking them as more text lines was
-              tried and read as clutter. */}
+        {/* Everything that is not the identity stays at the foot of the card:
+            the decision signals first, then the "why visit" line, then the muted
+            cuisine + address meta. Each signal renders only when it has
+            something to say, so a place with no reviews, no opening hours and no
+            friends shows no row at all. */}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent p-5 pt-20 text-cream">
           {(friendCount > 0 || rating || open.status !== "unknown") && (
             <div className="mb-2 flex flex-wrap items-center gap-1.5">
               {friendCount > 0 && (
@@ -161,13 +174,10 @@ export function SwipeCard({
               )}
             </div>
           )}
-          <h2 className="font-display text-2xl font-extrabold leading-tight">{place.name}</h2>
           {place.description && (
-            <p className="mt-1.5 line-clamp-2 text-sm leading-snug text-cream/90">
-              {place.description}
-            </p>
+            <p className="line-clamp-2 text-sm leading-snug text-cream/90">{place.description}</p>
           )}
-          <p className="mt-2 flex items-center gap-1.5 text-xs text-cream/60">
+          <p className="mt-2 flex items-center gap-1.5 text-xs text-cream/70">
             <span className="shrink-0">
               {meta.emoji} {place.cuisine}
             </span>

@@ -100,6 +100,10 @@ export function useSwipeDeck() {
     const favIds = new Set(favIdsQ.data ?? []);
     const skipped = skippedQ.data ?? new Set<string>();
     const undecided = places.filter((p) => {
+      // The card is now built out of the logo, so a place without one has no card
+      // to show. Every published place has a logo today - this is here so an
+      // unbranded one added later cannot land in the deck as a blank.
+      if (!p.avatar_url) return false;
       if (skipped.has(p.id) || favIds.has(p.id)) return false;
       const s = statuses[p.id];
       if (s?.has("want") || s?.has("visited")) return false;
