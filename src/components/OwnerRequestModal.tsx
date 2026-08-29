@@ -50,28 +50,28 @@ export function OwnerRequestModal({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] grid place-items-center bg-navy/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[9999] grid place-items-center bg-foreground/60 backdrop-blur-sm p-4"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="owner-req-title"
     >
       <div
-        className="relative w-full max-w-lg rounded-3xl bg-cream shadow-2xl overflow-hidden"
+        className="relative w-full max-w-lg rounded-3xl bg-background shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
           aria-label="Zamknij"
-          className="absolute top-3 right-3 w-9 h-9 rounded-full grid place-items-center bg-white/80 hover:bg-white text-navy shadow"
+          className="absolute top-3 right-3 w-9 h-9 rounded-full grid place-items-center bg-card/80 hover:bg-card text-foreground shadow"
         >
           <X size={18} />
         </button>
         <div className="p-6 sm:p-7">
-          <h2 id="owner-req-title" className="font-display text-2xl mb-1 text-navy">
+          <h2 id="owner-req-title" className="font-display text-2xl mb-1 text-foreground">
             Zgłoś się jako właściciel
           </h2>
-          <p className="text-sm text-navy/70 mb-5">
+          <p className="text-sm text-foreground/70 mb-5">
             <strong>{placeName}</strong> - zweryfikujemy zgłoszenie i skontaktujemy się
             mailowo.
           </p>
@@ -84,12 +84,12 @@ export function OwnerRequestModal({
               </Link>{" "} - powiążemy zgłoszenie z Twoim kontem.
             </div>
           ) : alreadyApproved ? (
-            <div className="rounded-2xl border-2 border-emerald-500/40 bg-emerald-500/10 p-4 text-sm text-navy inline-flex items-center gap-2">
+            <div className="rounded-2xl border-2 border-emerald-500/40 bg-emerald-500/10 p-4 text-sm text-foreground inline-flex items-center gap-2">
               <CheckCircle2 size={18} className="text-emerald-600" /> Jesteś już
               zweryfikowanym właścicielem tej knajpy.
             </div>
           ) : alreadyPending ? (
-            <div className="rounded-2xl border-2 border-amber-500/40 bg-amber-500/10 p-4 text-sm text-navy">
+            <div className="rounded-2xl border-2 border-amber-500/40 bg-amber-500/10 p-4 text-sm text-foreground">
               Twoje zgłoszenie oczekuje na weryfikację. Odezwiemy się mailowo.
             </div>
           ) : (
@@ -169,7 +169,7 @@ export function OwnerRequestModal({
 }
 
 const inputCx =
-  "w-full rounded-xl border border-border bg-white px-3 py-2.5 text-sm outline-none focus:border-tomato focus:ring-2 focus:ring-tomato/20 transition";
+  "w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm outline-none focus:border-tomato focus:ring-2 focus:ring-tomato/20 transition";
 
 function Field({
   label,
@@ -182,7 +182,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="block text-xs font-bold uppercase tracking-wider text-navy/70 mb-1">
+      <span className="block text-xs font-bold uppercase tracking-wider text-foreground/70 mb-1">
         {label} {required && <span className="text-tomato">*</span>}
       </span>
       {children}

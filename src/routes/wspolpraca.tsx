@@ -40,7 +40,7 @@ function WspolpracaPage() {
       <section className="pb-10 sm:pb-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 grid md:grid-cols-2 gap-12 items-start">
           <div>
-            <span className="chip bg-blush text-navy mb-4">Dla marek i lokali</span>
+            <span className="chip bg-secondary text-secondary-foreground mb-4">Dla marek i lokali</span>
             <h1 className="text-4xl sm:text-5xl mb-5 text-balance font-display">
               <SmartText>
                 Współpraca, która naprawdę<br /> trafia do <span className="text-tomato">głodnych</span>.

@@ -28,7 +28,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
             "group-[.toaster]:!bg-destructive group-[.toaster]:!text-destructive-foreground group-[.toaster]:!border-destructive",
           warning:
             "group-[.toaster]:!bg-tomato/10 group-[.toaster]:!text-tomato group-[.toaster]:!border-tomato/30",
-          info: "group-[.toaster]:!bg-navy/10 group-[.toaster]:!text-navy group-[.toaster]:!border-navy/20",
+          info: "group-[.toaster]:!bg-foreground/10 group-[.toaster]:!text-foreground group-[.toaster]:!border-foreground/20",
         },
       }}
       {...props}

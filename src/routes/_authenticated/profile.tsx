@@ -718,7 +718,7 @@ function ChangePasswordSection() {
   return (
     <section className="rounded-2xl bg-card border border-border p-5">
       <div className="flex items-center gap-2 mb-1">
-        <KeyRound size={18} className="text-navy" />
+        <KeyRound size={18} className="text-foreground" />
         <h2 className="font-display text-lg">Hasło</h2>
       </div>
       <p className="text-sm text-muted-foreground">Zmień hasło do logowania e-mailem.</p>
@@ -726,7 +726,7 @@ function ChangePasswordSection() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="mt-3 inline-flex items-center gap-2 rounded-full border-2 border-navy text-navy px-4 py-2 text-sm font-semibold hover:bg-navy/5"
+          className="mt-3 inline-flex items-center gap-2 rounded-full border-2 border-foreground/25 text-foreground px-4 py-2 text-sm font-semibold hover:bg-foreground/5"
         >
           <KeyRound size={14} /> Zmień hasło
         </button>
@@ -756,7 +756,7 @@ function ChangePasswordSection() {
               type="button"
               onClick={() => setShowNext((v) => !v)}
               aria-label={showNext ? "Ukryj hasło" : "Pokaż hasło"}
-              className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-8 h-8 rounded-full text-muted-foreground hover:text-navy hover:bg-navy/5"
+              className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-8 h-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/5"
             >
               {showNext ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
@@ -793,7 +793,7 @@ function BlockedUsersSection() {
   return (
     <section className="rounded-2xl bg-card border border-border p-5">
       <div className="flex items-center gap-2 mb-1">
-        <Ban size={18} className="text-navy" />
+        <Ban size={18} className="text-foreground" />
         <h2 className="font-display text-lg">Zablokowani</h2>
       </div>
       <p className="text-sm text-muted-foreground mb-3">
@@ -873,7 +873,7 @@ function NotificationsSection({ profile }: { profile: Profile | null }) {
   return (
     <section className="rounded-2xl bg-card border border-border p-5">
       <div className="flex items-center gap-2 mb-1">
-        <Bell size={18} className="text-navy" />
+        <Bell size={18} className="text-foreground" />
         <h2 className="font-display text-lg">Powiadomienia</h2>
       </div>
       <p className="text-sm text-muted-foreground mb-4">
@@ -944,7 +944,7 @@ function DataExportSection() {
   return (
     <section className="rounded-2xl bg-card border border-border p-5">
       <div className="flex items-center gap-2 mb-1">
-        <Download size={18} className="text-navy" />
+        <Download size={18} className="text-foreground" />
         <h2 className="font-display text-lg">Eksport danych</h2>
       </div>
       <p className="text-sm text-muted-foreground mb-3">
@@ -955,7 +955,7 @@ function DataExportSection() {
         type="button"
         onClick={handleExport}
         disabled={busy}
-        className="inline-flex items-center gap-2 rounded-full border-2 border-navy text-navy px-4 py-2 text-sm font-semibold hover:bg-navy/5 disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded-full border-2 border-foreground/25 text-foreground px-4 py-2 text-sm font-semibold hover:bg-foreground/5 disabled:opacity-50"
       >
         {busy ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
         Pobierz moje dane

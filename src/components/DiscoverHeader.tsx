@@ -80,7 +80,7 @@ export function DiscoverHeader({
             to="/mapa"
             aria-label="Więcej filtrów na mapie"
             title="Więcej filtrów na mapie"
-            className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-border bg-card text-navy transition hover:border-tomato active:scale-95"
+            className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-border bg-card text-foreground transition hover:border-tomato active:scale-95"
           >
             <SlidersHorizontal size={18} />
           </Link>

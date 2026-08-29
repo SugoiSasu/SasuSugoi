@@ -229,10 +229,10 @@ function HoursTable({ hours }: { hours: OpeningHours }) {
         return (
           <li
             key={d}
-            className={`flex items-center justify-between px-3 py-2 text-sm ${isToday ? "bg-cream/60 font-semibold" : ""}`}
+            className={`flex items-center justify-between px-3 py-2 text-sm ${isToday ? "bg-muted font-semibold" : ""}`}
           >
-            <span className="text-navy/80">{DAY_LABELS[d]}{isToday ? " · dziś" : ""}</span>
-            <span className={slot ? "text-navy" : "text-muted-foreground"}>
+            <span className="text-foreground/80">{DAY_LABELS[d]}{isToday ? " · dziś" : ""}</span>
+            <span className={slot ? "text-foreground" : "text-muted-foreground"}>
               {slot ? `${slot.open}–${slot.close}` : "Zamknięte"}
             </span>
           </li>
@@ -255,7 +255,7 @@ function PlaceAvatar({ name, cover, color }: { name: string; cover: string | nul
         alt=""
         loading="lazy"
         style={box}
-        className="aspect-square rounded-2xl object-cover border-2 border-navy flex-shrink-0 shadow-sm bg-cream"
+        className="aspect-square rounded-2xl object-cover border-2 border-foreground/25 flex-shrink-0 shadow-sm bg-muted"
         onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
       />
     );
@@ -263,7 +263,7 @@ function PlaceAvatar({ name, cover, color }: { name: string; cover: string | nul
   return (
     <div
       style={{ ...box, backgroundColor: color }}
-      className="aspect-square rounded-2xl grid place-items-center text-cream font-display text-xl flex-shrink-0 shadow-sm border-2 border-navy"
+      className="aspect-square rounded-2xl grid place-items-center text-cream font-display text-xl flex-shrink-0 shadow-sm border-2 border-foreground/25"
       aria-hidden
     >
       {initials}
@@ -273,7 +273,7 @@ function PlaceAvatar({ name, cover, color }: { name: string; cover: string | nul
 
 function PlaceProfileSkeleton() {
   return (
-    <div className="bg-cream min-h-dvh">
+    <div className="bg-background min-h-dvh">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 pb-24">
         <Skeleton className="h-9 w-40 rounded-full mb-5" />
         <div className="flex items-start gap-3 mb-5">
@@ -357,7 +357,7 @@ function PlaceProfile() {
   }
 
   return (
-    <div className="bg-cream min-h-dvh">
+    <div className="bg-background min-h-dvh">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 pb-40 lg:max-w-6xl lg:pb-24">
         <div className="mb-5 flex items-center justify-between gap-2 flex-wrap">
           <BackButton to="/" hash="mapa" label="Wróć do mapy" ariaLabel="Wróć do mapy lokali" />
@@ -365,7 +365,7 @@ function PlaceProfile() {
             <Link
               to="/admin/places/$id"
               params={{ id: place.id }}
-              className="inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-navy/80 text-navy px-4 py-2 text-sm font-semibold hover:bg-navy hover:text-cream transition"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-foreground/30 text-foreground px-4 py-2 text-sm font-semibold hover:bg-foreground hover:text-background transition"
             >
               <Settings2 size={16} /> Edytuj w panelu
             </Link>
@@ -381,7 +381,7 @@ function PlaceProfile() {
       <div className="lg:grid lg:grid-cols-[1.6fr_1fr] lg:items-start lg:gap-8">
       <div className="lg:col-start-1 lg:row-start-1">
         {/* HERO cover */}
-        <div className="mb-5 relative rounded-3xl overflow-hidden border-2 border-navy/10 shadow-lg h-[180px] sm:h-[280px]">
+        <div className="mb-5 relative rounded-3xl overflow-hidden border-2 border-foreground/30 shadow-lg h-[180px] sm:h-[280px]">
           {place.cover_image_url ? (
             <img
               src={place.cover_image_url}
@@ -436,19 +436,19 @@ function PlaceProfile() {
                     {meta.emoji} {place.cuisine}
                   </span>
                   {place.district && (
-                    <span className="chip bg-navy/10 text-navy text-xs inline-flex items-center gap-1">
+                    <span className="chip bg-foreground/10 text-foreground text-xs inline-flex items-center gap-1">
                       <MapPin size={11} /> {place.district}
                     </span>
                   )}
                   {verifiedOwner && (
-                    <span className="chip bg-emerald-600 text-white text-xs inline-flex items-center gap-1" title="Profil zarządzany przez zweryfikowanego właściciela">
+                    <span className="chip bg-emerald-700 text-white text-xs inline-flex items-center gap-1" title="Profil zarządzany przez zweryfikowanego właściciela">
                       <ShieldCheck size={12} /> Zweryfikowany właściciel
                     </span>
                   )}
                   {(awardWins ?? []).map((w) => (
                     <span
                       key={w.id}
-                      className="chip bg-mustard text-navy text-xs inline-flex items-center gap-1"
+                      className="chip bg-mustard text-foreground text-xs inline-flex items-center gap-1"
                       title={`${w.vote_count} głosów`}
                     >
                       <Trophy size={12} /> {w.event?.name ?? "Warte poŻarcia"} - {w.cuisine?.name}
@@ -478,7 +478,7 @@ function PlaceProfile() {
           </div>
 
           {place.description && (
-            <p className="text-base text-navy/80 mt-3 leading-relaxed">{place.description}</p>
+            <p className="text-base text-foreground/80 mt-3 leading-relaxed">{place.description}</p>
           )}
         </header>
 
@@ -496,7 +496,7 @@ function PlaceProfile() {
             target="_blank"
             rel="noreferrer"
             aria-label="Nawiguj do lokalu"
-            className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-navy/80 text-navy px-2 py-2 text-xs sm:text-sm font-medium hover:bg-navy hover:text-cream transition"
+            className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-foreground/30 text-foreground px-2 py-2 text-xs sm:text-sm font-medium hover:bg-foreground hover:text-background transition"
           >
             <Navigation size={16} /> <span className="hidden sm:inline truncate">Nawiguj</span>
           </a>
@@ -504,7 +504,7 @@ function PlaceProfile() {
             <a
               href={`tel:${place.phone.replace(/\s/g, "")}`}
               aria-label="Zadzwoń do lokalu"
-              className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-navy/80 text-navy px-2 py-2 text-xs sm:text-sm font-medium hover:bg-navy hover:text-cream transition"
+              className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-foreground/30 text-foreground px-2 py-2 text-xs sm:text-sm font-medium hover:bg-foreground hover:text-background transition"
             >
               <Phone size={16} /> <span className="hidden sm:inline truncate">Zadzwoń</span>
             </a>
@@ -522,7 +522,7 @@ function PlaceProfile() {
               target="_blank"
               rel="noreferrer"
               aria-label="Strona www lokalu"
-              className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-navy/80 text-navy px-2 py-2 text-xs sm:text-sm font-medium hover:bg-navy hover:text-cream transition"
+              className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-foreground/30 text-foreground px-2 py-2 text-xs sm:text-sm font-medium hover:bg-foreground hover:text-background transition"
             >
               <Globe size={16} /> <span className="hidden sm:inline truncate">Strona www</span>
             </a>
@@ -538,7 +538,7 @@ function PlaceProfile() {
             type="button"
             onClick={share}
             aria-label="Udostępnij"
-            className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-navy/80 text-navy px-2 py-2 text-xs sm:text-sm font-medium hover:bg-navy hover:text-cream transition"
+            className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-foreground/30 text-foreground px-2 py-2 text-xs sm:text-sm font-medium hover:bg-foreground hover:text-background transition"
           >
             <Share2 size={16} /> <span className="hidden sm:inline truncate">Udostępnij</span>
           </button>
@@ -568,7 +568,7 @@ function PlaceProfile() {
             icon={<Clock size={18} />}
             defaultOpen={false}
             summary={
-              <span className={openInfo.open ? "text-emerald-700 font-semibold" : "text-rose-700 font-semibold"}>
+              <span className={openInfo.open ? "text-ok font-semibold" : "text-destructive font-semibold"}>
                 {openInfo.open
                   ? `Otwarte${openInfo.today ? ` do ${openInfo.today.close}` : ""}`
                   : openInfo.today ? `Zamknięte · dziś ${openInfo.today.open}–${openInfo.today.close}` : "Dziś zamknięte"}
@@ -586,7 +586,7 @@ function PlaceProfile() {
           defaultOpen
           summary={<span className="truncate">{place.address}</span>}
         >
-          <div className="relative rounded-2xl overflow-hidden border-2 border-navy h-[200px] sm:h-[240px] touch-pan-y">
+          <div className="relative rounded-2xl overflow-hidden border-2 border-foreground/25 h-[200px] sm:h-[240px] touch-pan-y">
             <Suspense fallback={<div className="h-full bg-muted animate-pulse" />}>
               <FoodMap places={[place]} variant="mini" />
             </Suspense>
@@ -602,20 +602,20 @@ function PlaceProfile() {
           </div>
           <div className="mt-2 flex items-center gap-2 text-sm">
             <MapPin size={14} className="text-tomato flex-shrink-0" />
-            <span className="text-navy/80 flex-1 truncate">{place.address}</span>
+            <span className="text-foreground/80 flex-1 truncate">{place.address}</span>
             <button onClick={copyAddress} className="pz-hit inline-flex items-center gap-1 text-xs font-semibold text-tomato hover:underline">
               <Copy size={12} /> Kopiuj
             </button>
           </div>
           {(place.locations?.length ?? 0) > 0 && (
             <>
-              <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-navy/60">
+              <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-foreground/60">
                 Inne lokalizacje {place.name}
               </p>
               <ul className="mt-1.5 grid sm:grid-cols-2 gap-2 text-sm">
                 {place.locations!.map((l) => (
                   <li key={l.id} className="rounded-xl border border-border bg-card px-3 py-2">
-                    {l.label && <div className="text-xs uppercase tracking-wider font-bold text-navy/70">{l.label}</div>}
+                    {l.label && <div className="text-xs uppercase tracking-wider font-bold text-foreground/70">{l.label}</div>}
                     <div>{l.address}</div>
                   </li>
                 ))}
@@ -666,7 +666,7 @@ function PlaceProfile() {
             <Navigation size={16} /> Nawiguj
           </a>
           <FavoriteIconButton placeId={place.id} tone="dark" />
-          <button onClick={share} aria-label="Udostępnij" className="w-11 h-11 shrink-0 rounded-full border-2 border-navy text-navy grid place-items-center">
+          <button onClick={share} aria-label="Udostępnij" className="w-11 h-11 shrink-0 rounded-full border-2 border-foreground/25 text-foreground grid place-items-center">
             <Share2 size={18} />
           </button>
         </div>
@@ -700,7 +700,7 @@ function FollowButton({ placeId }: { placeId: string }) {
       <Link
         to="/auth"
         aria-label="Zaloguj się aby obserwować"
-        className="h-11 px-4 inline-flex items-center gap-2 rounded-full border-2 border-navy text-navy hover:bg-navy hover:text-cream text-sm font-semibold transition"
+        className="h-11 px-4 inline-flex items-center gap-2 rounded-full border-2 border-foreground/25 text-foreground hover:bg-foreground hover:text-background text-sm font-semibold transition"
       >
         <Bell size={16} /> <span className="hidden sm:inline">Obserwuj</span>
       </Link>
@@ -759,7 +759,7 @@ function FollowButton({ placeId }: { placeId: string }) {
       className={`h-11 px-4 inline-flex items-center gap-2 rounded-full text-sm font-semibold transition disabled:opacity-60 ${
         isFollowing
           ? "bg-navy text-cream hover:bg-tomato"
-          : "border-2 border-navy text-navy hover:bg-navy hover:text-cream"
+          : "border-2 border-foreground/25 text-foreground hover:bg-foreground hover:text-background"
       }`}
     >
       {busy ? (
@@ -782,7 +782,7 @@ function OwnerFooter({ placeId, placeName }: { placeId: string; placeName: strin
   return (
     <div className="mt-8 space-y-4">
       {owner && (
-        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3 flex items-center gap-2 text-sm text-navy">
+        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3 flex items-center gap-2 text-sm text-foreground">
           <ShieldCheck size={18} className="text-emerald-600 shrink-0" />
           <span>Profil zarządzany przez zweryfikowanego właściciela</span>
         </div>
@@ -804,11 +804,11 @@ function OwnerFooter({ placeId, placeName }: { placeId: string; placeName: strin
         <button
           type="button"
           onClick={() => setModalOpen(true)}
-          className="text-xs text-navy/50 hover:text-tomato underline underline-offset-4"
+          className="text-xs text-foreground/50 hover:text-tomato underline underline-offset-4"
         >
           Jesteś właścicielem tego miejsca? Zgłoś się
         </button>
-        <div className="text-[10px] text-navy/40 mt-0.5">
+        <div className="text-[10px] text-foreground/40 mt-0.5">
           Zweryfikujemy to i odezwiemy się do Ciebie
         </div>
       </div>
@@ -840,7 +840,7 @@ function Collapsible({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-cream/40 transition"
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted transition"
       >
         <span className="text-tomato shrink-0">{icon}</span>
         <span className="flex-1 min-w-0">
@@ -851,7 +851,7 @@ function Collapsible({
         </span>
         <ChevronDown
           size={20}
-          className={`shrink-0 text-navy/60 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+          className={`shrink-0 text-foreground/60 transition-transform duration-300 ${open ? "rotate-180" : ""}`}
         />
       </button>
       <div
@@ -869,9 +869,9 @@ function Collapsible({
 
 function QuickChip({ icon, label, badge }: { icon: React.ReactNode; label: string; badge?: { text: string; color: string } }) {
   return (
-    <div className="inline-flex items-center gap-2 rounded-full bg-white border border-border px-3 py-2 text-sm whitespace-nowrap shadow-sm">
-      <span className="text-navy/70">{icon}</span>
-      <span className="font-medium text-navy">{label}</span>
+    <div className="inline-flex items-center gap-2 rounded-full bg-card border border-border px-3 py-2 text-sm whitespace-nowrap shadow-sm">
+      <span className="text-muted-foreground">{icon}</span>
+      <span className="font-medium text-foreground">{label}</span>
       {badge && (
         <span className="text-xs font-bold text-white rounded-full px-2 py-0.5" style={{ backgroundColor: badge.color }}>
           {badge.text}
@@ -903,7 +903,7 @@ function MenuSection({ place }: { place: Place }) {
                 {cat.items.map((item, j) => (
                   <li key={j} className="px-4 py-3 flex items-baseline gap-3">
                     <span className="flex-1 font-medium">{item.name}</span>
-                    {item.price && <span className="font-bold text-navy whitespace-nowrap">{item.price}</span>}
+                    {item.price && <span className="font-bold text-foreground whitespace-nowrap">{item.price}</span>}
                   </li>
                 ))}
               </ul>
@@ -911,7 +911,7 @@ function MenuSection({ place }: { place: Place }) {
           ))}
           {place.menu_url && (
             <a href={place.menu_url} target="_blank" rel="noreferrer"
-               className="inline-flex items-center gap-2 text-sm text-navy hover:text-tomato font-semibold">
+               className="inline-flex items-center gap-2 text-sm text-foreground hover:text-tomato font-semibold">
               <ExternalLink size={14} /> Pełne menu na stronie lokalu
             </a>
           )}
@@ -920,7 +920,7 @@ function MenuSection({ place }: { place: Place }) {
         <div className="space-y-3">
           {place.menu_image_url && (
             <a href={place.menu_url || place.menu_image_url} target="_blank" rel="noreferrer"
-               className="block rounded-2xl overflow-hidden border-2 border-navy bg-card">
+               className="block rounded-2xl overflow-hidden border-2 border-foreground/25 bg-card">
               <img src={place.menu_image_url} alt={`Menu ${place.name}`} className="w-full h-auto object-contain" style={{ maxHeight: 520 }} loading="lazy" />
             </a>
           )}
@@ -934,7 +934,7 @@ function MenuSection({ place }: { place: Place }) {
       ) : (
         <div className="rounded-2xl border-2 border-dashed border-border p-6 text-center">
           <p className="text-sm text-muted-foreground mb-3">Menu jeszcze nieuzupełnione. Wiesz co warto zjeść?</p>
-          <Link to="/" hash="mapa" className="inline-flex items-center gap-2 rounded-full border-2 border-navy text-navy px-4 py-2 font-semibold hover:bg-navy hover:text-cream transition text-sm">
+          <Link to="/" hash="mapa" className="inline-flex items-center gap-2 rounded-full border-2 border-foreground/25 text-foreground px-4 py-2 font-semibold hover:bg-foreground hover:text-background transition text-sm">
             Zaproponuj menu
           </Link>
         </div>
@@ -948,7 +948,7 @@ function FavoriteCountBadge({ placeId }: { placeId: string }) {
   const count = useFavoriteCount(placeId);
   if (count <= 0) return null;
   return (
-    <span className="inline-flex items-center gap-1 text-navy/80 font-semibold text-sm">
+    <span className="inline-flex items-center gap-1 text-foreground/80 font-semibold text-sm">
       <Heart size={13} className="fill-tomato text-tomato" />
       {count}
     </span>
@@ -960,7 +960,7 @@ function FollowCountBadge({ placeId }: { placeId: string }) {
   if (count <= 0) return null;
   return (
     <span
-      className="inline-flex items-center gap-1 text-navy/80 font-semibold text-sm"
+      className="inline-flex items-center gap-1 text-foreground/80 font-semibold text-sm"
       title={`${count} ${count === 1 ? "obserwujący" : "obserwujących"}`}
     >
       <Bell size={13} className="fill-tomato text-tomato" />
@@ -985,7 +985,7 @@ function FavoriteIconButton({
   const toggle = useToggleFavorite();
 
   if (variant === "text") {
-    const base = "border-2 border-navy text-navy hover:bg-navy hover:text-cream";
+    const base = "border-2 border-foreground/25 text-foreground hover:bg-foreground hover:text-background";
     if (!user) {
       return (
         <Link
@@ -1021,7 +1021,7 @@ function FavoriteIconButton({
 
   const base = tone === "light"
     ? "bg-cream/90 hover:bg-cream text-navy"
-    : "border-2 border-navy text-navy hover:bg-navy hover:text-cream";
+    : "border-2 border-foreground/25 text-foreground hover:bg-foreground hover:text-background";
 
   if (!user) {
     return (
@@ -1083,7 +1083,7 @@ function FriendsFavoritedNotice({ placeId, placeName }: { placeId: string; place
           </Link>
         ))}
       </div>
-      <p className="text-sm text-navy font-medium">
+      <p className="text-sm text-foreground font-medium">
         <span className="font-bold">{first}</span>
         {more} {verb} <span className="font-bold">{placeName}</span> w ulubionych ❤️
       </p>

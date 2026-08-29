@@ -252,7 +252,7 @@ function AchievementsPage() {
                     to="/u/$username"
                     params={{ username: row.username ?? row.user_id }}
                     className={`flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-center transition ${
-                      isMe ? "border-tomato bg-blush/40" : "border-border bg-card hover:border-tomato"
+                      isMe ? "border-accent bg-accent/15" : "border-border bg-card hover:border-accent"
                     }`}
                   >
                     <span className="text-lg" aria-hidden>
@@ -282,7 +282,7 @@ function AchievementsPage() {
                   to="/u/$username"
                   params={{ username: row.username ?? row.user_id }}
                   className={`flex items-center gap-3 rounded-2xl border p-3 transition ${
-                    isMe ? "border-tomato bg-blush/40" : "border-border bg-card hover:border-tomato"
+                    isMe ? "border-accent bg-accent/15" : "border-border bg-card hover:border-accent"
                   }`}
                 >
                   <span className="w-5 shrink-0 text-center text-sm font-extrabold text-muted-foreground">{i + 4}</span>

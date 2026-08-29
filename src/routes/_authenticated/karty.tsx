@@ -221,7 +221,7 @@ function KartyPage() {
               aria-label="Cofnij ostatnią decyzję"
               onClick={undoLast}
               disabled={history.length === 0}
-              className="grid h-12 w-12 place-items-center rounded-full border-2 border-navy/15 bg-card text-navy/70 shadow-sm transition hover:-translate-y-0.5 hover:border-navy/40 hover:text-navy hover:shadow-md active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+              className="grid h-12 w-12 place-items-center rounded-full border-2 border-foreground/15 bg-card text-foreground/70 shadow-sm transition hover:-translate-y-0.5 hover:border-foreground/40 hover:text-foreground hover:shadow-md active:scale-95 disabled:pointer-events-none disabled:opacity-30"
             >
               <Undo2 size={20} />
             </button>

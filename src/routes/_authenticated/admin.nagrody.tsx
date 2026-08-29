@@ -99,15 +99,15 @@ function NewEventForm({ onDone }: { onDone: () => void }) {
   return (
     <div className="mb-6 rounded-2xl border border-tomato/40 bg-card p-4 space-y-4">
       <label className="block">
-        <span className="text-xs font-bold uppercase tracking-wider text-navy/70">Nazwa</span>
+        <span className="text-xs font-bold uppercase tracking-wider text-foreground/70">Nazwa</span>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm"
+          className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
         />
       </label>
       <div>
-        <span className="text-xs font-bold uppercase tracking-wider text-navy/70">Kategorie</span>
+        <span className="text-xs font-bold uppercase tracking-wider text-foreground/70">Kategorie</span>
         <div className="mt-2 flex flex-wrap gap-2">
           {(cuisines ?? []).map((c) => (
             <button
@@ -222,7 +222,7 @@ function EventCard({ event }: { event: AwardsEvent }) {
           ) : (
             <button
               onClick={() => setConfirmClose(true)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold hover:border-navy"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-semibold hover:border-foreground/40"
             >
               <Lock size={13} /> Zamknij
             </button>
@@ -267,7 +267,7 @@ function EventCard({ event }: { event: AwardsEvent }) {
               .sort((a, b) => b.count - a.count);
             return (
               <div key={cid} className="rounded-xl border border-border p-2.5">
-                <p className="text-xs font-bold uppercase tracking-wider text-navy/70 mb-1.5">
+                <p className="text-xs font-bold uppercase tracking-wider text-foreground/70 mb-1.5">
                   {cuisine?.emoji} {cuisine?.name ?? cid}
                 </p>
                 {rows.length === 0 ? (

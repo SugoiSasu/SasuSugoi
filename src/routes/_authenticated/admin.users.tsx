@@ -56,7 +56,7 @@ const ROLE_STYLE: Record<AppRole, string> = {
   admin: "bg-tomato/15 text-tomato border border-tomato/30",
   // --mustard is the brand's own gold; no need for Tailwind's amber. It is a
   // light token (L .84), so the label stays navy rather than a tinted text.
-  super_admin: "bg-mustard/30 text-navy border border-mustard",
+  super_admin: "bg-mustard text-navy border border-mustard",
 };
 
 type StatusFilter = "all" | "staff" | "beta";

@@ -64,7 +64,7 @@ export function PlaceReviewsSection({ placeId }: { placeId: string }) {
         <div className="surface mb-6 rounded-2xl border border-border bg-card p-4 sm:p-5">
           <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr] gap-4 sm:gap-6 items-center">
             <div className="text-center sm:text-left sm:border-r sm:border-border sm:pr-6">
-              <div className="font-display text-5xl leading-none text-navy">
+              <div className="font-display text-5xl leading-none text-foreground">
                 {avg?.toFixed(1) ?? " - "}
               </div>
               <div className="inline-flex items-center gap-0.5 mt-1.5" aria-hidden>
@@ -460,7 +460,7 @@ function OwnerReplyView({
   }
   return (
     <div className="mt-3 ml-6 sm:ml-12 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-3">
-      <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 mb-1">
+      <div className="flex items-center gap-2 text-xs font-semibold text-ok mb-1">
         <ShieldCheck size={13} /> Odpowiedź właściciela
         <span className="text-muted-foreground font-normal">
           · {new Date(reply.created_at).toLocaleDateString("pl-PL")}
@@ -471,7 +471,7 @@ function OwnerReplyView({
         <div className="mt-2 flex gap-2">
           <button
             onClick={() => setEdit(true)}
-            className="text-xs font-semibold text-navy/70 hover:text-tomato"
+            className="text-xs font-semibold text-foreground/70 hover:text-tomato"
           >
             Edytuj
           </button>
@@ -483,7 +483,7 @@ function OwnerReplyView({
                 onError: (e) => toast.error((e as Error).message),
               });
             }}
-            className="text-xs font-semibold text-navy/70 hover:text-destructive"
+            className="text-xs font-semibold text-foreground/70 hover:text-destructive"
           >
             Usuń
           </button>
@@ -539,7 +539,7 @@ function OwnerReplyForm({
       }}
       className="mt-3 ml-6 sm:ml-12 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-3 space-y-2"
     >
-      <div className="text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
+      <div className="text-xs font-semibold text-ok flex items-center gap-1.5">
         <ShieldCheck size={13} /> {existing ? "Edytuj odpowiedź" : "Odpowiedź właściciela"}
       </div>
       <textarea
@@ -548,13 +548,13 @@ function OwnerReplyForm({
         rows={3}
         maxLength={2000}
         placeholder="Napisz odpowiedź na tę recenzję…"
-        className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm outline-none focus:border-emerald-500 resize-none"
+        className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none focus:border-emerald-500 resize-none"
       />
       <div className="flex gap-2">
         <button
           type="submit"
           disabled={upsert.isPending || !content.trim()}
-          className="inline-flex items-center gap-2 rounded-full bg-emerald-600 text-white px-4 py-1.5 text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-full bg-emerald-700 text-white px-4 py-1.5 text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50"
         >
           {upsert.isPending && <Loader2 size={13} className="animate-spin" />}
           {existing ? "Zapisz" : "Opublikuj"}
@@ -568,7 +568,7 @@ function OwnerReplyForm({
               setContent("");
             }
           }}
-          className="text-xs font-semibold text-navy/70 hover:text-tomato px-2"
+          className="text-xs font-semibold text-foreground/70 hover:text-tomato px-2"
         >
           Anuluj
         </button>

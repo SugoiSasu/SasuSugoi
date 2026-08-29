@@ -68,8 +68,8 @@ export function PlacePostsSection({ placeId, placeName }: { placeId: string; pla
           <Megaphone size={18} />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="font-display text-lg text-navy leading-tight">Aktualności lokalu</h2>
-          <p className="text-xs text-navy/60">Ogłoszenia, promocje i nowinki od właściciela</p>
+          <h2 className="font-display text-lg text-foreground leading-tight">Aktualności lokalu</h2>
+          <p className="text-xs text-foreground/60">Ogłoszenia, promocje i nowinki od właściciela</p>
         </div>
         {isOwner && !composerOpen && !editing && (
           <button
@@ -98,7 +98,7 @@ export function PlacePostsSection({ placeId, placeName }: { placeId: string; pla
             <Loader2 className="animate-spin text-tomato" size={22} />
           </div>
         ) : !posts || posts.length === 0 ? (
-          <div className="text-sm text-navy/60 text-center py-6">
+          <div className="text-sm text-foreground/60 text-center py-6">
             {isOwner
               ? "Brak wpisów - dodaj pierwszy, żeby dać znać obserwującym."
               : `${placeName} nie opublikował(a) jeszcze żadnych wpisów.`}
@@ -169,13 +169,13 @@ function PostComposer({
   return (
     <form onSubmit={submit} className="rounded-2xl border border-tomato/30 bg-tomato/5 p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <div className="text-sm font-bold text-navy">
+        <div className="text-sm font-bold text-foreground">
           {initial ? "Edytuj wpis" : "Nowy wpis lokalu"}
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="text-navy/60 hover:text-tomato"
+          className="text-foreground/60 hover:text-tomato"
           aria-label="Zamknij"
         >
           <X size={18} />
@@ -189,8 +189,8 @@ function PostComposer({
             onClick={() => setPostType(t)}
             className={`rounded-full px-3 py-1 text-xs font-semibold border transition ${
               postType === t
-                ? "bg-navy text-cream border-navy"
-                : "bg-white border-border text-navy hover:border-tomato"
+                ? "bg-foreground text-background border-foreground"
+                : "bg-card border-border text-foreground hover:border-tomato"
             }`}
           >
             {TYPE_LABELS[t].label}
@@ -202,7 +202,7 @@ function PostComposer({
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Tytuł (np. Nowe menu jesienne)"
         maxLength={140}
-        className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm outline-none focus:border-tomato"
+        className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none focus:border-tomato"
       />
       <textarea
         value={body}
@@ -210,19 +210,19 @@ function PostComposer({
         placeholder="Treść wpisu…"
         rows={4}
         maxLength={2000}
-        className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm outline-none focus:border-tomato resize-y"
+        className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none focus:border-tomato resize-y"
       />
       <input
         value={imageUrl}
         onChange={(e) => setImageUrl(e.target.value)}
         placeholder="URL obrazka (opcjonalnie)"
-        className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm outline-none focus:border-tomato"
+        className="w-full rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none focus:border-tomato"
       />
       <div className="flex justify-end gap-2">
         <button
           type="button"
           onClick={onClose}
-          className="rounded-full px-4 py-2 text-sm font-semibold text-navy hover:bg-navy/5"
+          className="rounded-full px-4 py-2 text-sm font-semibold text-foreground hover:bg-foreground/5"
         >
           Anuluj
         </button>
@@ -251,7 +251,7 @@ function PostCard({
   const del = useDeletePlacePost(post.place_id);
   const typeMeta = TYPE_LABELS[post.post_type] ?? TYPE_LABELS.announcement;
   return (
-    <li className="rounded-2xl border border-border bg-white p-4">
+    <li className="rounded-2xl border border-border bg-card p-4">
       <div className="flex items-start gap-2 mb-2">
         <span
           className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${typeMeta.cls}`}
@@ -259,12 +259,12 @@ function PostCard({
           {typeMeta.label}
         </span>
         <div className="flex-1" />
-        <span className="text-xs text-navy/50">{timeAgo(post.created_at)}</span>
+        <span className="text-xs text-foreground/50">{timeAgo(post.created_at)}</span>
         {canManage && (
           <div className="flex items-center gap-1">
             <button
               onClick={onEdit}
-              className="pz-hit p-1 rounded hover:bg-navy/5 text-navy/60 hover:text-navy"
+              className="pz-hit p-1 rounded hover:bg-foreground/5 text-foreground/60 hover:text-foreground"
               aria-label="Edytuj"
             >
               <Pencil size={13} />
@@ -273,7 +273,7 @@ function PostCard({
               onClick={() => {
                 if (confirm("Usunąć wpis?")) del.mutate(post.id);
               }}
-              className="pz-hit p-1 rounded hover:bg-tomato/10 text-navy/60 hover:text-tomato"
+              className="pz-hit p-1 rounded hover:bg-tomato/10 text-foreground/60 hover:text-tomato"
               aria-label="Usuń"
             >
               <Trash2 size={13} />
@@ -281,9 +281,9 @@ function PostCard({
           </div>
         )}
       </div>
-      <div className="font-display text-lg text-navy mb-1">{post.title}</div>
+      <div className="font-display text-lg text-foreground mb-1">{post.title}</div>
       {post.body && (
-        <div className="text-sm text-navy/80 leading-relaxed">
+        <div className="text-sm text-foreground/80 leading-relaxed">
           <SmartText>{post.body}</SmartText>
         </div>
       )}
@@ -342,7 +342,7 @@ function PostSocial({ postId }: { postId: string }) {
             className={`pz-hit pz-reaction inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold border ${
               myReaction === t
                 ? "pz-reaction--mine bg-tomato/10 border-tomato text-tomato"
-                : "bg-white border-border text-navy/70 hover:border-tomato"
+                : "bg-card border-border text-foreground/70 hover:border-tomato"
             }`}
           >
             <span className="pz-reaction-emoji text-base leading-none">{REACTION_EMOJI[t]}</span>
@@ -351,7 +351,7 @@ function PostSocial({ postId }: { postId: string }) {
         ))}
         <button
           onClick={() => setCommentsOpen((v) => !v)}
-          className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-navy/70 hover:text-tomato"
+          className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-foreground/70 hover:text-tomato"
         >
           <MessageSquare size={13} /> {comments?.length ?? 0} komentarzy
           {commentsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
@@ -361,7 +361,7 @@ function PostSocial({ postId }: { postId: string }) {
       {commentsOpen && (
         <div className="mt-3 space-y-3">
           {(comments ?? []).length === 0 && (
-            <div className="text-xs text-navy/50">Brak komentarzy - bądź pierwszy.</div>
+            <div className="text-xs text-foreground/50">Brak komentarzy - bądź pierwszy.</div>
           )}
           <ul className="space-y-2">
             {(comments ?? []).map((c) => (
@@ -375,33 +375,33 @@ function PostSocial({ postId }: { postId: string }) {
                   username={c.author?.username ?? null}
                   size={28}
                 />
-                <div className="flex-1 min-w-0 rounded-xl bg-navy/5 px-3 py-2">
+                <div className="flex-1 min-w-0 rounded-xl bg-foreground/5 px-3 py-2">
                   <div className="flex items-center gap-2 text-xs">
                     {c.author?.username ? (
                       <Link
                         to="/u/$username"
                         params={{ username: c.author.username }}
-                        className="font-bold text-navy hover:text-tomato"
+                        className="font-bold text-foreground hover:text-tomato"
                       >
                         {c.author.display_name || `@${c.author.username}`}
                       </Link>
                     ) : (
-                      <span className="font-bold text-navy">
+                      <span className="font-bold text-foreground">
                         {c.author?.display_name || "Ktoś"}
                       </span>
                     )}
-                    <span className="text-navy/40">{timeAgo(c.created_at)}</span>
+                    <span className="text-foreground/40">{timeAgo(c.created_at)}</span>
                     {user?.id === c.user_id && (
                       <button
                         onClick={() => delComment.mutate(c.id)}
-                        className="ml-auto text-navy/40 hover:text-tomato"
+                        className="ml-auto text-foreground/40 hover:text-tomato"
                         aria-label="Usuń komentarz"
                       >
                         <Trash2 size={11} />
                       </button>
                     )}
                   </div>
-                  <div className="text-sm text-navy/85 whitespace-pre-wrap break-words">
+                  <div className="text-sm text-foreground/85 whitespace-pre-wrap break-words">
                     {c.body}
                   </div>
                 </div>
@@ -415,7 +415,7 @@ function PostSocial({ postId }: { postId: string }) {
                 onChange={(e) => setText(e.target.value)}
                 placeholder="Napisz komentarz…"
                 maxLength={800}
-                className="flex-1 rounded-full border border-border bg-white px-3 py-1.5 text-sm outline-none focus:border-tomato"
+                className="flex-1 rounded-full border border-border bg-card px-3 py-1.5 text-sm outline-none focus:border-tomato"
               />
               <button
                 type="submit"
@@ -431,7 +431,7 @@ function PostSocial({ postId }: { postId: string }) {
               </button>
             </form>
           ) : (
-            <div className="text-xs text-navy/60">
+            <div className="text-xs text-foreground/60">
               <Link to="/auth" className="font-bold text-tomato hover:underline">
                 Zaloguj się
               </Link>

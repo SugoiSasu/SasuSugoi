@@ -130,7 +130,7 @@ function AlphaGateTab() {
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? "Ukryj hasło" : "Pokaż hasło"}
               aria-pressed={showPassword}
-              className="absolute right-1 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-8 h-8 rounded-full text-muted-foreground hover:text-navy hover:bg-navy/5"
+              className="absolute right-1 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-8 h-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/5"
             >
               {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>

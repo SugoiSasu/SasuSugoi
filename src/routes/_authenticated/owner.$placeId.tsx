@@ -117,7 +117,7 @@ function OwnerPlaceEditor() {
 
   if (!user || !isOwner) {
     return (
-      <div className="rounded-2xl border-2 border-tomato/40 bg-tomato/10 p-6 text-sm text-navy flex items-start gap-3">
+      <div className="rounded-2xl border-2 border-tomato/40 bg-tomato/10 p-6 text-sm text-foreground flex items-start gap-3">
         <ShieldAlert className="text-tomato mt-0.5" size={18} />
         <div>
           Nie jesteś zweryfikowanym właścicielem tej knajpy. Wejdź na jej profil i wyślij
@@ -151,10 +151,10 @@ function OwnerPlaceEditor() {
     <div className="rounded-3xl bg-card border border-border p-5 sm:p-6 space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <div className="text-xs uppercase tracking-wider text-navy/60 font-semibold">
+          <div className="text-xs uppercase tracking-wider text-foreground/60 font-semibold">
             Edytujesz
           </div>
-          <h2 className="font-display text-2xl text-navy">{place.name}</h2>
+          <h2 className="font-display text-2xl text-foreground">{place.name}</h2>
         </div>
         <Link
           to="/k/$id"
@@ -166,10 +166,10 @@ function OwnerPlaceEditor() {
       </div>
 
       <section className="space-y-3">
-        <h3 className="font-display text-lg text-navy">Kontakt</h3>
+        <h3 className="font-display text-lg text-foreground">Kontakt</h3>
         <div className="grid sm:grid-cols-2 gap-3">
           <label className="block">
-            <span className="text-xs font-bold uppercase tracking-wider text-navy/70">Telefon</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground/70">Telefon</span>
             <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
@@ -178,7 +178,7 @@ function OwnerPlaceEditor() {
             />
           </label>
           <label className="block">
-            <span className="text-xs font-bold uppercase tracking-wider text-navy/70">Strona www</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground/70">Strona www</span>
             <input
               type="url"
               value={website}
@@ -191,15 +191,15 @@ function OwnerPlaceEditor() {
       </section>
 
       <section className="space-y-3">
-        <h3 className="font-display text-lg text-navy">Godziny otwarcia</h3>
+        <h3 className="font-display text-lg text-foreground">Godziny otwarcia</h3>
         <div className="space-y-2">
           {DAYS.map(({ key, label }) => {
             const d = hours[key];
             const closed = d === null;
             return (
               <div key={key} className="flex items-center gap-3 flex-wrap">
-                <span className="w-28 text-sm font-semibold text-navy">{label}</span>
-                <label className="inline-flex items-center gap-1.5 text-xs text-navy/70">
+                <span className="w-28 text-sm font-semibold text-foreground">{label}</span>
+                <label className="inline-flex items-center gap-1.5 text-xs text-foreground/70">
                   <input
                     type="checkbox"
                     checked={closed}
@@ -213,14 +213,14 @@ function OwnerPlaceEditor() {
                       type="time"
                       value={d?.open ?? ""}
                       onChange={(e) => updateDay(key, { open: e.target.value })}
-                      className="rounded-lg border border-border bg-white px-2 py-1 text-sm"
+                      className="rounded-lg border border-border bg-card px-2 py-1 text-sm"
                     />
-                    <span className="text-navy/50"> - </span>
+                    <span className="text-foreground/50"> - </span>
                     <input
                       type="time"
                       value={d?.close ?? ""}
                       onChange={(e) => updateDay(key, { close: e.target.value })}
-                      className="rounded-lg border border-border bg-white px-2 py-1 text-sm"
+                      className="rounded-lg border border-border bg-card px-2 py-1 text-sm"
                     />
                   </>
                 )}
@@ -231,10 +231,10 @@ function OwnerPlaceEditor() {
       </section>
 
       <section className="space-y-3">
-        <h3 className="font-display text-lg text-navy">Menu</h3>
+        <h3 className="font-display text-lg text-foreground">Menu</h3>
         <div className="grid sm:grid-cols-2 gap-3">
           <label className="block">
-            <span className="text-xs font-bold uppercase tracking-wider text-navy/70">
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground/70">
               Link do menu (PDF/www)
             </span>
             <input
@@ -246,7 +246,7 @@ function OwnerPlaceEditor() {
             />
           </label>
           <label className="block">
-            <span className="text-xs font-bold uppercase tracking-wider text-navy/70">
+            <span className="text-xs font-bold uppercase tracking-wider text-foreground/70">
               URL obrazka menu
             </span>
             <input
@@ -259,7 +259,7 @@ function OwnerPlaceEditor() {
           </label>
         </div>
         <label className="block">
-          <span className="text-xs font-bold uppercase tracking-wider text-navy/70">
+          <span className="text-xs font-bold uppercase tracking-wider text-foreground/70">
             Menu strukturalne (JSON, opcjonalnie)
           </span>
           <textarea
@@ -304,4 +304,4 @@ function OwnerPlaceEditor() {
 }
 
 const inputCx =
-  "mt-1 w-full rounded-xl border border-border bg-white px-3 py-2 text-sm outline-none focus:border-tomato focus:ring-2 focus:ring-tomato/20 transition";
+  "mt-1 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none focus:border-tomato focus:ring-2 focus:ring-tomato/20 transition";

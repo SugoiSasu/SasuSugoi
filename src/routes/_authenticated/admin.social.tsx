@@ -182,7 +182,7 @@ function PlatformCard({
               account.last_sync_error
                 ? "bg-destructive/12 text-destructive"
                 : stale
-                  ? "bg-mustard/30 text-navy"
+                  ? "bg-mustard text-navy"
                   : "bg-ok/12 text-ok"
             }`}
           >

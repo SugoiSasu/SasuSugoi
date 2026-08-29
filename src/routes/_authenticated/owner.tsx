@@ -13,8 +13,8 @@ function OwnerLayout() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       <div className="mb-6">
-        <h1 className="font-display text-3xl text-navy">Panel właściciela</h1>
-        <p className="text-sm text-navy/60 mt-1">
+        <h1 className="font-display text-3xl text-foreground">Panel właściciela</h1>
+        <p className="text-sm text-foreground/60 mt-1">
           Zarządzaj profilem swojej knajpy, danymi kontaktowymi, godzinami i menu.
         </p>
       </div>
@@ -24,7 +24,7 @@ function OwnerLayout() {
           <Loader2 className="animate-spin text-tomato" size={28} />
         </div>
       ) : !data || data.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-navy/70">
+        <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-foreground/70">
           Nie zarządzasz jeszcze żadną knajpą. Wejdź na profil swojego lokalu i użyj linku
           „Jesteś właścicielem?", żeby wysłać zgłoszenie do weryfikacji.
         </div>
@@ -45,10 +45,10 @@ function OwnerLayout() {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-bold text-navy truncate">{place.name}</div>
-                <div className="text-xs text-navy/60 truncate">{place.cuisine}</div>
+                <div className="font-bold text-foreground truncate">{place.name}</div>
+                <div className="text-xs text-foreground/60 truncate">{place.cuisine}</div>
               </div>
-              <ChevronRight size={18} className="text-navy/40 group-hover:text-tomato" />
+              <ChevronRight size={18} className="text-foreground/40 group-hover:text-tomato" />
             </Link>
           ))}
         </div>

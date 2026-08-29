@@ -1030,7 +1030,7 @@ function KindBadge({ kind }: { kind: WallItem["kind"] }) {
     post: {
       icon: <UtensilsCrossed size={11} />,
       label: "Wpis",
-      cls: "bg-navy/10 text-navy",
+      cls: "bg-foreground/10 text-foreground",
     },
     list: {
       icon: <ListChecks size={11} />,

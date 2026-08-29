@@ -111,7 +111,7 @@ function SubmittedBallot({ eventId, cuisineIds }: { eventId: string; cuisineIds:
 
   return (
     <div>
-      <div className="mb-6 flex items-center gap-2 rounded-2xl border-2 border-tomato/40 bg-tomato/10 px-4 py-3 text-sm font-semibold text-navy">
+      <div className="mb-6 flex items-center gap-2 rounded-2xl border-2 border-tomato/40 bg-tomato/10 px-4 py-3 text-sm font-semibold text-foreground">
         <Lock size={16} className="text-tomato shrink-0" /> Głosy wysłane - dzięki! Nie da się już ich zmienić.
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
@@ -122,7 +122,7 @@ function SubmittedBallot({ eventId, cuisineIds }: { eventId: string; cuisineIds:
           if (!cuisine) return null;
           return (
             <div key={cid} className="rounded-2xl border-2 border-border bg-card p-3">
-              <p className="text-xs font-bold uppercase tracking-wider text-navy/70 mb-1">
+              <p className="text-xs font-bold uppercase tracking-wider text-foreground/70 mb-1">
                 {cuisine.emoji} {cuisine.name}
               </p>
               <p className="text-sm font-semibold">{place?.name ?? "-"}</p>
@@ -251,7 +251,7 @@ function ResultsSection({ eventId }: { eventId: string }) {
           params={{ id: w.place?.slug ?? w.place?.id ?? "" }}
           className="rounded-2xl border-2 border-mustard bg-mustard/10 p-4 hover:bg-mustard/15 transition"
         >
-          <p className="text-xs font-bold uppercase tracking-wider text-navy/70 mb-1">
+          <p className="text-xs font-bold uppercase tracking-wider text-foreground/70 mb-1">
             {w.cuisine?.emoji} {w.cuisine?.name}
           </p>
           <p className="font-display text-lg font-bold flex items-center gap-1.5">

@@ -1,8 +1,13 @@
 // Deterministic colored initials for avatars without an uploaded picture.
+//
+// Kazdy kolor musi osiagac >= 4.5:1 z kremem LUB granatem (readableTextClass
+// wybiera lepszy z dwoch) - inicjaly sa male i pogrubione, wiec nie licza sie
+// jako duzy tekst. Piec kolorow bylo ponizej progu przy obu tuszach i zostalo
+// przyciemnionych albo rozjasnionych 2026-08-30. Zmieniajac ten zestaw, przemierz kontrast.
 
 const COLORS = [
-  "#e35d2e", "#f0a500", "#3b4cc7", "#5b6cf0", "#d4582a",
-  "#e89aab", "#f0b840", "#3aa56b", "#c4416a", "#8e5cd9",
+  "#b64a25", "#f0a500", "#3b4cc7", "#5160d6", "#de805d",
+  "#e89aab", "#f0b840", "#46aa74", "#c4416a", "#8154c5",
 ];
 
 export function initialsFromName(displayName?: string | null, username?: string | null): string {

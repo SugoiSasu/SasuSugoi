@@ -1066,7 +1066,7 @@ function AvatarUploader({
     <div className="bg-card rounded-2xl border border-border p-5 space-y-2">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="text-sm font-semibold">Avatar / logo lokalu</div>
-        <span className="inline-flex items-center gap-1 rounded-full bg-navy/10 text-navy border border-navy/20 px-2 py-0.5 text-[11px] font-semibold">
+        <span className="inline-flex items-center gap-1 rounded-full bg-foreground/10 text-foreground border border-foreground/20 px-2 py-0.5 text-[11px] font-semibold">
           Zalecane 400×400 px (1:1)
         </span>
       </div>
@@ -1208,7 +1208,7 @@ function ImageUploader({
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="text-sm font-semibold">{title}</div>
         {recommendedLabel && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-navy/10 text-navy border border-navy/20 px-2 py-0.5 text-[11px] font-semibold">
+          <span className="inline-flex items-center gap-1 rounded-full bg-foreground/10 text-foreground border border-foreground/20 px-2 py-0.5 text-[11px] font-semibold">
             {recommendedLabel}
           </span>
         )}

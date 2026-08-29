@@ -338,7 +338,7 @@ function MapaPage() {
                       setMobileView("map");
                     }}
                     className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left shadow-sm transition hover:border-tomato hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tomato ${
-                      isActive ? "border-tomato bg-blush/40" : "border-border bg-card"
+                      isActive ? "border-accent bg-accent/15" : "border-border bg-card"
                     }`}
                   >
                     <div

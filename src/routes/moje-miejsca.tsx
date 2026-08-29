@@ -145,7 +145,7 @@ function MyPlacesPage() {
             className={`-mb-px min-h-11 shrink-0 border-b-2 px-1 py-2.5 text-sm font-semibold transition ${
               tab === t.key
                 ? "border-tomato text-tomato"
-                : "border-transparent text-muted-foreground hover:text-navy"
+                : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             {t.label} <span className="opacity-70">{t.count}</span>

@@ -181,10 +181,10 @@ function FriendsRankingCard() {
   const top = (leaders ?? []).slice(0, 3);
 
   return (
-    <div className="rounded-3xl bg-blush p-5 text-navy">
+    <div className="rounded-3xl bg-secondary p-5 text-secondary-foreground">
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <h2 className="font-display text-lg">Ranking znajomych</h2>
-        <Link to="/u" className="text-[11px] font-bold uppercase tracking-wide text-navy/55 hover:text-navy">
+        <Link to="/u" className="text-[11px] font-bold uppercase tracking-wide text-secondary-foreground/70 hover:text-secondary-foreground">
           Pełny
         </Link>
       </div>
@@ -196,7 +196,7 @@ function FriendsRankingCard() {
           ))}
         </div>
       ) : top.length === 0 ? (
-        <p className="py-2 text-sm text-navy/65">
+        <p className="py-2 text-sm text-secondary-foreground/70">
           Dodaj znajomych, żeby ścigać się na wizyty.{" "}
           <Link to="/friends" className="font-bold underline">
             Zacznij tutaj
@@ -233,7 +233,7 @@ function FriendsRankingCard() {
                   <span className="min-w-0 flex-1 truncate text-sm font-bold">
                     {isMe ? "Ty" : (p.display_name ?? p.username)}
                   </span>
-                  <span className="shrink-0 text-xs font-semibold text-navy/60">
+                  <span className="shrink-0 text-xs font-semibold text-secondary-foreground/70">
                     {p.points_total} pkt
                   </span>
                 </Link>

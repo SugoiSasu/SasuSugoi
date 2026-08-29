@@ -113,7 +113,7 @@ export function VisitStatusButton({
       disabled={toggle.isPending}
       aria-pressed={active}
       className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-semibold transition disabled:opacity-50 ${
-        active ? m.activeClass : "border-2 border-navy text-navy hover:bg-navy hover:text-cream"
+        active ? m.activeClass : "border-2 border-foreground/25 text-foreground hover:bg-foreground hover:text-background"
       } ${className}`}
     >
       {toggle.isPending ? (
