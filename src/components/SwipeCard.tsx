@@ -5,6 +5,7 @@ import { cuisineMeta } from "@/data/places";
 import { YummyFace, NopeFace } from "@/components/SwipeFaces";
 import { placeOpenState } from "@/lib/places-api";
 import type { Place } from "@/lib/places-api";
+import { useCutoutLogo } from "@/lib/chroma-cutout";
 
 const SWIPE_THRESHOLD = 120;
 const VELOCITY_THRESHOLD = 500;
@@ -37,6 +38,12 @@ export function SwipeCard({
   const likeOpacity = useTransform(x, [20, 120], [0, 1]);
   const nopeOpacity = useTransform(x, [-120, -20], [1, 0]);
   const meta = cuisineMeta(place.cuisine);
+  // Same best-effort background removal the homepage already uses (a place
+  // can opt out via avatar_cutout_enabled, e.g. a logo whose "background" is
+  // actually part of the mark). Falls back to the raw file while the cutout
+  // is still processing or unavailable, so the card never shows nothing.
+  const cutoutLogo = useCutoutLogo(place.avatar_cutout_enabled !== false ? place.avatar_url : null);
+  const logoSrc = cutoutLogo ?? place.avatar_url ?? undefined;
 
   // Time-dependent state must not be computed during SSR or the first client
   // render: the server runs in UTC and the visitor does not, so the two would
@@ -87,7 +94,7 @@ export function SwipeCard({
             mostly transparent still lands on something. */}
         <div className="absolute inset-0 overflow-hidden" style={{ backgroundColor: meta.color }}>
           <img
-            src={place.avatar_url ?? undefined}
+            src={logoSrc}
             alt=""
             aria-hidden="true"
             className="absolute left-1/2 top-1/2 h-full w-full object-cover"
@@ -113,8 +120,10 @@ export function SwipeCard({
               cuisine colour - the same colour the filters use, so a card reads as
               its category before you have read a word of it. A hard cream tile
               boxed every logo in, including the ones that already carry their own
-              shape. Logos whose file has an opaque background still show it; the
-              fix for those is a transparent PNG, not more chrome here. */}
+              shape. A flat background (white, cream, black - common for an
+              uploaded logo) is cut out client-side so it doesn't show as a
+              coloured box; a place can turn that off (avatar_cutout_enabled)
+              if its "background" is actually part of the mark. */}
           <div className="relative grid h-32 w-32 place-items-center">
             <span
               aria-hidden="true"
@@ -122,7 +131,7 @@ export function SwipeCard({
               style={{ backgroundColor: meta.color, opacity: 0.85 }}
             />
             <img
-              src={place.avatar_url ?? undefined}
+              src={logoSrc}
               alt=""
               aria-hidden="true"
               className="relative h-full w-full object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)]"
