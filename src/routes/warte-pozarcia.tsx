@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Trophy, Loader2, Check, Send, Lock } from "lucide-react";
 import { useUser } from "@/lib/use-auth";
-import { usePlaces } from "@/lib/places-api";
+import { usePlaces, type Place } from "@/lib/places-api";
 import {
   useCurrentAwardsEvent,
   useMyAwardVotes,
@@ -140,12 +140,25 @@ function VotingCategories({ eventId, cuisineIds }: { eventId: string; cuisineIds
   const submitBallot = useSubmitAwardBallot(eventId);
   const [picks, setPicks] = useState<Record<string, string>>({});
 
-  const cuisineById = new Map((cuisines ?? []).map((c) => [c.id, c]));
-  const validCuisineIds = cuisineIds.filter((cid) => {
-    const cuisine = cuisineById.get(cid);
-    if (!cuisine) return false;
-    return (places ?? []).some((p) => p.cuisine === cuisine.name && p.is_published !== false);
-  });
+  // Picking any single candidate re-renders this component, and none of the
+  // derivation below depends on `picks` - without memoizing it, every click
+  // through a ~12-category ballot re-scanned the full city-wide places list
+  // twice per category for no reason.
+  const { cuisineById, placesByCuisineName, validCuisineIds } = useMemo(() => {
+    const cuisineById = new Map((cuisines ?? []).map((c) => [c.id, c]));
+    const placesByCuisineName = new Map<string, Place[]>();
+    for (const p of places ?? []) {
+      if (p.is_published === false) continue;
+      const list = placesByCuisineName.get(p.cuisine);
+      if (list) list.push(p);
+      else placesByCuisineName.set(p.cuisine, [p]);
+    }
+    const validCuisineIds = cuisineIds.filter((cid) => {
+      const cuisine = cuisineById.get(cid);
+      return !!cuisine && (placesByCuisineName.get(cuisine.name)?.length ?? 0) > 0;
+    });
+    return { cuisineById, placesByCuisineName, validCuisineIds };
+  }, [cuisines, cuisineIds, places]);
   const pickedCount = validCuisineIds.filter((cid) => picks[cid]).length;
   const allPicked = validCuisineIds.length > 0 && pickedCount === validCuisineIds.length;
 
@@ -165,9 +178,7 @@ function VotingCategories({ eventId, cuisineIds }: { eventId: string; cuisineIds
       {cuisineIds.map((cid) => {
         const cuisine = cuisineById.get(cid);
         if (!cuisine) return null;
-        const candidates = (places ?? []).filter(
-          (p) => p.cuisine === cuisine.name && p.is_published !== false,
-        );
+        const candidates = placesByCuisineName.get(cuisine.name) ?? [];
         const myPick = picks[cid];
         return (
           <section key={cid}>

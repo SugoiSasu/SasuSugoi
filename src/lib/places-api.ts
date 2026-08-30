@@ -101,6 +101,11 @@ export type PlaceInput = Omit<Place, "id" | "slug" | "sort_order" | "locations">
 export function placesQueryOptions() {
   return queryOptions({
     queryKey: ["places"],
+    // Admin-curated catalog, not something that needs sub-minute freshness -
+    // without this it refetched the whole places+locations join on nearly
+    // every route mount and every window refocus. Admin writes still show up
+    // immediately: the mutations below already invalidateQueries on success.
+    staleTime: 5 * 60_000,
     queryFn: async (): Promise<Place[]> => {
       const { data, error } = await supabase
         .from("places")

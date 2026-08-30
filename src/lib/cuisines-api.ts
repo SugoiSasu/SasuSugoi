@@ -15,6 +15,7 @@ export type CuisineInput = Omit<Cuisine, "id">;
 export function useCuisines() {
   return useQuery({
     queryKey: ["cuisines"],
+    staleTime: 5 * 60_000,
     queryFn: async (): Promise<Cuisine[]> => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)

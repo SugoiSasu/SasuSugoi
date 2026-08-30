@@ -39,8 +39,26 @@ export function useMyFavoritePlaceIds() {
 }
 
 export function useIsFavorite(placeId: string) {
-  const { data: ids } = useMyFavoritePlaceIds();
-  return (ids ?? []).includes(placeId);
+  const { user } = useUser();
+  // Reads the same cache entry useMyFavoritePlaceIds() populates (identical
+  // queryKey/queryFn/enabled), but `select` means this only re-renders when
+  // its own derived boolean actually flips - not on every toggle anywhere in
+  // the list, which is what happened when every caller subscribed to the raw
+  // array and React Query re-renders on any reference change to it.
+  const { data: isFav } = useQuery({
+    queryKey: ["my-favorite-place-ids", user?.id ?? null],
+    enabled: !!user,
+    queryFn: async (): Promise<string[]> => {
+      const { data, error } = await supabase
+        .from("place_favorites")
+        .select("place_id")
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return (data ?? []).map((r) => r.place_id);
+    },
+    select: (ids) => ids.includes(placeId),
+  });
+  return isFav ?? false;
 }
 
 export function useToggleFavorite() {

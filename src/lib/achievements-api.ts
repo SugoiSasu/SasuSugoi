@@ -63,6 +63,7 @@ export function computeProgress(
 export function useAchievements() {
   return useQuery({
     queryKey: ["achievements"],
+    staleTime: 5 * 60_000,
     queryFn: async (): Promise<Achievement[]> => {
       const { data, error } = await supabase
         .from("achievements")

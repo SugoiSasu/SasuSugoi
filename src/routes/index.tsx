@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Instagram, Star, Heart, X, MapPin, Sparkles, Clock, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { SmartText } from "@/components/SmartText";
@@ -397,7 +397,18 @@ function PlaceRail({
 }
 
 /* ------------------------------- card ------------------------------- */
-function DiscoverCard({ place, stat }: { place: Place; stat?: { avg: number; count: number } }) {
+// Up to ~24 of these can be mounted at once across the three homepage rails.
+// useIsFavorite() now only re-renders its own subscriber when its derived
+// boolean flips (see favorites-api.ts), but memo still matters as a second,
+// independent guard against any other prop/parent-driven re-render (e.g. the
+// ratings map's identity changing) rippling across every mounted card.
+const DiscoverCard = memo(function DiscoverCard({
+  place,
+  stat,
+}: {
+  place: Place;
+  stat?: { avg: number; count: number };
+}) {
   const meta = cuisineMeta(place.cuisine);
   const cutoutLogo = useCutoutLogo(place.avatar_cutout_enabled !== false ? place.avatar_url : null);
   const { user } = useUser();
@@ -515,7 +526,7 @@ function DiscoverCard({ place, stat }: { place: Place; stat?: { avg: number; cou
       </Link>
     </div>
   );
-}
+});
 
 /* --------------------------- first visit popup --------------------------- */
 function FirstVisitPopup() {
