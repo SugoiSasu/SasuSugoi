@@ -1,4 +1,5 @@
 ﻿import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Play, X, Instagram, Loader2 } from "lucide-react";
@@ -146,7 +147,11 @@ function InstagramReelModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  return (
+  // Portalled to <body>: a CSS transform on any ancestor (e.g. the swipe
+  // deck's draggable card) turns it into the containing block for a
+  // position:fixed descendant, which would shrink this to the ancestor's own
+  // box instead of the real viewport. The portal sidesteps that entirely.
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -201,6 +206,7 @@ function InstagramReelModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

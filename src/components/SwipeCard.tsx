@@ -6,6 +6,7 @@ import { YummyFace, NopeFace } from "@/components/SwipeFaces";
 import { placeOpenState } from "@/lib/places-api";
 import type { Place } from "@/lib/places-api";
 import { useCutoutLogo } from "@/lib/chroma-cutout";
+import { InstagramReelPoster } from "@/components/InstagramReelEmbed";
 
 const SWIPE_THRESHOLD = 120;
 const VELOCITY_THRESHOLD = 500;
@@ -298,6 +299,15 @@ export function SwipeCard({
                   <MapPin size={14} className="mt-0.5 shrink-0" />
                   <span>{place.address}</span>
                 </p>
+                {place.reel_url && (
+                  <div onPointerDownCapture={(e) => e.stopPropagation()} className="pt-1">
+                    <InstagramReelPoster
+                      reelUrl={place.reel_url}
+                      cuisine={place.cuisine}
+                      placeName={place.name}
+                    />
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
