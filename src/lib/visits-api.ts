@@ -44,6 +44,39 @@ export function useMyVisitStatus(placeId: string, status: VisitStatus) {
   return data?.[placeId]?.has(status) ?? false;
 }
 
+/** Map of placeId -> how many of my friends have marked it "visited". Same
+ *  shape as useFriendFavoriteCounts (favorites-api.ts) - one batched pair of
+ *  queries for the whole deck/map instead of one round trip per place. */
+export function useFriendVisitedCounts() {
+  const { user } = useUser();
+  return useQuery({
+    queryKey: ["friend-visited-counts", user?.id ?? null],
+    enabled: !!user,
+    queryFn: async (): Promise<Map<string, number>> => {
+      const { data: fs, error: fErr } = await supabase
+        .from("friendships")
+        .select("requester_id, addressee_id")
+        .eq("status", "accepted");
+      if (fErr) throw fErr;
+      const friendIds = (fs ?? [])
+        .map((f) => (f.requester_id === user!.id ? f.addressee_id : f.requester_id))
+        .filter((id): id is string => !!id);
+      if (friendIds.length === 0) return new Map();
+      const { data: visits, error } = await supabase
+        .from("place_visits")
+        .select("place_id")
+        .eq("status", "visited")
+        .in("user_id", friendIds);
+      if (error) throw error;
+      const counts = new Map<string, number>();
+      (visits ?? []).forEach((v) => {
+        counts.set(v.place_id, (counts.get(v.place_id) ?? 0) + 1);
+      });
+      return counts;
+    },
+  });
+}
+
 export function useToggleVisit() {
   const qc = useQueryClient();
   const { user } = useUser();

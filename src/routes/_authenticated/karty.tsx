@@ -3,9 +3,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, PartyPopper, RotateCcw, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSwipeDeck, useSkipPlace, useUnskipPlace, useResetSkips, useSkippedPlaceIds } from "@/lib/swipe-api";
-import { useToggleVisit } from "@/lib/visits-api";
+import { useToggleVisit, useFriendVisitedCounts } from "@/lib/visits-api";
 import { usePlaceRatingsMap } from "@/lib/places-api";
 import { useFriendFavoriteCounts } from "@/lib/favorites-api";
+import { useFriendRecommendCounts } from "@/lib/reviews-api";
+import type { FriendSignal } from "@/components/SwipeCard";
 import { pluralPl } from "@/lib/plural-pl";
 import { trackEvent } from "@/lib/analytics";
 import { SwipeCard } from "@/components/SwipeCard";
@@ -36,10 +38,26 @@ function KartyPage() {
   const unskipPlace = useUnskipPlace();
   const resetSkips = useResetSkips();
   const { data: skippedIds } = useSkippedPlaceIds();
-  // Both of these are already fetched for the map and the homepage, so putting
-  // them on the card costs no extra request.
+  // All four are already fetched elsewhere in the app (map, homepage, profile),
+  // so putting them on the card costs no extra request.
   const { data: ratings } = usePlaceRatingsMap();
-  const { data: friendCounts } = useFriendFavoriteCounts();
+  const { data: friendWantCounts } = useFriendFavoriteCounts();
+  const { data: friendVisitedCounts } = useFriendVisitedCounts();
+  const { data: friendRecommendCounts } = useFriendRecommendCounts();
+
+  // One badge, not three: a friend's opinion ("poleca") is stronger proof than
+  // just having gone, which in turn says more than only having saved it -
+  // showing all three at once was tried and read as clutter (see the comment
+  // on the card's foot section below), so the card shows whichever is true.
+  function topFriendSignal(placeId: string): FriendSignal {
+    const recommend = friendRecommendCounts?.get(placeId) ?? 0;
+    if (recommend > 0) return { kind: "recommend", count: recommend };
+    const visited = friendVisitedCounts?.get(placeId) ?? 0;
+    if (visited > 0) return { kind: "visited", count: visited };
+    const want = friendWantCounts?.get(placeId) ?? 0;
+    if (want > 0) return { kind: "want", count: want };
+    return null;
+  }
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [burst, setBurst] = useState<{ id: number; type: "like" | "nope" } | null>(null);
   // Every decision is reversible, so each one is remembered with the direction it
@@ -165,7 +183,7 @@ function KartyPage() {
       className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 py-10"
     >
       <div className="flex w-full items-start justify-center gap-10">
-      <div className="w-full max-w-md text-center">
+      <div className="w-full max-w-md text-center lg:max-w-lg">
         <h1 className="font-display text-3xl font-extrabold sm:text-4xl">Karty 🎴</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           Przesuń w prawo - trafi do „Chcę odwiedzić”. W lewo - pomiń, wróci za 5 dni.
@@ -177,7 +195,7 @@ function KartyPage() {
           </p>
         )}
 
-        <div className="relative mx-auto mt-6 aspect-[3/4] w-full max-w-[340px]">
+        <div className="relative mx-auto mt-6 aspect-[3/4] w-full max-w-[340px] lg:max-w-[440px]">
           {isLoading ? (
             <div className="grid h-full place-items-center rounded-3xl border border-dashed border-border">
               <Loader2 className="animate-spin text-tomato" size={28} />
@@ -225,7 +243,7 @@ function KartyPage() {
                       place={place}
                       isTop={idxFromTop === 0}
                       rating={ratings?.get(place.id)}
-                      friendCount={friendCounts?.get(place.id) ?? 0}
+                      friendSignal={topFriendSignal(place.id)}
                       onSwipeCommit={(dir) => handleSwipeCommit(dir, place)}
                       onSwipe={(dir) => handleSwipeEnd(dir, place)}
                     />

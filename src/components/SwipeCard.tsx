@@ -10,11 +10,25 @@ import { useCutoutLogo } from "@/lib/chroma-cutout";
 const SWIPE_THRESHOLD = 120;
 const VELOCITY_THRESHOLD = 500;
 
+/** The single strongest thing your friends have done with this place, in
+ *  priority order: a friend's opinion outweighs just having gone, which
+ *  outweighs only having saved it. Null when none apply. */
+export type FriendSignal = { kind: "recommend" | "visited" | "want"; count: number } | null;
+
+const FRIEND_SIGNAL_TEXT: Record<
+  "recommend" | "visited" | "want",
+  (count: number) => string
+> = {
+  recommend: (n) => (n === 1 ? "1 znajomy poleca" : `${n} znajomych poleca`),
+  visited: (n) => (n === 1 ? "1 znajomy tu był" : `${n} znajomych tu było`),
+  want: (n) => (n === 1 ? "1 znajomy chce tu iść" : `${n} znajomych chce tu iść`),
+};
+
 export function SwipeCard({
   place,
   isTop,
   rating,
-  friendCount = 0,
+  friendSignal = null,
   onSwipeCommit,
   onSwipe,
 }: {
@@ -22,9 +36,8 @@ export function SwipeCard({
   isTop: boolean;
   /** Real aggregated rating, when the place has any reviews at all. */
   rating?: { avg: number; count: number };
-  /** How many of my friends already want to go here - the strongest single
-   *  reason to swipe right, so it earns a place on the card. */
-  friendCount?: number;
+  /** The strongest reason your own friends give to swipe right - see FriendSignal. */
+  friendSignal?: FriendSignal;
   /** Fires the instant a drag passes the threshold - this is what actually
    * writes the decision, so it can never be lost to the user navigating
    * away before the (purely cosmetic) exit animation below finishes. */
@@ -143,67 +156,68 @@ export function SwipeCard({
         </div>
 
         {/* Everything that is not the identity stays at the foot of the card:
-            the decision signals first, then the "why visit" line, then the muted
-            cuisine + address meta. Each signal renders only when it has
-            something to say, so a place with no reviews, no opening hours and no
-            friends shows no row at all. */}
+            the decision signals first, then the "why visit" line, then the
+            muted address. Cuisine used to be a grey line down at the very
+            bottom, easy to miss - it's the first thing you want to know
+            before swiping, so it leads the signal row as its own coloured
+            chip instead. The friend signal collapses three possible facts
+            (recommends it / has been / wants to go) into whichever one is
+            true and strongest - showing all three at once was tried and
+            read as clutter. Rating and open-status still render only when
+            they have something to say. */}
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent p-5 pt-20 text-cream">
-          {(friendCount > 0 || rating || open.status !== "unknown") && (
-            <div className="mb-2 flex flex-wrap items-center gap-1.5">
-              {friendCount > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-tomato px-2 py-1 text-[11px] font-bold text-cream">
-                  <Users size={11} aria-hidden="true" />
-                  {friendCount === 1
-                    ? "1 znajomy chce tu iść"
-                    : `${friendCount} znajomych chce tu iść`}
-                </span>
-              )}
-              {rating && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-cream/20 px-2 py-1 text-[11px] font-bold text-cream backdrop-blur-sm">
-                  <Star size={11} className="fill-mustard text-mustard" aria-hidden="true" />
-                  {rating.avg.toFixed(1).replace(".", ",")}
-                  <span className="font-semibold text-cream/70">({rating.count})</span>
-                </span>
-              )}
-              {open.status !== "unknown" && (
+          <div className="mb-2 flex flex-wrap items-center gap-1.5">
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold text-cream"
+              style={{ backgroundColor: meta.color }}
+            >
+              {meta.emoji} {place.cuisine}
+            </span>
+            {friendSignal && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-tomato px-2 py-1 text-[11px] font-bold text-cream">
+                <Users size={11} aria-hidden="true" />
+                {FRIEND_SIGNAL_TEXT[friendSignal.kind](friendSignal.count)}
+              </span>
+            )}
+            {rating && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-cream/20 px-2 py-1 text-[11px] font-bold text-cream backdrop-blur-sm">
+                <Star size={11} className="fill-mustard text-mustard" aria-hidden="true" />
+                {rating.avg.toFixed(1).replace(".", ",")}
+                <span className="font-semibold text-cream/70">({rating.count})</span>
+              </span>
+            )}
+            {open.status !== "unknown" && (
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-bold backdrop-blur-sm ${
+                  open.status === "closed"
+                    ? "bg-cream/15 text-cream/70"
+                    : "bg-cream/20 text-cream"
+                }`}
+              >
                 <span
-                  className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-bold backdrop-blur-sm ${
-                    open.status === "closed"
-                      ? "bg-cream/15 text-cream/70"
-                      : "bg-cream/20 text-cream"
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    open.status === "open"
+                      ? "bg-ok"
+                      : open.status === "closing-soon"
+                        ? "bg-tomato"
+                        : "bg-cream/40"
                   }`}
-                >
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      open.status === "open"
-                        ? "bg-ok"
-                        : open.status === "closing-soon"
-                          ? "bg-tomato"
-                          : "bg-cream/40"
-                    }`}
-                    aria-hidden="true"
-                  />
-                  {open.status === "open"
-                    ? `Otwarte do ${open.closesAt}`
-                    : open.status === "closing-soon"
-                      ? open.minutesToClose <= 1
-                        ? "Zamyka się"
-                        : `Zamyka za ${open.minutesToClose} min`
-                      : "Zamknięte"}
-                </span>
-              )}
-            </div>
-          )}
+                  aria-hidden="true"
+                />
+                {open.status === "open"
+                  ? `Otwarte do ${open.closesAt}`
+                  : open.status === "closing-soon"
+                    ? open.minutesToClose <= 1
+                      ? "Zamyka się"
+                      : `Zamyka za ${open.minutesToClose} min`
+                    : "Zamknięte"}
+              </span>
+            )}
+          </div>
           {place.description && (
             <p className="line-clamp-2 text-sm leading-snug text-cream/90">{place.description}</p>
           )}
           <p className="mt-2 flex items-center gap-1.5 text-xs text-cream/70">
-            <span className="shrink-0">
-              {meta.emoji} {place.cuisine}
-            </span>
-            <span aria-hidden="true" className="shrink-0">
-              ·
-            </span>
             <span className="inline-flex min-w-0 items-center gap-1 truncate">
               <MapPin size={11} className="shrink-0" />
               <span className="truncate">{place.address}</span>
