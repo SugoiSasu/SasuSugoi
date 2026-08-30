@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { motion, useMotionValue, useTransform, animate } from "motion/react";
-import { MapPin, Star, Users } from "lucide-react";
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "motion/react";
+import { MapPin, Star, Users, X } from "lucide-react";
 import { cuisineMeta } from "@/data/places";
 import { YummyFace, NopeFace } from "@/components/SwipeFaces";
 import { placeOpenState } from "@/lib/places-api";
@@ -69,11 +69,18 @@ export function SwipeCard({
   }, []);
   const open = now ? placeOpenState(place.opening_hours, now) : { status: "unknown" as const };
 
+  // Reading the full description isn't a decision, so it gets its own state
+  // instead of hijacking the drag gesture - dragging is turned off while
+  // open, and the panel that shows the text stays inside the card's own
+  // rounded bounds instead of a page-covering modal, so the deck (and your
+  // place in it) never leaves the screen.
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
+
   return (
     <motion.div
       className="absolute inset-0"
       style={{ x, rotate }}
-      drag={isTop ? "x" : false}
+      drag={isTop && !descriptionOpen ? "x" : false}
       dragElastic={0.9}
       whileDrag={{ scale: 1.04 }}
       transition={{ scale: { type: "spring", stiffness: 400, damping: 25 } }}
@@ -215,7 +222,20 @@ export function SwipeCard({
             )}
           </div>
           {place.description && (
-            <p className="line-clamp-2 text-sm leading-snug text-cream/90">{place.description}</p>
+            <>
+              <p className="line-clamp-2 text-sm leading-snug text-cream/90">{place.description}</p>
+              <button
+                type="button"
+                onPointerDownCapture={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDescriptionOpen(true);
+                }}
+                className="pz-hit mt-0.5 text-xs font-bold text-cream/80 underline underline-offset-2 hover:text-cream"
+              >
+                Zobacz pełny opis
+              </button>
+            </>
           )}
           <p className="mt-2 flex items-center gap-1.5 text-xs text-cream/70">
             <span className="inline-flex min-w-0 items-center gap-1 truncate">
@@ -239,6 +259,37 @@ export function SwipeCard({
           <NopeFace size={30} />
           <span className="font-display text-lg font-extrabold text-navy">OMIJAM</span>
         </motion.div>
+
+        <AnimatePresence>
+          {descriptionOpen && place.description && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onPointerDownCapture={(e) => e.stopPropagation()}
+              onClick={() => setDescriptionOpen(false)}
+              role="dialog"
+              aria-modal="true"
+              aria-label={`Pełny opis: ${place.name}`}
+              className="absolute inset-0 z-10 flex flex-col bg-navy/95 p-5 text-cream backdrop-blur-sm"
+            >
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <h3 className="font-display text-lg font-extrabold leading-tight">{place.name}</h3>
+                <button
+                  type="button"
+                  aria-label="Zamknij"
+                  onClick={() => setDescriptionOpen(false)}
+                  className="pz-hit grid h-8 w-8 shrink-0 place-items-center rounded-full bg-cream/15 hover:bg-cream/25"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <p className="overflow-y-auto text-sm leading-relaxed text-cream/90">
+                {place.description}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );
