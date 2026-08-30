@@ -21,12 +21,15 @@ import {
   Share2,
   Sparkles,
   Search,
+  Bookmark,
 } from "lucide-react";
 import {
   useWallFeed,
   useForYouFeed,
   useCreateWallPost,
   useFeedReactionTotals,
+  useMySavedItemKeys,
+  useToggleSave,
   type WallItem,
 } from "@/lib/wall-api";
 import { usePlaces, usePlaceRatingsMap, type Place } from "@/lib/places-api";
@@ -852,7 +855,10 @@ function FeedCard({ item }: { item: WallItem }) {
         item.kind === "list" ||
         item.kind === "challenge_complete") &&
         item.socialRefId && <WallSocial kind={item.kind} refId={item.socialRefId} />}
-      <ShareRow item={item} />
+      <div className="mt-2 flex items-center gap-4">
+        <ShareRow item={item} />
+        <SaveButton itemKey={item.id} />
+      </div>
     </li>
   );
 }
@@ -918,9 +924,47 @@ function ShareRow({ item }: { item: WallItem }) {
     <button
       type="button"
       onClick={share}
-      className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-tomato"
+      className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-tomato"
     >
       <Share2 size={12} /> Udostępnij
+    </button>
+  );
+}
+
+/** "Zapisz" toggle - private per-user bookmark on any feed item (mockup's
+ *  save icon on each post). Anonymous visitors get a login prompt instead
+ *  of a silent no-op, same pattern as reactions/comments elsewhere on this
+ *  page. */
+function SaveButton({ itemKey }: { itemKey: string }) {
+  const { user } = useUser();
+  const { data: savedKeys } = useMySavedItemKeys();
+  const toggle = useToggleSave();
+  const saved = !!savedKeys?.has(itemKey);
+
+  return (
+    <button
+      type="button"
+      disabled={toggle.isPending}
+      onClick={() => {
+        if (!user) {
+          toast.error("Zaloguj się, żeby zapisywać");
+          return;
+        }
+        toggle.mutate(
+          { itemKey, saved },
+          {
+            onError: (err) =>
+              toast.error(err instanceof Error ? err.message : "Nie udało się zapisać"),
+          },
+        );
+      }}
+      aria-pressed={saved}
+      className={`inline-flex items-center gap-1.5 text-xs font-semibold disabled:opacity-60 disabled:pointer-events-none ${
+        saved ? "text-tomato" : "text-muted-foreground hover:text-tomato"
+      }`}
+    >
+      <Bookmark size={12} className={saved ? "fill-current" : ""} />
+      {saved ? "Zapisano" : "Zapisz"}
     </button>
   );
 }

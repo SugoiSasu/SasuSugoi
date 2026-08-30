@@ -2329,6 +2329,27 @@ export type Database = {
         }
         Relationships: []
       }
+      wall_saves: {
+        Row: {
+          created_at: string
+          id: string
+          item_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       social_accounts_public: {

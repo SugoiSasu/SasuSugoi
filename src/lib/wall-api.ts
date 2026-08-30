@@ -588,3 +588,48 @@ export function useFeedReactionTotals(items: WallItem[] | undefined) {
     },
   });
 }
+
+/** "Zapisz" - a private per-user bookmark on any WallItem, keyed by its
+ *  synthetic id (item.id, e.g. "review-<uuid>"). One query for the whole
+ *  feed instead of one per card. */
+export function useMySavedItemKeys() {
+  const { user } = useUser();
+  return useQuery({
+    queryKey: ["wall-saves", user?.id ?? null],
+    enabled: !!user,
+    queryFn: async (): Promise<Set<string>> => {
+      const { data, error } = await supabase
+        .from("wall_saves")
+        .select("item_key")
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return new Set((data ?? []).map((r) => r.item_key));
+    },
+  });
+}
+
+export function useToggleSave() {
+  const { user } = useUser();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ itemKey, saved }: { itemKey: string; saved: boolean }) => {
+      if (!user) throw new Error("Zaloguj się, żeby zapisywać");
+      if (saved) {
+        const { error } = await supabase
+          .from("wall_saves")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("item_key", itemKey);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("wall_saves")
+          .insert({ user_id: user.id, item_key: itemKey });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["wall-saves", user?.id ?? null] });
+    },
+  });
+}
