@@ -217,100 +217,6 @@ export function useToggleFavorite() {
 }
 
 /* ============================================================
- * Lists / groups
- * ============================================================ */
-export interface FriendList {
-  id: string;
-  user_id: string;
-  name: string;
-  color: string | null;
-  icon: string | null;
-}
-
-export function useFriendLists() {
-  return useQuery({
-    queryKey: ["friend-lists"],
-    queryFn: async (): Promise<FriendList[]> => {
-      const { data, error } = await supabase.from("friend_lists").select("*").order("created_at");
-      if (error) throw error;
-      return (data ?? []) as FriendList[];
-    },
-  });
-}
-
-export function useFriendListMembers(listId: string | null) {
-  return useQuery({
-    queryKey: ["friend-list-members", listId],
-    enabled: !!listId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("friend_list_members")
-        .select("friend_id")
-        .eq("list_id", listId!);
-      if (error) throw error;
-      return new Set((data ?? []).map((r) => r.friend_id as string));
-    },
-  });
-}
-
-export function useCreateFriendList() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: { name: string; color?: string; icon?: string }) => {
-      const { data: me } = await supabase.auth.getUser();
-      if (!me.user) throw new Error("Nie zalogowano");
-      const { error } = await supabase
-        .from("friend_lists")
-        .insert({ user_id: me.user.id, name: input.name, color: input.color, icon: input.icon });
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["friend-lists"] }),
-  });
-}
-
-export function useDeleteFriendList() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("friend_lists").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["friend-lists"] }),
-  });
-}
-
-export function useToggleListMember() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({
-      listId,
-      friendId,
-      on,
-    }: {
-      listId: string;
-      friendId: string;
-      on: boolean;
-    }) => {
-      if (on) {
-        const { error } = await supabase
-          .from("friend_list_members")
-          .insert({ list_id: listId, friend_id: friendId });
-        if (error && !String(error.message).includes("duplicate")) throw error;
-      } else {
-        const { error } = await supabase
-          .from("friend_list_members")
-          .delete()
-          .eq("list_id", listId)
-          .eq("friend_id", friendId);
-        if (error) throw error;
-      }
-    },
-    onSuccess: (_d, vars) =>
-      qc.invalidateQueries({ queryKey: ["friend-list-members", vars.listId] }),
-  });
-}
-
-/* ============================================================
  * Notes
  * ============================================================ */
 export function useFriendNote(friendId: string | null) {
@@ -626,41 +532,8 @@ export function useInviteStats() {
 }
 
 /* ============================================================
- * Friend activity feed + leaderboard
+ * Leaderboard
  * ============================================================ */
-export interface FriendFeedItem {
-  kind: string;
-  review_id: string;
-  author_id: string;
-  author_name: string;
-  author_avatar: string | null;
-  place_id: string;
-  place_name: string;
-  place_slug: string;
-  rating: number;
-  body: string | null;
-  photo_url: string | null;
-  created_at: string;
-}
-
-export function useFriendFeed(limit = 20, before?: string) {
-  return useQuery({
-    queryKey: ["friend-feed", limit, before ?? null],
-    queryFn: async (): Promise<FriendFeedItem[]> => {
-      const { data: me } = await supabase.auth.getUser();
-      if (!me.user) return [];
-      const args: { _user: string; _limit: number; _before?: string } = {
-        _user: me.user.id,
-        _limit: limit,
-      };
-      if (before) args._before = before;
-      const { data, error } = await supabase.rpc("friend_activity_feed", args);
-      if (error) throw error;
-      return (data ?? []) as FriendFeedItem[];
-    },
-  });
-}
-
 export interface FriendLeaderRow {
   user_id: string;
   display_name: string | null;
@@ -868,42 +741,6 @@ export function useDeleteComment() {
       if (ctx?.previous !== undefined) qc.setQueryData(ctx.key, ctx.previous);
     },
     onSettled: (_d, _e, v) => qc.invalidateQueries({ queryKey: ["review-comments", v.reviewId] }),
-  });
-}
-
-/* ============================================================
- * Review tags ("byliśmy razem")
- * ============================================================ */
-export function useReviewTags(reviewId: string) {
-  return useQuery({
-    queryKey: ["review-tags", reviewId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("review_tags")
-        .select("tagged_user_id")
-        .eq("review_id", reviewId);
-      if (error) throw error;
-      return (data ?? []).map((r) => r.tagged_user_id as string);
-    },
-  });
-}
-
-export function useTagFriendsInReview() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ reviewId, friendIds }: { reviewId: string; friendIds: string[] }) => {
-      const { data: me } = await supabase.auth.getUser();
-      if (!me.user) throw new Error("Nie zalogowano");
-      if (friendIds.length === 0) return;
-      const rows = friendIds.map((fid) => ({
-        review_id: reviewId,
-        tagged_user_id: fid,
-        tagger_id: me.user!.id,
-      }));
-      const { error } = await supabase.from("review_tags").insert(rows);
-      if (error && !String(error.message).includes("duplicate")) throw error;
-    },
-    onSuccess: (_d, v) => qc.invalidateQueries({ queryKey: ["review-tags", v.reviewId] }),
   });
 }
 
