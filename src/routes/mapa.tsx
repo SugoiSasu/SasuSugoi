@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, ChevronDown, ChevronRight, Clock, Heart, List, Map as MapIcon, Search, Star, Users, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Clock, Heart, List, Map as MapIcon, Search, Star, UtensilsCrossed, Users, X } from "lucide-react";
 import FoodMap, { type MapBounds } from "@/components/FoodMap";
 import { useMyFavoritePlaceIds, useFriendFavoriteCounts } from "@/lib/favorites-api";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -196,7 +196,13 @@ function MapaPage() {
         <div className="flex items-center gap-2">
           <Popover>
             <PopoverTrigger className={trigger(!!cuisine)} aria-label="Filtruj po kuchni">
-              <span className="truncate">{cuisine ?? "Kuchnia"}</span>
+              <UtensilsCrossed size={13} className="shrink-0" />
+              {/* Three flex-1 chips squeezed into one row below `sm:` used to
+                  crush this text to an illegible 2-3 letter fragment
+                  ("Oc…", "Otwar…") - confirmed live at 320-375px. Below
+                  400px the icon (added above) carries the meaning alone;
+                  the label reappears once there's room to read it. */}
+              <span className="hidden truncate min-[400px]:inline">{cuisine ?? "Kuchnia"}</span>
               <ChevronDown size={14} className="shrink-0 opacity-70" />
             </PopoverTrigger>
             <PopoverContent align="start" className="max-h-72 w-56 overflow-y-auto p-2">
@@ -228,7 +234,12 @@ function MapaPage() {
           <Popover>
             <PopoverTrigger className={trigger(minRating > 0)} aria-label="Filtruj po ocenie">
               <Star size={13} className={minRating > 0 ? "fill-cream" : "text-tomato"} />
-              <span className="truncate">{minRating > 0 ? `${minRating}+` : "Ocena"}</span>
+              {/* Once a rating is picked the label is just "4+" - short
+                  enough to always show, unlike the generic "Ocena"
+                  placeholder which only reappears with room to read it. */}
+              <span className={`truncate ${minRating > 0 ? "" : "hidden min-[400px]:inline"}`}>
+                {minRating > 0 ? `${minRating}+` : "Ocena"}
+              </span>
               <ChevronDown size={14} className="shrink-0 opacity-70" />
             </PopoverTrigger>
             <PopoverContent align="start" className="w-44 p-2">
@@ -253,7 +264,7 @@ function MapaPage() {
             className={trigger(openNow)}
           >
             <Clock size={13} className="shrink-0" />
-            <span className="truncate">Otwarte teraz</span>
+            <span className="hidden truncate min-[400px]:inline">Otwarte teraz</span>
           </button>
 
           {/* Layers are a different axis from the filters above: not what kind

@@ -123,7 +123,7 @@ export function BottomTabBar() {
             return (
               <Link key={to} to={to} className={itemCls(active)} aria-label={label}>
                 <Icon size={20} />
-                {active && <span className="max-w-full truncate">{label}</span>}
+                {active && <span className="hidden max-w-full truncate min-[360px]:inline">{label}</span>}
               </Link>
             );
           })}
@@ -148,7 +148,9 @@ export function BottomTabBar() {
                 </span>
               )}
             </span>
-            {isActive("/friends", false) && <span className="max-w-full truncate">Znajomi</span>}
+            {isActive("/friends", false) && (
+              <span className="hidden max-w-full truncate min-[360px]:inline">Znajomi</span>
+            )}
           </Link>
 
           <Link
@@ -157,8 +159,13 @@ export function BottomTabBar() {
             aria-label="Moje miejsca"
           >
             <Bookmark size={20} />
+            {/* "Moje miejsca" overflowed its ~58px flex slot even on a
+                414px-wide phone (confirmed live: scrollWidth 62 > clientWidth
+                58) - truncated on every real device, not just narrow ones.
+                "Miejsca" fits; aria-label above keeps the full name for
+                screen readers. */}
             {isActive("/moje-miejsca", false) && (
-              <span className="max-w-full truncate">Moje miejsca</span>
+              <span className="hidden max-w-full truncate min-[360px]:inline">Miejsca</span>
             )}
           </Link>
 
@@ -170,7 +177,9 @@ export function BottomTabBar() {
               aria-label="Profil"
             >
               <UserIcon size={20} />
-              {pathname.startsWith("/u/") && <span className="max-w-full truncate">Profil</span>}
+              {pathname.startsWith("/u/") && (
+                <span className="hidden max-w-full truncate min-[360px]:inline">Profil</span>
+              )}
             </Link>
           ) : (
             <Link
@@ -179,7 +188,9 @@ export function BottomTabBar() {
               aria-label="Profil"
             >
               <UserIcon size={20} />
-              {pathname.startsWith("/auth") && <span className="max-w-full truncate">Profil</span>}
+              {pathname.startsWith("/auth") && (
+                <span className="hidden max-w-full truncate min-[360px]:inline">Profil</span>
+              )}
             </Link>
           )}
         </div>
