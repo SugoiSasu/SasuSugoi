@@ -104,7 +104,7 @@ function WallPage() {
       <div className="mx-auto flex max-w-5xl items-start justify-center gap-6">
         <div className="w-full max-w-2xl min-w-0">
           <header className="mb-6 pb-5 border-b border-border">
-            <h1 className="font-persona text-3xl sm:text-4xl mb-1">Pożeralnia 📰</h1>
+            <h1 className="font-persona text-3xl sm:text-4xl mb-1">POZERALNIA 📰</h1>
             <p className="text-sm text-muted-foreground">
               Aktywność znajomych, nowinki z Twoich ulubionych miejscówek i komunikaty od lokali.
             </p>
