@@ -1325,10 +1325,13 @@ function WallRail() {
         <div className="rounded-3xl bg-secondary p-5 text-secondary-foreground">
           <div className="mb-3 font-display text-base font-bold">Zaproponuj do obserwowania</div>
           <ul className="space-y-2">
-            {suggestions.map(({ place, friends }) => (
+            {suggestions.map(({ place, friends }) => {
+              const meta = cuisineMeta(place.cuisine ?? "");
+              return (
               <li
                 key={place.id}
-                className="flex items-center gap-2.5 rounded-2xl bg-card/80 px-3 py-2.5"
+                className="flex items-center gap-2.5 rounded-2xl border-2 bg-card/90 px-3 py-2.5"
+                style={{ borderColor: meta.color }}
               >
                 <PlaceAvatarDot place={place} size={34} />
                 <div className="min-w-0 flex-1">
@@ -1349,7 +1352,8 @@ function WallRail() {
                 </div>
                 <FollowChip placeId={place.id} />
               </li>
-            ))}
+              );
+            })}
           </ul>
         </div>
       )}

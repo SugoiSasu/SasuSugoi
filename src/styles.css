@@ -157,6 +157,25 @@
     letter-spacing: -0.02em;
     font-weight: 600;
   }
+
+  /* Global press feedback: every button/link-as-button gets a tiny squash on
+     tap so touch interactions feel alive, without hand-adding active:scale-*
+     to hundreds of individual elements. Excludes anything explicitly opted
+     out (drag handles, swipe cards) via [data-no-press]. */
+  button:not(:disabled):not([data-no-press]),
+  [role="button"]:not([aria-disabled="true"]):not([data-no-press]) {
+    transition: transform 0.1s ease-out;
+  }
+  button:not(:disabled):not([data-no-press]):active,
+  [role="button"]:not([aria-disabled="true"]):not([data-no-press]):active {
+    transform: scale(0.95);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    button:not(:disabled):not([data-no-press]):active,
+    [role="button"]:not([aria-disabled="true"]):not([data-no-press]):active {
+      transform: none;
+    }
+  }
 }
 
 @layer utilities {
