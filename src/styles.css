@@ -158,20 +158,35 @@
     font-weight: 600;
   }
 
-  /* Global press feedback: every button/link-as-button gets a tiny squash on
-     tap so touch interactions feel alive, without hand-adding active:scale-*
-     to hundreds of individual elements. Excludes anything explicitly opted
-     out (drag handles, swipe cards) via [data-no-press]. */
+  /* Global press/hover feedback: every button, role=button, and real link
+     gets a tiny scale reaction so clicks/taps feel alive, without hand-adding
+     active:scale-* to hundreds of individual elements - most primary CTAs in
+     this app are router <Link>s (rendered as <a>), not <button>, so all three
+     selectors are needed. Excludes anything explicitly opted out (drag
+     handles, swipe cards) via [data-no-press]. */
   button:not(:disabled):not([data-no-press]),
+  a[href]:not([data-no-press]),
   [role="button"]:not([aria-disabled="true"]):not([data-no-press]) {
     transition: transform 0.1s ease-out;
   }
+  @media (hover: hover) {
+    button:not(:disabled):not([data-no-press]):hover,
+    a[href]:not([data-no-press]):hover,
+    [role="button"]:not([aria-disabled="true"]):not([data-no-press]):hover {
+      transform: scale(1.04);
+    }
+  }
   button:not(:disabled):not([data-no-press]):active,
+  a[href]:not([data-no-press]):active,
   [role="button"]:not([aria-disabled="true"]):not([data-no-press]):active {
     transform: scale(0.95);
   }
   @media (prefers-reduced-motion: reduce) {
+    button:not(:disabled):not([data-no-press]):hover,
+    a[href]:not([data-no-press]):hover,
+    [role="button"]:not([aria-disabled="true"]):not([data-no-press]):hover,
     button:not(:disabled):not([data-no-press]):active,
+    a[href]:not([data-no-press]):active,
     [role="button"]:not([aria-disabled="true"]):not([data-no-press]):active {
       transform: none;
     }
