@@ -39,6 +39,7 @@ export function useFriendsCount(userId: string | null | undefined) {
 export function useMyFriendships() {
   return useQuery({
     queryKey: ["my-friendships"],
+    staleTime: 30_000,
     queryFn: async (): Promise<Friendship[]> => {
       const { data, error } = await supabase
         .from("friendships")
@@ -184,6 +185,7 @@ export function useRemoveFriendship() {
 export function useFriendFavorites() {
   return useQuery({
     queryKey: ["friend-favorites"],
+    staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase.from("friend_favorites").select("friend_id");
       if (error) throw error;
@@ -262,6 +264,7 @@ export function useSetFriendNote() {
 export function useBlockedUsers() {
   return useQuery({
     queryKey: ["blocked-users"],
+    staleTime: 30_000,
     queryFn: async (): Promise<FriendProfile[]> => {
       const { data: blocks, error } = await supabase.from("user_blocks").select("blocked_id");
       if (error) throw error;
@@ -333,6 +336,7 @@ export function useMyInvites(enabled = true) {
   return useQuery({
     queryKey: ["friend-invites"],
     enabled,
+    staleTime: 30_000,
     queryFn: async (): Promise<FriendInvite[]> => {
       const { data, error } = await supabase
         .from("friend_invites")
@@ -490,27 +494,32 @@ export function useInviteStats() {
       );
 
       const profileIds = Array.from(new Set(acceptedRows.map((i) => i.accepted_by)));
-      let profilesById = new Map<string, FriendProfile>();
-      if (profileIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select(
-            "id, username, display_name, avatar_url, avatar_source, is_vip, vip_until, vip_nick_color",
-          )
-          .in("id", profileIds);
-        profilesById = new Map((profiles ?? []).map((p) => [p.id, p as FriendProfile]));
-      }
-
       const inviteIds = acceptedRows.map((i) => i.id);
-      let pointsByInvite = new Map<string, number>();
-      if (inviteIds.length > 0) {
-        const { data: txns } = await supabase
-          .from("points_transactions")
-          .select("ref_id, points")
-          .eq("event_key", "invite_accepted")
-          .in("ref_id", inviteIds);
-        pointsByInvite = new Map((txns ?? []).map((t) => [t.ref_id as string, t.points as number]));
-      }
+      // Independent of each other - both only depend on acceptedRows above -
+      // so they run together instead of one after the other.
+      const [profilesRes, txnsRes] = await Promise.all([
+        profileIds.length > 0
+          ? supabase
+              .from("profiles")
+              .select(
+                "id, username, display_name, avatar_url, avatar_source, is_vip, vip_until, vip_nick_color",
+              )
+              .in("id", profileIds)
+          : Promise.resolve({ data: [] as FriendProfile[] }),
+        inviteIds.length > 0
+          ? supabase
+              .from("points_transactions")
+              .select("ref_id, points")
+              .eq("event_key", "invite_accepted")
+              .in("ref_id", inviteIds)
+          : Promise.resolve({ data: [] as { ref_id: string; points: number }[] }),
+      ]);
+      const profilesById = new Map(
+        (profilesRes.data ?? []).map((p) => [p.id, p as FriendProfile]),
+      );
+      const pointsByInvite = new Map(
+        (txnsRes.data ?? []).map((t) => [t.ref_id as string, t.points as number]),
+      );
 
       const acceptedList: AcceptedInviteRow[] = acceptedRows
         .map((i) => ({
@@ -761,10 +770,14 @@ export function useFriendSuggestions() {
       if (!me.user) return [];
       const myId = me.user.id;
 
-      // accepted friends + pending + blocks → exclude
-      const { data: fs } = await supabase
-        .from("friendships")
-        .select("requester_id, addressee_id, status");
+      // accepted friends + pending + blocks → exclude. myReviews only needs
+      // myId, not the friendships/blocks results, so it runs alongside them
+      // instead of waiting for them.
+      const [{ data: fs }, { data: blocks }, { data: myReviews }] = await Promise.all([
+        supabase.from("friendships").select("requester_id, addressee_id, status"),
+        supabase.from("user_blocks").select("blocker_id, blocked_id"),
+        supabase.from("reviews").select("place_id").eq("user_id", myId),
+      ]);
       const knownIds = new Set<string>([myId]);
       const friendIds = new Set<string>();
       (fs ?? []).forEach((f) => {
@@ -773,49 +786,44 @@ export function useFriendSuggestions() {
         knownIds.add(other);
         if (f.status === "accepted") friendIds.add(other);
       });
-      const { data: blocks } = await supabase.from("user_blocks").select("blocker_id, blocked_id");
       (blocks ?? []).forEach((b) => {
         knownIds.add(b.blocker_id === myId ? (b.blocked_id as string) : (b.blocker_id as string));
       });
-
-      // mutual friends: friends of my friends
-      const mutualMap = new Map<string, number>();
-      if (friendIds.size > 0) {
-        const { data: fof } = await supabase
-          .from("friendships")
-          .select("requester_id, addressee_id, status")
-          .eq("status", "accepted")
-          .or(
-            Array.from(friendIds)
-              .map((id) => `requester_id.eq.${id},addressee_id.eq.${id}`)
-              .join(","),
-          );
-        (fof ?? []).forEach((f) => {
-          [f.requester_id, f.addressee_id].forEach((id) => {
-            if (!id || knownIds.has(id as string)) return;
-            mutualMap.set(id as string, (mutualMap.get(id as string) ?? 0) + 1);
-          });
-        });
-      }
-
-      // shared places: users who reviewed places I reviewed
-      const sharedMap = new Map<string, number>();
-      const { data: myReviews } = await supabase
-        .from("reviews")
-        .select("place_id")
-        .eq("user_id", myId);
       const myPlaces = Array.from(new Set((myReviews ?? []).map((r) => r.place_id as string)));
-      if (myPlaces.length > 0) {
-        const { data: others } = await supabase
-          .from("reviews")
-          .select("user_id, place_id")
-          .in("place_id", myPlaces);
-        (others ?? []).forEach((r) => {
-          const uid = r.user_id as string;
-          if (!uid || knownIds.has(uid)) return;
-          sharedMap.set(uid, (sharedMap.get(uid) ?? 0) + 1);
+
+      // mutual friends (friends of my friends) and shared places (reviewed the
+      // same places as me) are independent lookups - fire together.
+      const [fofRes, othersRes] = await Promise.all([
+        friendIds.size > 0
+          ? supabase
+              .from("friendships")
+              .select("requester_id, addressee_id, status")
+              .eq("status", "accepted")
+              .or(
+                Array.from(friendIds)
+                  .map((id) => `requester_id.eq.${id},addressee_id.eq.${id}`)
+                  .join(","),
+              )
+          : Promise.resolve({ data: [] as { requester_id: string; addressee_id: string }[] }),
+        myPlaces.length > 0
+          ? supabase.from("reviews").select("user_id, place_id").in("place_id", myPlaces)
+          : Promise.resolve({ data: [] as { user_id: string; place_id: string }[] }),
+      ]);
+
+      const mutualMap = new Map<string, number>();
+      (fofRes.data ?? []).forEach((f) => {
+        [f.requester_id, f.addressee_id].forEach((id) => {
+          if (!id || knownIds.has(id as string)) return;
+          mutualMap.set(id as string, (mutualMap.get(id as string) ?? 0) + 1);
         });
-      }
+      });
+
+      const sharedMap = new Map<string, number>();
+      (othersRes.data ?? []).forEach((r) => {
+        const uid = r.user_id as string;
+        if (!uid || knownIds.has(uid)) return;
+        sharedMap.set(uid, (sharedMap.get(uid) ?? 0) + 1);
+      });
 
       const candidateIds = new Set<string>([...mutualMap.keys(), ...sharedMap.keys()]);
       if (candidateIds.size === 0) return [];

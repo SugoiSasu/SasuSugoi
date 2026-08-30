@@ -40,6 +40,7 @@ function isLive(ad: Ad, now = Date.now()): boolean {
 export function useActiveAds() {
   return useQuery({
     queryKey: ["ads-active"],
+    staleTime: 60_000,
     queryFn: async (): Promise<Ad[]> => {
       const { data, error } = await supabase
         .from("ads")

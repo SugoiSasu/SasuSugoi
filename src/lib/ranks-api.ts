@@ -23,6 +23,7 @@ export interface UserRank {
 export function useRanks() {
   return useQuery({
     queryKey: ["ranks"],
+    staleTime: 5 * 60_000,
     queryFn: async (): Promise<Rank[]> => {
       const { data, error } = await supabase
         .from("ranks")

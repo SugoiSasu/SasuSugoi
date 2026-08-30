@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "./use-auth";
+import { sanitizeIlikeTerm } from "./postgrest-filter";
 
 export type AvatarSource = "google" | "upload" | "initials";
 
@@ -79,9 +80,13 @@ export function useProfileByUsername(usernameOrId: string) {
       const q = supabase.from("profiles").select(
         "id, username, display_name, avatar_url, avatar_source, bio, district, favorite_cuisines, is_public, points_total, created_at, instagram_url, tiktok_url, youtube_url, facebook_url, x_url, is_vip, vip_until, vip_nick_color, gender, active_title, active_title_achievement_id",
       );
+      // ilike's own wildcards (%, _) must be stripped from a raw route param
+      // before use, same as the ranking search does - otherwise "/u/%25"
+      // (-> "%") matches every username and .maybeSingle() throws on the
+      // resulting multi-row result instead of behaving like a clean 404.
       const { data, error } = UUID_RE.test(usernameOrId)
         ? await q.eq("id", usernameOrId).maybeSingle()
-        : await q.ilike("username", usernameOrId).maybeSingle();
+        : await q.ilike("username", sanitizeIlikeTerm(usernameOrId)).maybeSingle();
       if (error) throw error;
       return data as Profile | null;
     },

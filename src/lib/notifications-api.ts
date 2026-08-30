@@ -133,6 +133,7 @@ export function useNotifications(limit = 30) {
         () => {
           qc.invalidateQueries({ queryKey: ["notifications", user.id] });
           qc.invalidateQueries({ queryKey: ["notifications-page", user.id] });
+          qc.invalidateQueries({ queryKey: ["notifications-unread-count", user.id] });
         },
       )
       .subscribe((status) => {
@@ -191,9 +192,27 @@ export function useNotifications(limit = 30) {
   });
 }
 
+// A dedicated exact count, not derived from useNotifications' capped 30-row
+// page - that undercounted (silently capped at 30) for anyone with more
+// unread notifications than the page size, e.g. after being away a while.
 export function useUnreadCount() {
-  const { data } = useNotifications();
-  return (data ?? []).filter((n) => !n.read_at).length;
+  const { user } = useUser();
+  const rtStatus = useRealtimeStatus();
+  const { data } = useQuery({
+    queryKey: ["notifications-unread-count", user?.id ?? null],
+    enabled: !!user,
+    refetchInterval: rtStatus === "connected" ? 60_000 : 20_000,
+    queryFn: async (): Promise<number> => {
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user!.id)
+        .is("read_at", null);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+  return data ?? 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -270,6 +289,10 @@ export function useMarkRead() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["notifications", user?.id ?? null] });
       qc.invalidateQueries({ queryKey: ["notifications-page", user?.id ?? null] });
+      qc.invalidateQueries({ queryKey: ["notifications-unread-count", user?.id ?? null] });
+    },
+    onError: (err) => {
+      logNotifEvent("error", "mark read onError", { err: String(err), userId: user?.id });
     },
   });
 }

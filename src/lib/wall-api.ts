@@ -68,6 +68,7 @@ export function useWallFeed() {
   return useQuery({
     queryKey: ["wall-feed", user?.id ?? null],
     enabled: !!user,
+    staleTime: 30_000,
     queryFn: async (): Promise<WallItem[]> => {
       const me = user!.id;
 
@@ -104,8 +105,14 @@ export function useWallFeed() {
       const profileIdsToFetch = new Set<string>(feedUserIds);
       const placeIdsToFetch = new Set<string>(myPlaceIds);
 
-      // 3) friend reviews
-      if (feedUserIds.length) {
+      // 3-8) None of these six blocks depend on each other's results - only on
+      // feedUserIds/postsPlaceIds already resolved above - so they used to run
+      // as six sequential awaits (a real waterfall on the page that loads on
+      // every /wall visit). Promise.all so they fire together; each pushes
+      // into the shared `items` array/`placeIdsToFetch` set from its own
+      // closure, which is safe since JS only interleaves at await points.
+      const fetchReviews = async () => {
+        if (!feedUserIds.length) return;
         const { data: rvs } = await supabase
           .from("reviews")
           .select("id, user_id, place_id, body, rating, photo_url, created_at")
@@ -126,10 +133,10 @@ export function useWallFeed() {
             image_url: r.photo_url,
           });
         });
-      }
+      };
 
-      // 4) friend favorites
-      if (feedUserIds.length) {
+      const fetchFavorites = async () => {
+        if (!feedUserIds.length) return;
         const { data: ffs } = await supabase
           .from("place_favorites")
           .select("id, user_id, place_id, created_at")
@@ -148,11 +155,12 @@ export function useWallFeed() {
             socialRefId: f.id,
           });
         });
-      }
+      };
 
-      // 5) friend achievements - grouped into one card per (user, day) so a
+      // Friend achievements - grouped into one card per (user, day) so a
       // multi-badge unlock doesn't flood the feed with repeat cards.
-      if (feedUserIds.length) {
+      const fetchAchievements = async () => {
+        if (!feedUserIds.length) return;
         const { data: uas } = await supabase
           .from("user_achievements")
           .select("id, user_id, achievement_id, unlocked_at")
@@ -199,10 +207,11 @@ export function useWallFeed() {
             socialRefId: key,
           });
         });
-      }
+      };
 
-      // 6) my own quick posts + friends' quick posts ("co dziś jadłeś?")
-      if (feedUserIds.length) {
+      // My own quick posts + friends' quick posts ("co dziś jadłeś?")
+      const fetchQuickPosts = async () => {
+        if (!feedUserIds.length) return;
         const { data: wps } = await supabase
           .from("wall_posts")
           .select("id, user_id, place_id, body, image_url, created_at")
@@ -223,10 +232,11 @@ export function useWallFeed() {
             socialRefId: w.id,
           });
         });
-      }
+      };
 
-      // 7) friend-curated lists ("najlepszy street food w Poznaniu")
-      if (feedUserIds.length) {
+      // Friend-curated lists ("najlepszy street food w Poznaniu")
+      const fetchLists = async () => {
+        if (!feedUserIds.length) return;
         const { data: lists } = await supabase
           .from("place_lists")
           .select("id, user_id, title, description, created_at")
@@ -263,10 +273,11 @@ export function useWallFeed() {
             socialRefId: l.id,
           });
         });
-      }
+      };
 
-      // 8) friend challenge completions ("tydzień kebabu ukończony")
-      if (feedUserIds.length) {
+      // Friend challenge completions ("tydzień kebabu ukończony")
+      const fetchChallenges = async () => {
+        if (!feedUserIds.length) return;
         const { data: completions } = await supabase
           .from("user_challenge_completions")
           .select("id, user_id, completed_at, challenge:challenges(title, icon)")
@@ -286,16 +297,17 @@ export function useWallFeed() {
             socialRefId: c.id,
           });
         });
-      }
+      };
 
-      // 9) posts only from places the user follows (owners also see their own)
+      // Posts only from places the user follows (owners also see their own)
       const postsPlaceIds = Array.from(
         new Set([
           ...(follows ?? []).map((r) => r.place_id),
           ...(owned ?? []).map((r) => r.place_id),
         ]),
       );
-      if (postsPlaceIds.length) {
+      const fetchPlacePosts = async () => {
+        if (!postsPlaceIds.length) return;
         const { data: pps } = await supabase
           .from("place_posts")
           .select("id, place_id, title, body, image_url, created_at")
@@ -314,9 +326,19 @@ export function useWallFeed() {
             meta: p.title,
           });
         });
-      }
+      };
 
-      // 10) hydrate profiles and places
+      await Promise.all([
+        fetchReviews(),
+        fetchFavorites(),
+        fetchAchievements(),
+        fetchQuickPosts(),
+        fetchLists(),
+        fetchChallenges(),
+        fetchPlacePosts(),
+      ]);
+
+      // hydrate profiles and places
       if (profileIdsToFetch.size) {
         const { data: profs } = await supabase
           .from("profiles")
@@ -372,6 +394,7 @@ export function useForYouFeed() {
   return useQuery({
     queryKey: ["wall-for-you", user?.id ?? null],
     enabled: !!user,
+    staleTime: 30_000,
     queryFn: async (): Promise<WallItem[]> => {
       const me = user!.id;
       const [{ data: profile }, { data: myFavs }] = await Promise.all([
@@ -428,14 +451,22 @@ export function useForYouFeed() {
       const items: WallItem[] = [];
       const profileIdsToFetch = new Set<string>();
 
-      const { data: rvs } = await supabase
-        .from("reviews")
-        .select("id, user_id, place_id, body, rating, photo_url, created_at")
-        .in("place_id", placeIds)
-        .neq("user_id", me)
-        .gte("created_at", sinceIso)
-        .order("created_at", { ascending: false })
-        .limit(30);
+      const [{ data: rvs }, { data: pps }] = await Promise.all([
+        supabase
+          .from("reviews")
+          .select("id, user_id, place_id, body, rating, photo_url, created_at")
+          .in("place_id", placeIds)
+          .neq("user_id", me)
+          .gte("created_at", sinceIso)
+          .order("created_at", { ascending: false })
+          .limit(30),
+        supabase
+          .from("place_posts")
+          .select("id, place_id, title, body, image_url, created_at")
+          .in("place_id", placeIds)
+          .order("created_at", { ascending: false })
+          .limit(20),
+      ]);
       (rvs ?? []).forEach((r) => {
         profileIdsToFetch.add(r.user_id);
         items.push({
@@ -449,13 +480,6 @@ export function useForYouFeed() {
           image_url: r.photo_url,
         });
       });
-
-      const { data: pps } = await supabase
-        .from("place_posts")
-        .select("id, place_id, title, body, image_url, created_at")
-        .in("place_id", placeIds)
-        .order("created_at", { ascending: false })
-        .limit(20);
       (pps ?? []).forEach((p) => {
         items.push({
           id: `fy-pp-${p.id}`,

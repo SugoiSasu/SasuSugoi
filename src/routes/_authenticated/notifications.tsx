@@ -12,6 +12,7 @@ import {
 } from "@/lib/notifications-api";
 import { AsyncState } from "@/components/AsyncState";
 import { trackEvent } from "@/lib/analytics";
+import { toast } from "sonner";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 
@@ -84,7 +85,11 @@ function NotificationsPage() {
           <BackButton to="/" />
           {unread > 0 && (
             <button
-              onClick={() => markRead.mutate("all")}
+              onClick={() =>
+                markRead.mutate("all", {
+                  onError: () => toast.error("Nie udało się oznaczyć jako przeczytane"),
+                })
+              }
               className="inline-flex items-center gap-1.5 text-xs font-medium text-tomato hover:underline min-h-11 px-2"
               aria-label={`Oznacz wszystkie ${unread} powiadomień jako przeczytane`}
             >

@@ -175,7 +175,7 @@ function KartyPage() {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  });
+  }, [top]);
 
   return (
     <main

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "motion/react";
 import { MapPin, Star, Users, X } from "lucide-react";
 import { cuisineMeta } from "@/data/places";
@@ -130,21 +130,31 @@ export function SwipeCard({
   // rounded bounds instead of a page-covering modal, so the deck (and your
   // place in it) never leaves the screen.
   const [descriptionOpen, setDescriptionOpen] = useState(false);
+  // A committed drag keeps flying off-screen for ~700ms while `isTop`/drag are
+  // still both live (the parent only flips them once onSwipe fires at the end
+  // of that animation) - without this guard, a second drag gesture started
+  // during that window re-commits the same place, double-writing the mutation
+  // and pushing a duplicate history entry. Ref, not state: must take effect
+  // synchronously inside the same onDragEnd call that sets it, which a state
+  // update scheduled for next render wouldn't.
+  const committedRef = useRef(false);
 
   return (
     <motion.div
       className="absolute inset-0"
       style={{ x, rotate }}
-      drag={isTop && !descriptionOpen ? "x" : false}
+      drag={isTop && !descriptionOpen && !committedRef.current ? "x" : false}
       dragElastic={0.9}
       whileDrag={{ scale: 1.04 }}
       transition={{ scale: { type: "spring", stiffness: 400, damping: 25 } }}
       onDragEnd={(_event, info) => {
+        if (committedRef.current) return;
         const passed =
           Math.abs(info.offset.x) > SWIPE_THRESHOLD ||
           Math.abs(info.velocity.x) > VELOCITY_THRESHOLD;
         if (passed) {
           const direction = info.offset.x > 0 ? "right" : "left";
+          committedRef.current = true;
           onSwipeCommit(direction);
           animate(x, direction === "right" ? 700 : -700, {
             type: "spring",

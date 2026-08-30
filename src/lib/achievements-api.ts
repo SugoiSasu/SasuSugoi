@@ -79,6 +79,7 @@ export function useUserAchievements(userId: string | null | undefined) {
   return useQuery({
     queryKey: ["user-achievements", userId ?? null],
     enabled: !!userId,
+    staleTime: 5 * 60_000,
     queryFn: async (): Promise<UserAchievement[]> => {
       const { data, error } = await supabase
         .from("user_achievements")
@@ -131,6 +132,7 @@ export function useMyTitledAchievements(userId: string | null | undefined) {
   return useQuery({
     queryKey: ["my-titled-achievements", userId ?? null],
     enabled: !!userId,
+    staleTime: 5 * 60_000,
     queryFn: async (): Promise<TitledAchievement[]> => {
       const { data, error } = await supabase
         .from("user_achievements")

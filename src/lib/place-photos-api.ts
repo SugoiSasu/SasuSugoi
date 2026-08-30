@@ -15,16 +15,12 @@ export interface PlacePhoto {
 const BUCKET = "place-photos";
 const SIGNED_TTL = 60 * 60 * 24 * 7; // 7 days
 
-async function signIfNeeded(row: PlacePhoto): Promise<PlacePhoto> {
-  if (!row.storage_path) return row;
-  const { data } = await supabase.storage.from(BUCKET).createSignedUrl(row.storage_path, SIGNED_TTL);
-  return { ...row, url: data?.signedUrl ?? row.url };
-}
-
 export function usePlacePhotos(placeId: string) {
   return useQuery({
     queryKey: ["place-photos", placeId],
     enabled: !!placeId,
+    // Signed URLs are valid 7 days - no need to re-sign every mount/focus.
+    staleTime: 1000 * 60 * 60,
     queryFn: async (): Promise<PlacePhoto[]> => {
       const { data, error } = await supabase
         .from("place_photos")
@@ -34,7 +30,17 @@ export function usePlacePhotos(placeId: string) {
         .order("created_at", { ascending: true });
       if (error) throw error;
       const rows = (data ?? []) as PlacePhoto[];
-      return Promise.all(rows.map(signIfNeeded));
+      const paths = rows.map((r) => r.storage_path).filter((p): p is string => !!p);
+      // One batched storage call instead of one createSignedUrl per photo -
+      // a place with 20 photos used to mean 20 sequential storage round trips.
+      if (!paths.length) return rows;
+      const { data: signed } = await supabase.storage.from(BUCKET).createSignedUrls(paths, SIGNED_TTL);
+      const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
+      return rows.map((r) =>
+        r.storage_path && urlByPath.get(r.storage_path)
+          ? { ...r, url: urlByPath.get(r.storage_path)! }
+          : r,
+      );
     },
   });
 }

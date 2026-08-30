@@ -39,6 +39,7 @@ import {
 import { AdminFilterChips, AdminStatusTag } from "@/components/admin/AdminControls";
 import { useIsSuperAdmin } from "@/lib/use-auth";
 import { useBulkAction } from "@/components/admin/useBulkAction";
+import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
 import { formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
 
@@ -276,6 +277,11 @@ function PendingList({ filter }: { filter: QueueFilter }) {
   }, [suggestions, owners, filter]);
 
   const bulk = useBulkAction(entries, (e) => e.id);
+  // A misclick here has real consequences - approving grants ownership over
+  // a place - so bulk approve/reject go through the same confirm-modal
+  // pattern the bulk-delete flow on /admin/places already uses, instead of
+  // firing immediately on click.
+  const [confirmAction, setConfirmAction] = useState<"approve" | "reject" | null>(null);
 
   async function handleBulk(action: "approve" | "reject") {
     // Owner requests submitted without an account cannot be approved -
@@ -330,12 +336,39 @@ function PendingList({ filter }: { filter: QueueFilter }) {
             count={bulk.selectedCount}
             busy={bulk.busy}
             progress={bulk.progress}
-            onApprove={() => handleBulk("approve")}
-            onReject={() => handleBulk("reject")}
+            onApprove={() => setConfirmAction("approve")}
+            onReject={() => setConfirmAction("reject")}
             onClear={bulk.clear}
           />
         </div>
       )}
+      <ConfirmDeleteModal
+        open={confirmAction !== null}
+        title={
+          confirmAction === "approve"
+            ? `Zatwierdzić ${bulk.selectedCount} zgłoszeń?`
+            : `Odrzucić ${bulk.selectedCount} zgłoszeń?`
+        }
+        description={
+          confirmAction === "approve"
+            ? "Zatwierdzone zgłoszenia właściciela od razu przyznają dostęp do lokalu."
+            : "Tej operacji nie da się cofnąć."
+        }
+        confirmLabel={confirmAction === "approve" ? "Zatwierdź" : "Odrzuć"}
+        icon={confirmAction === "approve" ? Check : X}
+        confirmClassName={
+          confirmAction === "approve"
+            ? "bg-tomato text-cream hover:bg-tomato/90"
+            : "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+        }
+        pending={bulk.busy}
+        onConfirm={() => {
+          const action = confirmAction;
+          setConfirmAction(null);
+          if (action) handleBulk(action);
+        }}
+        onCancel={() => setConfirmAction(null)}
+      />
       <ul className="divide-y divide-border">
         {entries.map((e) => (
           <li key={`${e.kind}-${e.id}`} className="p-4 flex gap-3">

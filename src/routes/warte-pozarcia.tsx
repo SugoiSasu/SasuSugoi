@@ -174,7 +174,7 @@ function VotingCategories({ eventId, cuisineIds }: { eventId: string; cuisineIds
   }
 
   return (
-    <div className="space-y-8 pb-24">
+    <div className="space-y-8 pb-36 lg:pb-24">
       {cuisineIds.map((cid) => {
         const cuisine = cuisineById.get(cid);
         if (!cuisine) return null;
@@ -215,7 +215,12 @@ function VotingCategories({ eventId, cuisineIds }: { eventId: string; cuisineIds
         );
       })}
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 backdrop-blur-md px-4 py-3">
+      {/* bottom-20 clears the mobile BottomTabBar (reserved via pb-20 on the
+          route view in __root.tsx) - at bottom-0 this bar sat underneath the
+          tab bar's higher z-index, hiding the submit button. Desktop has no
+          tab bar, so it drops to the true bottom there with its own
+          safe-area padding. */}
+      <div className="fixed inset-x-0 bottom-20 z-30 border-t border-border bg-background/95 backdrop-blur-md px-4 py-3 lg:bottom-0 lg:pz-safe-bottom">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
           <span className="text-sm font-semibold text-muted-foreground">
             Wybrano {pickedCount}/{validCuisineIds.length}

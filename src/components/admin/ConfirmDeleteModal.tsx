@@ -1,4 +1,4 @@
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2, Trash2, type LucideIcon } from "lucide-react";
 
 export function ConfirmDeleteModal({
   open,
@@ -6,6 +6,8 @@ export function ConfirmDeleteModal({
   description,
   pending,
   confirmLabel = "Usuń",
+  icon: Icon = Trash2,
+  confirmClassName = "bg-destructive text-destructive-foreground hover:bg-destructive/90",
   onConfirm,
   onCancel,
 }: {
@@ -14,6 +16,8 @@ export function ConfirmDeleteModal({
   description: string;
   pending?: boolean;
   confirmLabel?: string;
+  icon?: LucideIcon;
+  confirmClassName?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -42,9 +46,9 @@ export function ConfirmDeleteModal({
             type="button"
             onClick={onConfirm}
             disabled={pending}
-            className="inline-flex items-center gap-2 rounded-full bg-destructive text-destructive-foreground px-4 py-2 text-sm font-semibold hover:bg-destructive/90 disabled:opacity-50"
+            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold disabled:opacity-50 ${confirmClassName}`}
           >
-            {pending ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+            {pending ? <Loader2 size={14} className="animate-spin" /> : <Icon size={14} />}
             {confirmLabel}
           </button>
         </div>
