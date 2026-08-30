@@ -32,7 +32,7 @@ import { RandomPlaceCard } from "@/components/RandomPlaceCard";
 import { SidebarAdCard } from "@/components/SidebarAdCard";
 import { InviteFriendsModal } from "@/components/InviteFriendsModal";
 import { useCurrentAwardsEvent } from "@/lib/awards-api";
-import logoDark from "@/assets/brand/po_zeramy-logo-dark.png.asset.json";
+import logoDark from "@/assets/brand/po_zeramy-logo-dark-nav.webp.asset.json";
 
 const coreItems = [
   { to: "/", label: "Odkrywaj", icon: Compass, exact: true },

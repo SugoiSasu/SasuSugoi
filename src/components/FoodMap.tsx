@@ -94,6 +94,11 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
   const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
+    // useEffect alone never runs during SSR, but Vite/Rollup still traces the
+    // dynamic import()s below into the server bundle unless the branch is
+    // statically eliminable - this guard is what actually keeps the 1.3MB
+    // maplibre-gl-leaflet chunk out of the deployed serverless function.
+    if (import.meta.env.SSR) return;
     let cancelled = false;
     (async () => {
       if (!containerRef.current) return;
@@ -282,10 +287,15 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
               { direction: "top", offset: [0, -26], opacity: 0.98, className: "pz-tooltip" },
             );
           }
-          if (!selectRef.current) {
+          if (!selectRef.current && variant !== "mini") {
             // Only bind the rich popup when there's no parent-owned "selected place"
             // UI - otherwise the marker click handler above hands off to it directly
             // and this would just be a second, duplicate info panel on top of it.
+            // "mini" is excluded outright: its own contract above promises no popup
+            // CTAs and no navigation on click, but nothing enforced that until now -
+            // the place-detail page's embedded map was opening a working "Profil ->"
+            // link back to the very page you're already on, plus visit-status
+            // buttons duplicating the page's own controls.
             const subtitle = pin.label
               ? `<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:${color};font-weight:700;margin-bottom:.25rem">${highlightHtml(pin.label, query)}</div>`
               : "";

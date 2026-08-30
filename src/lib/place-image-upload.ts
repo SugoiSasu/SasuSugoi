@@ -40,9 +40,34 @@ export function useUploadPlaceImage(placeId: string) {
         .createSignedUrl(path, TEN_YEARS);
       if (signErr || !signed?.signedUrl) throw signErr ?? new Error("Nie udało się wygenerować URL");
 
-      const update = kind === "cover" ? { cover_image_url: signed.signedUrl } : { avatar_url: signed.signedUrl };
-      const { error: dbErr } = await supabase.from("places").update(update).eq("id", placeId);
-      if (dbErr) throw dbErr;
+      // A BEFORE UPDATE trigger (guard_places_owner_columns) silently reverts
+      // these two columns for anyone who isn't admin/super_admin - it doesn't
+      // raise an error, so a plain .update() with no thrown error is not proof
+      // the write actually happened. Re-select the column and compare so a
+      // reverted write surfaces as a real failure instead of a false "success".
+      let actual: string | null;
+      if (kind === "cover") {
+        const { data, error } = await supabase
+          .from("places")
+          .update({ cover_image_url: signed.signedUrl })
+          .eq("id", placeId)
+          .select("cover_image_url")
+          .single();
+        if (error) throw error;
+        actual = data.cover_image_url;
+      } else {
+        const { data, error } = await supabase
+          .from("places")
+          .update({ avatar_url: signed.signedUrl })
+          .eq("id", placeId)
+          .select("avatar_url")
+          .single();
+        if (error) throw error;
+        actual = data.avatar_url;
+      }
+      if (actual !== signed.signedUrl) {
+        throw new Error("Nie masz uprawnień do zmiany tego zdjęcia - skontaktuj się z administratorem");
+      }
 
       return signed.signedUrl;
     },

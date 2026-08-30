@@ -63,12 +63,12 @@ import { Home, MapPin } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import sadPizza404 from "@/assets/brand/sad-pizza-404.png";
+import sadPizza404 from "@/assets/brand/sad-pizza-404.webp";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ScrollToTop } from "@/components/ScrollToTop";
 
 import { installPolishStripper } from "@/lib/polish-stripper";
-import { VisitEventListener } from "@/components/VisitStatus";
+import { VisitEventListener } from "@/components/VisitEventListener";
 import { AuthAnalytics } from "@/components/AuthAnalytics";
 import { AlphaGate } from "@/components/AlphaGate";
 import { supabase } from "@/integrations/supabase/client";

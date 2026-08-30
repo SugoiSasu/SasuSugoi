@@ -26,7 +26,7 @@ import { useMyProfile } from "@/lib/profile-api";
 import { useUserVisitedPlaces, useUserFavoritePlaces } from "@/lib/visits-api";
 import { useFriendProfiles, useMyFriendships, useMyInviteLink } from "@/lib/friends-api";
 import { useCurrentAwardsEvent } from "@/lib/awards-api";
-import logoDark from "@/assets/brand/po_zeramy-logo-dark.png.asset.json";
+import logoDark from "@/assets/brand/po_zeramy-logo-dark-nav.webp.asset.json";
 
 /** Global top nav. Hash links jump to sections on home; from other pages they navigate to "/#anchor". */
 export function SiteNav() {

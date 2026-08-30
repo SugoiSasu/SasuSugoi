@@ -1,12 +1,15 @@
 "use client";
 
-import { useTheme } from "next-themes";
 import { Toaster as Sonner } from "sonner";
+import { useTheme } from "@/lib/theme";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme();
+  // next-themes previously supplied this, but no next-themes ThemeProvider
+  // is mounted anywhere in the app - its useTheme() silently fell back to
+  // reading the OS colour scheme directly, ignoring the app's own toggle.
+  const { resolved: theme } = useTheme();
 
   return (
     <Sonner

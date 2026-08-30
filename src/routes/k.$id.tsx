@@ -31,7 +31,7 @@ import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import { ShareModal } from "@/components/ShareModal";
 import { VisitStatusButton } from "@/components/VisitStatus";
 import { InstagramReelPoster } from "@/components/InstagramReelEmbed";
-import sadPizza from "@/assets/brand/sad-pizza-404.png";
+import sadPizza from "@/assets/brand/sad-pizza-404.webp";
 import { trackEvent } from "@/lib/analytics";
 
 const FoodMap = lazy(() => import("@/components/FoodMap"));

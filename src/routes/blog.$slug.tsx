@@ -243,7 +243,7 @@ function Comments({ postId }: { postId: string }) {
               const canDelete = user?.id === c.user_id || isAdmin;
               const username = c.author?.username ?? null;
               const avatar = c.author?.avatar_url ? (
-                <img src={c.author.avatar_url} alt={name} className="w-10 h-10 rounded-full object-cover" />
+                <img src={c.author.avatar_url} alt={name} loading="lazy" className="w-10 h-10 rounded-full object-cover" />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-tomato/20 grid place-items-center text-tomato font-bold">
                   {name[0]?.toUpperCase() ?? "?"}

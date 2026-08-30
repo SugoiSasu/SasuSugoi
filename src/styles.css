@@ -69,7 +69,8 @@
 
 @font-face {
   font-family: "Persona";
-  src: url("./assets/fonts/Persona.otf") format("opentype"),
+  src: url("./assets/fonts/Persona.woff2") format("woff2"),
+       url("./assets/fonts/Persona.otf") format("opentype"),
        url("./assets/fonts/Persona.ttf") format("truetype");
   font-weight: 400 900;
   font-style: normal;

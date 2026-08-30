@@ -21,12 +21,17 @@ import italianoCover from "@/assets/brand/po_zeramy-italiano.png.asset.json";
 import mixCover from "@/assets/brand/po_zeramy-mix-smakow.png.asset.json";
 import kebabCover from "@/assets/brand/po_zeramy-kebab-pattern.jpg.asset.json";
 import sweetCover from "@/assets/brand/po_zeramy-sweet-baby.png.asset.json";
-import burgerPattern from "@/assets/brand/po_zeramy-burger-pattern.jpg.asset.json";
-import asiaPattern from "@/assets/brand/po_zeramy-asia-pattern.jpg.asset.json";
-import polskaPattern from "@/assets/brand/po_zeramy-polska-pattern.jpg.asset.json";
-import italianoPattern from "@/assets/brand/po_zeramy-italiano-pattern.jpg.asset.json";
-import sweetPattern from "@/assets/brand/po_zeramy-sweet-pattern.jpg.asset.json";
 import confettiPattern from "@/assets/brand/po_zeramy-confetti-pattern.svg.asset.json";
+// The "Kategorie" chip renders these at 56x56 CSS px. The *-pattern.jpg files
+// above are 2000x1116 full-bleed hero images (~200-260KB each) meant for a
+// larger surface - these are 128px center-crop WebPs of the same art,
+// generated specifically for chip scale (~4KB each).
+import italianoChip from "@/assets/brand/po_zeramy-italiano-chip.webp.asset.json";
+import kebabChip from "@/assets/brand/po_zeramy-kebab-chip.webp.asset.json";
+import asiaChip from "@/assets/brand/po_zeramy-asia-chip.webp.asset.json";
+import sweetChip from "@/assets/brand/po_zeramy-sweet-chip.webp.asset.json";
+import polskaChip from "@/assets/brand/po_zeramy-polska-chip.webp.asset.json";
+import burgerChip from "@/assets/brand/po_zeramy-burger-chip.webp.asset.json";
 
 export interface CuisineMeta {
   color: string;
@@ -42,14 +47,14 @@ const META: Record<string, CuisineMeta> = {
     color: "#3b4cc7",
     cover: italianoCover.url,
     emoji: "🍕",
-    chipBackground: italianoPattern.url,
+    chipBackground: italianoChip.url,
   },
-  Kebaby: { color: "#e26a3a", cover: kebabCover.url, emoji: "🌯", chipBackground: kebabCover.url },
+  Kebaby: { color: "#e26a3a", cover: kebabCover.url, emoji: "🌯", chipBackground: kebabChip.url },
   Azjatycka: {
     color: "#d4582a",
     cover: asiaCover.url,
     emoji: "🍜",
-    chipBackground: asiaPattern.url,
+    chipBackground: asiaChip.url,
   },
   Śniadania: {
     color: "#f0b840",
@@ -61,13 +66,13 @@ const META: Record<string, CuisineMeta> = {
     color: "#e89aab",
     cover: sweetCover.url,
     emoji: "🍦",
-    chipBackground: sweetPattern.url,
+    chipBackground: sweetChip.url,
   },
   Polska: {
     color: "#c4416a",
     cover: mixCover.url,
     emoji: "🥟",
-    chipBackground: polskaPattern.url,
+    chipBackground: polskaChip.url,
   },
   Meksykańska: {
     color: "#3aa56b",
@@ -85,7 +90,7 @@ const META: Record<string, CuisineMeta> = {
     color: "#e35d2e",
     cover: americanCover.url,
     emoji: "🍔",
-    chipBackground: burgerPattern.url,
+    chipBackground: burgerChip.url,
   },
   Ramen: {
     color: "#8e5cd9",
