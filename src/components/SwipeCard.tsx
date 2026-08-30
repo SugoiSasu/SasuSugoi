@@ -109,12 +109,23 @@ export function SwipeCard({
         {/* Centre block: the logo at a size you can actually read, and the name
             directly under it. */}
         <div className="absolute inset-x-0 top-[24%] flex flex-col items-center gap-3 px-6 text-center">
-          <div className="h-28 w-28 overflow-hidden rounded-3xl bg-cream shadow-2xl ring-2 ring-navy/25">
+          {/* No plate: the logo sits straight on the card, over a soft pool of the
+              cuisine colour - the same colour the filters use, so a card reads as
+              its category before you have read a word of it. A hard cream tile
+              boxed every logo in, including the ones that already carry their own
+              shape. Logos whose file has an opaque background still show it; the
+              fix for those is a transparent PNG, not more chrome here. */}
+          <div className="relative grid h-32 w-32 place-items-center">
+            <span
+              aria-hidden="true"
+              className="absolute inset-[-18%] rounded-full blur-xl"
+              style={{ backgroundColor: meta.color, opacity: 0.85 }}
+            />
             <img
               src={place.avatar_url ?? undefined}
               alt=""
               aria-hidden="true"
-              className="h-full w-full object-contain p-2"
+              className="relative h-full w-full object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)]"
             />
           </div>
           <h2 className="font-display text-2xl font-extrabold leading-tight text-cream drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)]">

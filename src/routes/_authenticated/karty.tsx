@@ -1,8 +1,8 @@
 ﻿import { useCallback, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2, PartyPopper, Undo2 } from "lucide-react";
+import { Loader2, PartyPopper, RotateCcw, Undo2 } from "lucide-react";
 import { toast } from "sonner";
-import { useSwipeDeck, useSkipPlace, useUnskipPlace } from "@/lib/swipe-api";
+import { useSwipeDeck, useSkipPlace, useUnskipPlace, useResetSkips, useSkippedPlaceIds } from "@/lib/swipe-api";
 import { useToggleVisit } from "@/lib/visits-api";
 import { usePlaceRatingsMap } from "@/lib/places-api";
 import { useFriendFavoriteCounts } from "@/lib/favorites-api";
@@ -34,6 +34,8 @@ function KartyPage() {
   const toggleVisit = useToggleVisit();
   const skipPlace = useSkipPlace();
   const unskipPlace = useUnskipPlace();
+  const resetSkips = useResetSkips();
+  const { data: skippedIds } = useSkippedPlaceIds();
   // Both of these are already fetched for the map and the homepage, so putting
   // them on the card costs no extra request.
   const { data: ratings } = usePlaceRatingsMap();
@@ -117,6 +119,26 @@ function KartyPage() {
     toast(`Cofnięto: ${last.place.name}`);
   }, [history, toggleVisit, unskipPlace]);
 
+  // Undo walks back one decision at a time. This is the other end of the same
+  // problem: the deck runs dry and everything you passed on is locked behind a
+  // five-day cooldown with no way to look again.
+  const skippedCount = skippedIds?.size ?? 0;
+  function resetDeck() {
+    resetSkips.mutate(undefined, {
+      onSuccess: (count) => {
+        // The local hide-set and the undo stack both describe the run that just
+        // ended. Leaving them would keep the returning cards invisible.
+        setHiddenIds(new Set());
+        setHistory([]);
+        toast.success(
+          `Wróciło ${count} ${pluralPl(count, "pominięta karta", "pominięte karty", "pominiętych kart")}`,
+        );
+      },
+      onError: (err) =>
+        toast.error(err instanceof Error ? err.message : "Nie udało się zresetować kart"),
+    });
+  }
+
   // Arrow keys on desktop. The deck was mouse-drag only, which left it unusable
   // for anyone navigating by keyboard even though the two buttons underneath do
   // exactly the same thing.
@@ -165,8 +187,21 @@ function KartyPage() {
               <PartyPopper size={32} className="text-tomato" />
               <p className="font-display text-lg font-bold">To wszystkie karty na dziś!</p>
               <p className="text-sm text-muted-foreground">
-                Pominięte knajpy wrócą do talii za kilka dni. Zajrzyj później po nowe propozycje.
+                {skippedCount > 0
+                  ? "Pominięte knajpy wrócą do talii za kilka dni - albo ściągnij je z powrotem teraz."
+                  : "Zajrzyj później po nowe propozycje."}
               </p>
+              {skippedCount > 0 && (
+                <button
+                  type="button"
+                  onClick={resetDeck}
+                  disabled={resetSkips.isPending}
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:-translate-y-0.5 disabled:opacity-50"
+                >
+                  <RotateCcw size={16} aria-hidden="true" />
+                  Zresetuj karty
+                </button>
+              )}
             </div>
           ) : (
             stack
@@ -236,6 +271,17 @@ function KartyPage() {
               <YummyFace size={34} />
             </button>
           </div>
+        )}
+        {top && skippedCount > 0 && (
+          <button
+            type="button"
+            onClick={resetDeck}
+            disabled={resetSkips.isPending}
+            className="mt-5 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-muted-foreground transition hover:bg-foreground/5 hover:text-foreground disabled:opacity-50"
+          >
+            <RotateCcw size={13} aria-hidden="true" />
+            Zresetuj karty ({skippedCount} {pluralPl(skippedCount, "pominięta", "pominięte", "pominiętych")})
+          </button>
         )}
       </div>
 

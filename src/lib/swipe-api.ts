@@ -65,6 +65,34 @@ export function useUnskipPlace() {
   });
 }
 
+/** Clears every skip at once, so everything swiped left comes straight back
+ *  instead of waiting out the five-day cooldown. Undo only reaches the last
+ *  decision; this is the way out when the deck has run dry and you want another
+ *  look. Touches skips only - "chcę odwiedzić" and visited are real decisions,
+ *  not a cooldown, and stay where they are. */
+export function useResetSkips() {
+  const qc = useQueryClient();
+  const { user } = useUser();
+  return useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Musisz być zalogowany");
+      const { data, error } = await supabase
+        .from("place_swipe_skips")
+        .delete()
+        .eq("user_id", user.id)
+        .select("skipped_at");
+      if (error) throw error;
+      // Rows past the cooldown were already back in the deck, so clearing them
+      // returns nothing. Counting them would promise more cards than appear.
+      const cutoff = Date.now() - SKIP_COOLDOWN_DAYS * 86400000;
+      return (data ?? []).filter((r) => new Date(r.skipped_at as string).getTime() >= cutoff).length;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["swipe-skips"] });
+    },
+  });
+}
+
 /** Small deterministic PRNG-based shuffle - stable per seed, no Math.random(). */
 function seededShuffle<T>(items: T[], seed: string): T[] {
   let h = 0;
