@@ -1255,7 +1255,10 @@ function PlaceInfoCard({ place }: { place: WallItem["place"] & {} }) {
   return (
     <div
       className="mt-3 flex items-center gap-3 rounded-2xl border-2 px-3 py-2.5"
-      style={{ borderColor: meta.color, backgroundColor: `${meta.color}1A` }}
+      style={{
+        borderColor: `color-mix(in oklab, ${meta.color} 80%, black)`,
+        backgroundColor: `${meta.color}1A`,
+      }}
     >
       <PlaceAvatarDot place={place as Place} size={40} />
       <div className="min-w-0 flex-1">
@@ -1331,7 +1334,7 @@ function WallRail() {
               <li
                 key={place.id}
                 className="flex items-center gap-2.5 rounded-2xl border-2 bg-card/90 px-3 py-2.5"
-                style={{ borderColor: meta.color }}
+                style={{ borderColor: `color-mix(in oklab, ${meta.color} 80%, black)` }}
               >
                 <PlaceAvatarDot place={place} size={34} />
                 <div className="min-w-0 flex-1">
