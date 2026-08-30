@@ -533,3 +533,58 @@ export function useUserSearch(query: string) {
     },
   });
 }
+
+/**
+ * Total reaction count per feed item, for the "Popularne" sort. Reactions
+ * live in three tables depending on the item kind (reviews and place posts
+ * predate the generic wall social layer), so this batches one query per
+ * table over the whole visible feed instead of one round trip per card.
+ */
+export function useFeedReactionTotals(items: WallItem[] | undefined) {
+  const ids = (items ?? []).map((i) => i.id).sort();
+  return useQuery({
+    queryKey: ["wall-reaction-totals", ids],
+    enabled: ids.length > 0,
+    staleTime: 60_000,
+    queryFn: async (): Promise<Map<string, number>> => {
+      const reviewIds: string[] = [];
+      const placePostIds: string[] = [];
+      const wallRefIds: string[] = [];
+      const byRef = new Map<string, string>();
+      (items ?? []).forEach((it) => {
+        if (it.kind === "review") {
+          const raw = it.id.replace(/^(fy-)?review-/, "");
+          reviewIds.push(raw);
+          byRef.set(`rv:${raw}`, it.id);
+        } else if (it.kind === "place_post") {
+          const raw = it.id.replace(/^(fy-)?pp-/, "");
+          placePostIds.push(raw);
+          byRef.set(`pp:${raw}`, it.id);
+        } else if (it.socialRefId) {
+          wallRefIds.push(it.socialRefId);
+          byRef.set(`wl:${it.socialRefId}`, it.id);
+        }
+      });
+      const [rv, pp, wl] = await Promise.all([
+        reviewIds.length
+          ? supabase.from("review_reactions").select("review_id").in("review_id", reviewIds)
+          : Promise.resolve({ data: [] as { review_id: string }[] }),
+        placePostIds.length
+          ? supabase.from("place_post_reactions").select("post_id").in("post_id", placePostIds)
+          : Promise.resolve({ data: [] as { post_id: string }[] }),
+        wallRefIds.length
+          ? supabase.from("wall_reactions").select("ref_id").in("ref_id", wallRefIds)
+          : Promise.resolve({ data: [] as { ref_id: string }[] }),
+      ]);
+      const totals = new Map<string, number>();
+      const bump = (key: string) => {
+        const itemId = byRef.get(key);
+        if (itemId) totals.set(itemId, (totals.get(itemId) ?? 0) + 1);
+      };
+      (rv.data ?? []).forEach((r) => bump(`rv:${r.review_id}`));
+      (pp.data ?? []).forEach((r) => bump(`pp:${r.post_id}`));
+      (wl.data ?? []).forEach((r) => bump(`wl:${r.ref_id}`));
+      return totals;
+    },
+  });
+}

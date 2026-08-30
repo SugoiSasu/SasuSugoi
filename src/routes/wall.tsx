@@ -20,11 +20,18 @@ import {
   Medal,
   Share2,
   Sparkles,
-  Users,
   Search,
 } from "lucide-react";
-import { useWallFeed, useForYouFeed, useCreateWallPost, type WallItem } from "@/lib/wall-api";
-import { usePlaces, type Place } from "@/lib/places-api";
+import {
+  useWallFeed,
+  useForYouFeed,
+  useCreateWallPost,
+  useFeedReactionTotals,
+  type WallItem,
+} from "@/lib/wall-api";
+import { usePlaces, usePlaceRatingsMap, type Place } from "@/lib/places-api";
+import { useMyFollowedPlaceIds, useIsFollowing, useToggleFollow } from "@/lib/follows-api";
+import { useFriendFavoriteCounts } from "@/lib/favorites-api";
 import { badgesLabel } from "@/lib/plural-pl";
 import { useMyProfile } from "@/lib/profile-api";
 import { useStorageImageUpload } from "@/components/admin/useStorageImageUpload";
@@ -90,54 +97,100 @@ function WallPage() {
   const { user, loading: authLoading } = useUser();
   return (
     <main id="main-content" className="min-h-dvh bg-background py-6 sm:py-8 px-3 sm:px-4">
-      <div className="mx-auto max-w-2xl">
-        <header className="mb-6 pb-5 border-b border-border">
-          <h1 className="font-persona text-3xl sm:text-4xl mb-1">Pożeralnia 📰</h1>
-          <p className="text-sm text-muted-foreground">
-            Aktywność znajomych, nowinki z Twoich ulubionych miejscówek i komunikaty od lokali.
-          </p>
-        </header>
-        {authLoading ? (
-          <div className="grid place-items-center py-20">
-            <Loader2 className="animate-spin" />
-          </div>
-        ) : !user ? (
-          <AuthGate
-            icon={Megaphone}
-            title="Zaloguj się, żeby zobaczyć feed"
-            description="Pożeralnia pokazuje recenzje znajomych, ich nowe ulubione miejscówki, zdobyte odznaki i aktualności z lokali, które obserwujesz."
-          />
-        ) : (
-          <SignedInFeed />
-        )}
+      {/* Redesign 2026-08-30 (Claude Design handoff): the feed used to sit
+          alone in a max-w-2xl column, leaving the whole right half of a
+          desktop screen empty. Now feed + right rail ("Dzieje się teraz",
+          follow suggestions), rail xl-only so nothing changes on mobile. */}
+      <div className="mx-auto flex max-w-5xl items-start justify-center gap-6">
+        <div className="w-full max-w-2xl min-w-0">
+          <header className="mb-6 pb-5 border-b border-border">
+            <h1 className="font-persona text-3xl sm:text-4xl mb-1">Pożeralnia 📰</h1>
+            <p className="text-sm text-muted-foreground">
+              Aktywność znajomych, nowinki z Twoich ulubionych miejscówek i komunikaty od lokali.
+            </p>
+          </header>
+          {authLoading ? (
+            <div className="grid place-items-center py-20">
+              <Loader2 className="animate-spin" />
+            </div>
+          ) : !user ? (
+            <AuthGate
+              icon={Megaphone}
+              title="Zaloguj się, żeby zobaczyć feed"
+              description="Pożeralnia pokazuje recenzje znajomych, ich nowe ulubione miejscówki, zdobyte odznaki i aktualności z lokali, które obserwujesz."
+            />
+          ) : (
+            <SignedInFeed />
+          )}
+        </div>
+        {user && <WallRail />}
       </div>
     </main>
   );
 }
 
+/** Which slice of the feed a filter tab shows. "for-you" swaps the data
+ *  source entirely (discovery feed); the rest filter the friends feed. */
+type FeedTab = "all" | "friends" | "places" | "mine" | "for-you";
+
+const FEED_TABS: { key: FeedTab; label: string }[] = [
+  { key: "all", label: "Wszystko" },
+  { key: "friends", label: "Znajomi" },
+  { key: "places", label: "Lokale" },
+  { key: "mine", label: "Moje wpisy" },
+  { key: "for-you", label: "Dla Ciebie" },
+];
+
 function SignedInFeed() {
-  const [tab, setTab] = useState<"friends" | "for-you">("friends");
+  const { user } = useUser();
+  const [tab, setTab] = useState<FeedTab>("all");
+  const [sort, setSort] = useState<"new" | "hot">("new");
   const friendsFeed = useWallFeed();
   const forYouFeed = useForYouFeed();
-  const { data, isLoading } = tab === "friends" ? friendsFeed : forYouFeed;
+  const { data: rawData, isLoading } = tab === "for-you" ? forYouFeed : friendsFeed;
+
+  const me = user?.id;
+  const filtered = (rawData ?? []).filter((it) => {
+    if (tab === "all" || tab === "for-you") return true;
+    if (tab === "places") return it.kind === "place_post";
+    if (tab === "mine") return it.author?.id === me;
+    // "friends": everything that is someone else's activity, not a place announcement
+    return it.kind !== "place_post" && it.author?.id !== me;
+  });
+
+  // "Popularne" needs reaction counts up front; one batched fetch for the
+  // whole visible list (see useFeedReactionTotals) instead of per-card reads.
+  const { data: totals } = useFeedReactionTotals(sort === "hot" ? rawData : undefined);
+  const data =
+    sort === "hot" && totals
+      ? [...filtered].sort((a, b) => (totals.get(b.id) ?? 0) - (totals.get(a.id) ?? 0))
+      : filtered;
 
   return (
     <>
+      <FollowedPlacesStrip />
       <QuickPostBar />
-      <div className="mb-4 inline-flex rounded-full border border-border bg-card p-1">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap gap-1 rounded-full border border-border bg-card p-1">
+          {FEED_TABS.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => setTab(t.key)}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold transition ${tab === t.key ? "bg-tomato text-cream" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              {t.key === "for-you" && <Sparkles size={13} />}
+              {t.label}
+            </button>
+          ))}
+        </div>
         <button
           type="button"
-          onClick={() => setTab("friends")}
-          className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "friends" ? "bg-tomato text-cream" : "text-muted-foreground hover:text-foreground"}`}
+          onClick={() => setSort((s) => (s === "new" ? "hot" : "new"))}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground transition hover:border-tomato"
         >
-          <Users size={13} /> Znajomi
-        </button>
-        <button
-          type="button"
-          onClick={() => setTab("for-you")}
-          className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition ${tab === "for-you" ? "bg-tomato text-cream" : "text-muted-foreground hover:text-foreground"}`}
-        >
-          <Sparkles size={13} /> Dla Ciebie
+          {sort === "new" ? "Najnowsze" : "Popularne"}
+          <ChevronDown size={13} className="text-muted-foreground" />
         </button>
       </div>
       {isLoading ? (
@@ -159,10 +212,21 @@ function SignedInFeed() {
           ))}
         </ul>
       ) : !data || data.length === 0 ? (
-        tab === "friends" ? (
+        tab === "for-you" ? (
+          <EmptyForYou />
+        ) : tab === "all" ? (
           <EmptyWall />
         ) : (
-          <EmptyForYou />
+          <div className="bg-card border border-dashed border-border rounded-3xl p-8 text-center">
+            <p className="text-sm text-muted-foreground mb-4">Brak wpisów w tej zakładce.</p>
+            <button
+              type="button"
+              onClick={() => setTab("all")}
+              className="chip bg-tomato text-cream hover:bg-tomato/90"
+            >
+              Pokaż wszystko
+            </button>
+          </div>
         )
       ) : (
         <ul className="space-y-3">
@@ -261,6 +325,16 @@ function QuickPostBar() {
 
   return (
     <div className="bg-card border border-border rounded-2xl p-4 mb-4">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void handlePhoto(f);
+        }}
+      />
       {!open ? (
         <>
           <button
@@ -282,13 +356,39 @@ function QuickPostBar() {
               Co dzisiaj jadłeś? 🍽️
             </span>
           </button>
-          <button
-            type="button"
-            onClick={() => setListModalOpen(true)}
-            className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-tomato hover:underline"
-          >
-            <ListChecks size={13} /> Stwórz listę tematyczną
-          </button>
+          {/* Action pill row from the mockup. It had four; "Oceń lokal" and
+              "Zamelduj się" are cut because rating and check-ins happen on the
+              place page, not as wall posts - a pill that silently redirects
+              would promise the wrong thing. The three left are real actions. */}
+          <div className="mt-3 grid grid-cols-3 gap-1.5 border-t border-border pt-3">
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(true);
+                requestAnimationFrame(() => fileInputRef.current?.click());
+              }}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-background px-2 py-2 text-xs font-semibold text-foreground transition hover:bg-muted"
+            >
+              <Camera size={13} className="text-blush" /> Zdjęcie
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(true);
+                requestAnimationFrame(() => textareaRef.current?.focus());
+              }}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-background px-2 py-2 text-xs font-semibold text-foreground transition hover:bg-muted"
+            >
+              <MapPin size={13} className="text-tomato" /> Z lokalu
+            </button>
+            <button
+              type="button"
+              onClick={() => setListModalOpen(true)}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-background px-2 py-2 text-xs font-semibold text-foreground transition hover:bg-muted"
+            >
+              <ListChecks size={13} className="text-ok" /> Lista
+            </button>
+          </div>
           {listModalOpen && <CreateListModal onClose={() => setListModalOpen(false)} />}
         </>
       ) : (
@@ -329,16 +429,6 @@ function QuickPostBar() {
               {uploading ? "Wgrywam…" : "Dodaj zdjęcie"}
             </button>
           )}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void handlePhoto(f);
-            }}
-          />
           <div className="flex flex-wrap items-center gap-2">
             <PlacePickerField value={placeId} onChange={setPlaceId} places={places ?? []} />
             <div className="ml-auto flex items-center gap-2">
@@ -663,7 +753,11 @@ function FeedCard({ item }: { item: WallItem }) {
           </div>
           <div className="text-xs text-muted-foreground">{timeAgo(item.created_at)}</div>
         </div>
-        <KindBadge kind={item.kind} />
+        {item.kind === "place_post" && item.place ? (
+          <FollowChip placeId={item.place.id} />
+        ) : (
+          <KindBadge kind={item.kind} />
+        )}
       </div>
       {item.kind === "review" && (
         <div className="text-sm">
@@ -737,6 +831,14 @@ function FeedCard({ item }: { item: WallItem }) {
           loading="lazy"
         />
       )}
+      {/* The mockup's place card: a tappable summary of the place the item is
+          about, with its live rating. Lists carry their own place previews and
+          the header already links the name, so only single-place kinds get it. */}
+      {item.place &&
+        (item.kind === "review" ||
+          item.kind === "favorite" ||
+          item.kind === "post" ||
+          item.kind === "place_post") && <PlaceInfoCard place={item.place} />}
       {item.kind === "review" && <ReviewSocial reviewId={item.id.replace(/^review-/, "")} />}
       {item.kind === "place_post" && <PostSocial postId={item.id.replace(/^pp-/, "")} />}
       {(item.kind === "favorite" ||
@@ -1050,5 +1152,194 @@ function KindBadge({ kind }: { kind: WallItem["kind"] }) {
     >
       {m.icon} {m.label}
     </span>
+  );
+}
+
+/* ------------------- redesign 2026-08-30: nowe sekcje ------------------- */
+
+/** Horizontal strip of the places you follow - the mobile mockup's "stories"
+ *  bar, kept on every breakpoint so desktop gets it too without touching the
+ *  global sidebar. A place gets a "live" ring when it posted in the feed's
+ *  current window. Hidden entirely when you follow nothing (the follow
+ *  suggestions in the rail / empty state cover that case). */
+function FollowedPlacesStrip() {
+  const { data: followedIds } = useMyFollowedPlaceIds();
+  const { data: places } = usePlaces();
+  const { data: feed } = useWallFeed();
+
+  const followed = (places ?? []).filter((p) => (followedIds ?? []).includes(p.id));
+  if (!followed.length) return null;
+
+  const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+  const liveIds = new Set(
+    (feed ?? [])
+      .filter((it) => it.kind === "place_post" && +new Date(it.created_at) >= dayAgo)
+      .map((it) => it.place?.id)
+      .filter(Boolean),
+  );
+
+  return (
+    <div className="mb-4 flex gap-3 overflow-x-auto pb-1">
+      {followed.map((p) => {
+        const live = liveIds.has(p.id);
+        return (
+          <Link
+            key={p.id}
+            to="/k/$id"
+            params={{ id: p.slug ?? p.id }}
+            className="flex w-16 shrink-0 flex-col items-center gap-1.5 text-center"
+          >
+            <span
+              className={`rounded-full p-[3px] ${live ? "bg-gradient-to-tr from-tomato to-blush" : "bg-border"}`}
+            >
+              <span className="block rounded-full bg-card p-[2px]">
+                <PlaceAvatarDot place={p} size={48} />
+              </span>
+            </span>
+            <span className="w-full truncate text-[10px] font-semibold text-muted-foreground">
+              {p.name}
+            </span>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Follow/unfollow chip for a place, used on place-post cards and in the
+ *  rail's suggestions. Same mutation the place detail page uses. */
+function FollowChip({ placeId }: { placeId: string }) {
+  const following = useIsFollowing(placeId);
+  const toggle = useToggleFollow();
+  return (
+    <button
+      type="button"
+      disabled={toggle.isPending}
+      onClick={() =>
+        toggle.mutate(
+          { placeId, on: !following },
+          {
+            onError: (err) =>
+              toast.error(err instanceof Error ? err.message : "Nie udało się zapisać"),
+          },
+        )
+      }
+      className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition disabled:opacity-60 ${
+        following
+          ? "border border-border bg-card text-foreground hover:border-destructive hover:text-destructive"
+          : "bg-tomato text-cream hover:bg-tomato/90"
+      }`}
+    >
+      {following ? "Obserwujesz" : "Obserwuj"}
+    </button>
+  );
+}
+
+/** Compact place card inside a feed item: logo, name, cuisine, live rating,
+ *  and a "Zobacz" link - the mockup's biggest addition to the post card.
+ *  Ratings come from the already-cached batched map, not per-card queries. */
+function PlaceInfoCard({ place }: { place: WallItem["place"] & {} }) {
+  const { data: ratings } = usePlaceRatingsMap();
+  if (!place) return null;
+  const rating = ratings?.get(place.id);
+  return (
+    <div className="mt-3 flex items-center gap-3 rounded-2xl bg-background px-3 py-2.5">
+      <PlaceAvatarDot place={place as Place} size={40} />
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-bold">{place.name}</div>
+        {place.cuisine && <div className="text-xs text-muted-foreground">{place.cuisine}</div>}
+      </div>
+      {rating && (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-bold">
+          <Star size={11} className="fill-mustard text-mustard" />
+          {rating.avg.toFixed(1).replace(".", ",")}
+        </span>
+      )}
+      <Link
+        to="/k/$id"
+        params={{ id: place.slug ?? place.id }}
+        className="shrink-0 rounded-full border border-border px-3 py-1.5 text-xs font-bold text-foreground transition hover:border-tomato hover:text-tomato"
+      >
+        Zobacz
+      </Link>
+    </div>
+  );
+}
+
+/** Desktop-only right rail: what's happening + follow suggestions. The
+ *  mockup also had "nearby friends" (no location data exists) and a tag
+ *  cloud (no tag system exists) - both cut rather than faked. */
+function WallRail() {
+  const { data: feed } = useWallFeed();
+  const { data: places } = usePlaces();
+  const { data: followedIds } = useMyFollowedPlaceIds();
+  const { data: friendFavCounts } = useFriendFavoriteCounts();
+  const { user } = useUser();
+
+  // Latest three things that happened, as one-liners. Own posts excluded -
+  // "dzieje się teraz" is about everyone else.
+  const liveNow = (feed ?? []).filter((it) => it.author?.id !== user?.id).slice(0, 3);
+
+  const followedSet = new Set(followedIds ?? []);
+  const suggestions = (places ?? [])
+    .filter((p) => p.is_published !== false && !followedSet.has(p.id))
+    .map((p) => ({ place: p, friends: friendFavCounts?.get(p.id) ?? 0 }))
+    .sort((a, b) => b.friends - a.friends)
+    .slice(0, 3);
+
+  return (
+    <aside className="sticky top-6 hidden w-72 shrink-0 flex-col gap-4 xl:flex">
+      {liveNow.length > 0 && (
+        <div className="rounded-3xl bg-navy p-5 text-cream">
+          <div className="mb-3 text-[10px] font-extrabold uppercase tracking-widest text-cream/50">
+            Dzieje się teraz
+          </div>
+          <ul className="space-y-3">
+            {liveNow.map((it) => (
+              <li key={it.id} className="flex items-start gap-2.5">
+                <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-tomato-on-dark" />
+                <div className="min-w-0 text-sm leading-snug [&_a:hover]:text-tomato-on-dark">
+                  <HeaderLine item={it} />
+                  <div className="mt-0.5 text-[11px] text-cream/50">{timeAgo(it.created_at)}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {suggestions.length > 0 && (
+        <div className="rounded-3xl bg-secondary p-5 text-secondary-foreground">
+          <div className="mb-3 font-display text-base font-bold">Zaproponuj do obserwowania</div>
+          <ul className="space-y-2">
+            {suggestions.map(({ place, friends }) => (
+              <li
+                key={place.id}
+                className="flex items-center gap-2.5 rounded-2xl bg-card/80 px-3 py-2.5"
+              >
+                <PlaceAvatarDot place={place} size={34} />
+                <div className="min-w-0 flex-1">
+                  <Link
+                    to="/k/$id"
+                    params={{ id: place.slug ?? place.id }}
+                    className="block truncate text-sm font-bold text-foreground hover:text-tomato"
+                  >
+                    {place.name}
+                  </Link>
+                  <div className="truncate text-[11px] text-muted-foreground">
+                    {friends > 0
+                      ? friends === 1
+                        ? "1 znajomy tu bywa"
+                        : `${friends} znajomych tu bywa`
+                      : (place.cuisine ?? "")}
+                  </div>
+                </div>
+                <FollowChip placeId={place.id} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </aside>
   );
 }
