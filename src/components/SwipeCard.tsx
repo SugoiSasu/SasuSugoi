@@ -69,6 +69,60 @@ export function SwipeCard({
   }, []);
   const open = now ? placeOpenState(place.opening_hours, now) : { status: "unknown" as const };
 
+  // Built once, used twice: identically on the card face and again inside the
+  // full-description panel below, so the two never drift out of sync with
+  // each other.
+  const signalBadges = (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span
+        className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold text-cream"
+        style={{ backgroundColor: meta.color }}
+      >
+        {meta.emoji} {place.cuisine}
+      </span>
+      {friendSignal && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-tomato px-2 py-1 text-[11px] font-bold text-cream">
+          <Users size={11} aria-hidden="true" />
+          {FRIEND_SIGNAL_TEXT[friendSignal.kind](friendSignal.count)}
+        </span>
+      )}
+      {rating && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-cream/20 px-2 py-1 text-[11px] font-bold text-cream backdrop-blur-sm">
+          <Star size={11} className="fill-mustard text-mustard" aria-hidden="true" />
+          {rating.avg.toFixed(1).replace(".", ",")}
+          <span className="font-semibold text-cream/70">({rating.count})</span>
+        </span>
+      )}
+      {open.status !== "unknown" && (
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-bold backdrop-blur-sm ${
+            open.status === "closed" ? "bg-cream/15 text-cream/70" : "bg-cream/20 text-cream"
+          }`}
+        >
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              open.status === "open"
+                ? "bg-ok"
+                : open.status === "closing-soon"
+                  ? "bg-tomato"
+                  : "bg-cream/40"
+            }`}
+            aria-hidden="true"
+          />
+          {open.status === "open"
+            ? `Otwarte do ${open.closesAt}`
+            : open.status === "closing-soon"
+              ? open.minutesToClose <= 1
+                ? "Zamyka się"
+                : `Zamyka za ${open.minutesToClose} min`
+              : open.status === "closed" && open.opensAt
+                ? `Zamknięte, otwiera się o ${open.opensAt}`
+                : "Zamknięte"}
+        </span>
+      )}
+    </div>
+  );
+
   // Reading the full description isn't a decision, so it gets its own state
   // instead of hijacking the drag gesture - dragging is turned off while
   // open, and the panel that shows the text stays inside the card's own
@@ -173,54 +227,7 @@ export function SwipeCard({
             read as clutter. Rating and open-status still render only when
             they have something to say. */}
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent p-5 pt-20 text-cream">
-          <div className="mb-2 flex flex-wrap items-center gap-1.5">
-            <span
-              className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-bold text-cream"
-              style={{ backgroundColor: meta.color }}
-            >
-              {meta.emoji} {place.cuisine}
-            </span>
-            {friendSignal && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-tomato px-2 py-1 text-[11px] font-bold text-cream">
-                <Users size={11} aria-hidden="true" />
-                {FRIEND_SIGNAL_TEXT[friendSignal.kind](friendSignal.count)}
-              </span>
-            )}
-            {rating && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-cream/20 px-2 py-1 text-[11px] font-bold text-cream backdrop-blur-sm">
-                <Star size={11} className="fill-mustard text-mustard" aria-hidden="true" />
-                {rating.avg.toFixed(1).replace(".", ",")}
-                <span className="font-semibold text-cream/70">({rating.count})</span>
-              </span>
-            )}
-            {open.status !== "unknown" && (
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-bold backdrop-blur-sm ${
-                  open.status === "closed"
-                    ? "bg-cream/15 text-cream/70"
-                    : "bg-cream/20 text-cream"
-                }`}
-              >
-                <span
-                  className={`h-1.5 w-1.5 rounded-full ${
-                    open.status === "open"
-                      ? "bg-ok"
-                      : open.status === "closing-soon"
-                        ? "bg-tomato"
-                        : "bg-cream/40"
-                  }`}
-                  aria-hidden="true"
-                />
-                {open.status === "open"
-                  ? `Otwarte do ${open.closesAt}`
-                  : open.status === "closing-soon"
-                    ? open.minutesToClose <= 1
-                      ? "Zamyka się"
-                      : `Zamyka za ${open.minutesToClose} min`
-                    : "Zamknięte"}
-              </span>
-            )}
-          </div>
+          <div className="mb-2">{signalBadges}</div>
           {place.description && (
             <>
               <p className="line-clamp-2 text-sm leading-snug text-cream/90">{place.description}</p>
@@ -284,9 +291,14 @@ export function SwipeCard({
                   <X size={16} />
                 </button>
               </div>
-              <p className="overflow-y-auto text-sm leading-relaxed text-cream/90">
-                {place.description}
-              </p>
+              <div className="flex-1 space-y-3 overflow-y-auto">
+                {signalBadges}
+                <p className="text-sm leading-relaxed text-cream/90">{place.description}</p>
+                <p className="flex items-start gap-1.5 border-t border-cream/15 pt-3 text-sm text-cream/80">
+                  <MapPin size={14} className="mt-0.5 shrink-0" />
+                  <span>{place.address}</span>
+                </p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
