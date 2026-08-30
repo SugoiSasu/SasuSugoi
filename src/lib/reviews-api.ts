@@ -120,6 +120,10 @@ export function useSaveReview() {
       qc.invalidateQueries({ queryKey: ["my-review", vars.values.place_id] });
       qc.invalidateQueries({ queryKey: ["user-reviews"] });
       qc.invalidateQueries({ queryKey: ["profile"] });
+      // A new review is its own wall-feed item - without this, writing a
+      // review and immediately checking /wall could miss it for up to the
+      // feed's staleTime (own-activity should always feel instant).
+      qc.invalidateQueries({ queryKey: ["wall-feed"] });
       if (!vars.id) {
         trackEvent("write_review", { item_id: vars.values.place_id, rating: vars.values.rating });
       }

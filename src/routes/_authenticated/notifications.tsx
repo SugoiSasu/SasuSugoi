@@ -5,6 +5,7 @@ import { ArrowLeft, Bell, CheckCheck, Loader2, UserPlus, UserCheck, Newspaper, T
 import {
   useNotificationsInfinite,
   useMarkRead,
+  useUnreadCount,
   NOTIFICATION_TYPES,
   NOTIFICATION_TYPE_LABELS,
   type Notification,
@@ -72,7 +73,12 @@ function NotificationsPage() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const items: Notification[] = data?.pages.flatMap((p) => p.items) ?? [];
-  const unread = items.filter((n) => !n.read_at).length;
+  // "Oznacz wszystkie" marks ALL notifications read regardless of the local
+  // type filter (useMarkRead's "all" case has no filter awareness), so its
+  // visibility must be gated on the real global count - not the filtered/
+  // paginated `items` list, which could read zero unread here while unread
+  // items still exist outside the current filter or a page not yet loaded.
+  const unread = useUnreadCount();
 
   const setFilter = (f: NotificationType | "all") => {
     navigate({ search: { filter: f } });

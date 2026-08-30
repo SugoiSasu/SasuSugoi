@@ -118,6 +118,9 @@ export function useToggleFavorite() {
       qc.invalidateQueries({ queryKey: ["user-favorite-places"] });
       qc.invalidateQueries({ queryKey: ["friends-favorited"] });
       qc.invalidateQueries({ queryKey: ["place-favorite-counts"] });
+      // A new favorite is its own wall-feed item (and unfavoriting removes
+      // it) - without this it could miss the feed for up to its staleTime.
+      qc.invalidateQueries({ queryKey: ["wall-feed"] });
     },
     onSuccess: (_d, { placeId, on }) => {
       if (on) trackEvent("favorite_place", { item_id: placeId });

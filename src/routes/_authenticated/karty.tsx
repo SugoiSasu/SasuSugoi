@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from "react";
+﻿import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, PartyPopper, RotateCcw, Undo2 } from "lucide-react";
 import { toast } from "sonner";
@@ -69,6 +69,16 @@ function KartyPage() {
   const stack = visible.slice(0, VISIBLE_STACK);
   const top = stack[0];
 
+  // A drag-commit and the visual "remove from stack" that follows it are
+  // separated by the ~700ms fly-away animation (see handleSwipeCommit's own
+  // comment below) - `top` still points at the same place for that whole
+  // window. SwipeCard's own internal guard only stops a second onDragEnd on
+  // the SAME gesture; it does nothing for the Yummy/Nope buttons or arrow
+  // keys below, which call decide() directly and would otherwise double-fire
+  // the mutation on that place if pressed during the window. This ref closes
+  // that gap for every path, not just re-dragging.
+  const pendingCommitRef = useRef<string | null>(null);
+
   // Fires the instant a drag passes the threshold - guarantees the write
   // happens even if the user navigates away from /karty before the
   // ~700ms fly-away animation below finishes. That animation's promise
@@ -101,11 +111,16 @@ function KartyPage() {
     setHiddenIds((prev) => new Set(prev).add(place.id));
     setBurst({ id: Date.now(), type: direction === "right" ? "like" : "nope" });
     setHistory((prev) => [...prev, { place, direction }]);
+    if (pendingCommitRef.current === place.id) pendingCommitRef.current = null;
   }
 
   // Buttons and keys both take the same path a completed drag does, so a decision
-  // is written and recorded identically however it was made.
+  // is written and recorded identically however it was made. Guarded by
+  // pendingCommitRef: a drag on this same place may already be mid fly-away
+  // (committed, not yet ended), in which case this is a duplicate and no-ops.
   function decide(direction: "left" | "right", place: Place) {
+    if (pendingCommitRef.current === place.id) return;
+    pendingCommitRef.current = place.id;
     handleSwipeCommit(direction, place);
     handleSwipeEnd(direction, place);
   }
@@ -244,7 +259,10 @@ function KartyPage() {
                       isTop={idxFromTop === 0}
                       rating={ratings?.get(place.id)}
                       friendSignal={topFriendSignal(place.id)}
-                      onSwipeCommit={(dir) => handleSwipeCommit(dir, place)}
+                      onSwipeCommit={(dir) => {
+                        pendingCommitRef.current = place.id;
+                        handleSwipeCommit(dir, place);
+                      }}
                       onSwipe={(dir) => handleSwipeEnd(dir, place)}
                     />
                   </div>

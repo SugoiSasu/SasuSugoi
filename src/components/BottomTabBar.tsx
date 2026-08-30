@@ -33,6 +33,13 @@ export function BottomTabBar() {
     `flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold transition-colors ${
       active ? "text-tomato" : "text-muted-foreground"
     }`;
+  // Even the active tab's own label can overflow its ~43px slot on a 320px
+  // phone (confirmed live: "Odkrywaj" truncated there) - below 360px the
+  // icon+color alone carries the meaning, same as the other five tabs
+  // already do unconditionally. mapa.tsx has its own version of this same
+  // idea at a different threshold (400px) because it's tuned against a
+  // 3-chip filter row, not a 6-icon tab bar - the two aren't meant to match.
+  const ACTIVE_LABEL_CLS = "hidden max-w-full truncate min-[360px]:inline";
 
   return (
     <>
@@ -123,7 +130,7 @@ export function BottomTabBar() {
             return (
               <Link key={to} to={to} className={itemCls(active)} aria-label={label}>
                 <Icon size={20} />
-                {active && <span className="hidden max-w-full truncate min-[360px]:inline">{label}</span>}
+                {active && <span className={ACTIVE_LABEL_CLS}>{label}</span>}
               </Link>
             );
           })}
@@ -149,7 +156,7 @@ export function BottomTabBar() {
               )}
             </span>
             {isActive("/friends", false) && (
-              <span className="hidden max-w-full truncate min-[360px]:inline">Znajomi</span>
+              <span className={ACTIVE_LABEL_CLS}>Znajomi</span>
             )}
           </Link>
 
@@ -165,7 +172,7 @@ export function BottomTabBar() {
                 "Miejsca" fits; aria-label above keeps the full name for
                 screen readers. */}
             {isActive("/moje-miejsca", false) && (
-              <span className="hidden max-w-full truncate min-[360px]:inline">Miejsca</span>
+              <span className={ACTIVE_LABEL_CLS}>Miejsca</span>
             )}
           </Link>
 
@@ -178,7 +185,7 @@ export function BottomTabBar() {
             >
               <UserIcon size={20} />
               {pathname.startsWith("/u/") && (
-                <span className="hidden max-w-full truncate min-[360px]:inline">Profil</span>
+                <span className={ACTIVE_LABEL_CLS}>Profil</span>
               )}
             </Link>
           ) : (
@@ -189,7 +196,7 @@ export function BottomTabBar() {
             >
               <UserIcon size={20} />
               {pathname.startsWith("/auth") && (
-                <span className="hidden max-w-full truncate min-[360px]:inline">Profil</span>
+                <span className={ACTIVE_LABEL_CLS}>Profil</span>
               )}
             </Link>
           )}

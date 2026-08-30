@@ -413,6 +413,7 @@ export function useAcceptInvite() {
       qc.invalidateQueries({ queryKey: ["friend-profiles"] });
       qc.invalidateQueries({ queryKey: ["friend-leaderboard"] });
       qc.invalidateQueries({ queryKey: ["user-achievements"] });
+      qc.invalidateQueries({ queryKey: ["my-titled-achievements"] });
       qc.invalidateQueries({ queryKey: ["profile"] });
     },
   });

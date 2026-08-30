@@ -80,6 +80,13 @@
 
 :root {
   --radius: 1rem;
+  /* Reserved space for the mobile BottomTabBar (lg:hidden, intrinsic height -
+     it has no fixed height class of its own). Both __root.tsx's content
+     padding and any page-local fixed bottom bar (e.g. warte-pozarcia.tsx)
+     need to clear it; previously each guessed the same 5rem independently
+     with no shared source, so a future tab-bar height change would need to
+     be re-guessed correctly in every consumer instead of updated once here. */
+  --pz-tabbar-h: 5rem;
   --navy: oklch(0.31 0.14 268);
   --cobalt: oklch(0.46 0.18 268);
   --cream: oklch(0.975 0.012 60);

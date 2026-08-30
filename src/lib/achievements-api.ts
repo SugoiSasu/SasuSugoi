@@ -121,7 +121,10 @@ export function useUnlockManualAchievement() {
       return Boolean(data);
     },
     onSuccess: (unlocked) => {
-      if (unlocked) qc.invalidateQueries({ queryKey: ["user-achievements"] });
+      if (unlocked) {
+        qc.invalidateQueries({ queryKey: ["user-achievements"] });
+        qc.invalidateQueries({ queryKey: ["my-titled-achievements"] });
+      }
     },
   });
 }

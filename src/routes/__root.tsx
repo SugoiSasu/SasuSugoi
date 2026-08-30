@@ -377,7 +377,7 @@ function RootComponent() {
             </div>
 
             {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-            <div className="pz-route-view pb-20 lg:pb-0">
+            <div className="pz-route-view pb-[var(--pz-tabbar-h)] lg:pb-0">
               <Outlet />
             </div>
             <BottomTabBar />

@@ -72,21 +72,18 @@ export function useWallFeed() {
     queryFn: async (): Promise<WallItem[]> => {
       const me = user!.id;
 
-      // 1) friend ids
-      const { data: fs } = await supabase
-        .from("friendships")
-        .select("requester_id, addressee_id")
-        .eq("status", "accepted");
-      const friendIds = (fs ?? [])
-        .map((f) => (f.requester_id === me ? f.addressee_id : f.requester_id))
-        .filter((id): id is string => !!id);
-
-      // 2) followed + favorited + owned place ids (obserwowane knajpy pokazują wpisy na wallu, właściciele widzą swoje posty)
-      const [{ data: favs }, { data: follows }, { data: owned }] = await Promise.all([
+      // Friend ids + followed/favorited/owned place ids - all four only
+      // depend on `me`, so they fire together instead of the friendships
+      // query paying its own round trip before the other three even start.
+      const [{ data: fs }, { data: favs }, { data: follows }, { data: owned }] = await Promise.all([
+        supabase.from("friendships").select("requester_id, addressee_id").eq("status", "accepted"),
         supabase.from("place_favorites").select("place_id").eq("user_id", me),
         supabase.from("place_follows").select("place_id").eq("user_id", me),
         supabase.from("place_owners").select("place_id").eq("user_id", me).eq("verified", true),
       ]);
+      const friendIds = (fs ?? [])
+        .map((f) => (f.requester_id === me ? f.addressee_id : f.requester_id))
+        .filter((id): id is string => !!id);
       const myPlaceIds = Array.from(
         new Set([
           ...(favs ?? []).map((r) => r.place_id),
@@ -112,7 +109,6 @@ export function useWallFeed() {
       // into the shared `items` array/`placeIdsToFetch` set from its own
       // closure, which is safe since JS only interleaves at await points.
       const fetchReviews = async () => {
-        if (!feedUserIds.length) return;
         const { data: rvs } = await supabase
           .from("reviews")
           .select("id, user_id, place_id, body, rating, photo_url, created_at")
@@ -136,7 +132,6 @@ export function useWallFeed() {
       };
 
       const fetchFavorites = async () => {
-        if (!feedUserIds.length) return;
         const { data: ffs } = await supabase
           .from("place_favorites")
           .select("id, user_id, place_id, created_at")
@@ -160,7 +155,6 @@ export function useWallFeed() {
       // Friend achievements - grouped into one card per (user, day) so a
       // multi-badge unlock doesn't flood the feed with repeat cards.
       const fetchAchievements = async () => {
-        if (!feedUserIds.length) return;
         const { data: uas } = await supabase
           .from("user_achievements")
           .select("id, user_id, achievement_id, unlocked_at")
@@ -211,7 +205,6 @@ export function useWallFeed() {
 
       // My own quick posts + friends' quick posts ("co dziś jadłeś?")
       const fetchQuickPosts = async () => {
-        if (!feedUserIds.length) return;
         const { data: wps } = await supabase
           .from("wall_posts")
           .select("id, user_id, place_id, body, image_url, created_at")
@@ -236,7 +229,6 @@ export function useWallFeed() {
 
       // Friend-curated lists ("najlepszy street food w Poznaniu")
       const fetchLists = async () => {
-        if (!feedUserIds.length) return;
         const { data: lists } = await supabase
           .from("place_lists")
           .select("id, user_id, title, description, created_at")
@@ -277,7 +269,6 @@ export function useWallFeed() {
 
       // Friend challenge completions ("tydzień kebabu ukończony")
       const fetchChallenges = async () => {
-        if (!feedUserIds.length) return;
         const { data: completions } = await supabase
           .from("user_challenge_completions")
           .select("id, user_id, completed_at, challenge:challenges(title, icon)")

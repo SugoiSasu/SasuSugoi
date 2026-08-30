@@ -165,6 +165,13 @@ function MapaPage() {
         ? "border-navy bg-gradient-to-br from-navy to-[oklch(0.3_0.13_268)] text-cream shadow-md shadow-navy/30"
         : "border-border bg-card text-foreground shadow-sm hover:border-tomato hover:shadow-md"
     }`;
+  // Three flex-1 chips squeezed into one row used to crush their labels to
+  // illegible 2-3 letter fragments below 400px (confirmed live) - the icon
+  // each chip already carries takes over below that width. BottomTabBar has
+  // its own version of this same idea at a different threshold (360px)
+  // because it's tuned against a 6-icon tab bar, not a 3-chip filter row -
+  // the two aren't meant to match.
+  const FILTER_LABEL_CLS = "hidden truncate min-[400px]:inline";
 
   const optionRow = (active: boolean) =>
     `flex min-h-11 w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition ${
@@ -202,7 +209,7 @@ function MapaPage() {
                   ("Oc…", "Otwar…") - confirmed live at 320-375px. Below
                   400px the icon (added above) carries the meaning alone;
                   the label reappears once there's room to read it. */}
-              <span className="hidden truncate min-[400px]:inline">{cuisine ?? "Kuchnia"}</span>
+              <span className={FILTER_LABEL_CLS}>{cuisine ?? "Kuchnia"}</span>
               <ChevronDown size={14} className="shrink-0 opacity-70" />
             </PopoverTrigger>
             <PopoverContent align="start" className="max-h-72 w-56 overflow-y-auto p-2">
@@ -237,7 +244,7 @@ function MapaPage() {
               {/* Once a rating is picked the label is just "4+" - short
                   enough to always show, unlike the generic "Ocena"
                   placeholder which only reappears with room to read it. */}
-              <span className={`truncate ${minRating > 0 ? "" : "hidden min-[400px]:inline"}`}>
+              <span className={minRating > 0 ? "truncate" : FILTER_LABEL_CLS}>
                 {minRating > 0 ? `${minRating}+` : "Ocena"}
               </span>
               <ChevronDown size={14} className="shrink-0 opacity-70" />
@@ -260,11 +267,12 @@ function MapaPage() {
           <button
             type="button"
             aria-pressed={openNow}
+            aria-label="Otwarte teraz"
             onClick={() => setOpenNow((v) => !v)}
             className={trigger(openNow)}
           >
             <Clock size={13} className="shrink-0" />
-            <span className="hidden truncate min-[400px]:inline">Otwarte teraz</span>
+            <span className={FILTER_LABEL_CLS}>Otwarte teraz</span>
           </button>
 
           {/* Layers are a different axis from the filters above: not what kind

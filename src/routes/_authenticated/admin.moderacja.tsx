@@ -351,7 +351,9 @@ function PendingList({ filter }: { filter: QueueFilter }) {
         }
         description={
           confirmAction === "approve"
-            ? "Zatwierdzone zgłoszenia właściciela od razu przyznają dostęp do lokalu."
+            ? bulk.selectedItems.some((e) => e.kind === "owner")
+              ? "Zatwierdzone zgłoszenia właściciela od razu przyznają dostęp do lokalu."
+              : "Tej operacji nie da się cofnąć."
             : "Tej operacji nie da się cofnąć."
         }
         confirmLabel={confirmAction === "approve" ? "Zatwierdź" : "Odrzuć"}

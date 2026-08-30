@@ -6,6 +6,7 @@ import {
   useNotifications,
   useMarkRead,
   useRealtimeStatus,
+  useUnreadCount,
   type Notification,
 } from "@/lib/notifications-api";
 import { trackEvent } from "@/lib/analytics";
@@ -44,7 +45,12 @@ export function NotificationBell() {
   const [ringing, setRinging] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const items = (data ?? []) as Notification[];
-  const unread = items.filter((n) => !n.read_at).length;
+  // The badge shown to the user is an exact DB count, not derived from the
+  // capped preview list below - that used to silently cap at 30 (the old
+  // useNotifications page size), understating the count for anyone with
+  // more unread than fits on one page.
+  const unread = useUnreadCount();
+  const previewUnread = items.filter((n) => !n.read_at).length;
 
   // Ring the bell only on a genuine new arrival (N -> N+1 while mounted),
   // never on first mount/page load - a null->N transition on load would
