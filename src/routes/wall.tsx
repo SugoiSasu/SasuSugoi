@@ -360,6 +360,11 @@ function QuickPostBar() {
               "Zamelduj się" are cut because rating and check-ins happen on the
               place page, not as wall posts - a pill that silently redirects
               would promise the wrong thing. The three left are real actions. */}
+          {/* Neutral chip borders (even at border-2/25%) kept reading as "no
+              cutoff" against a white card - a genuine colour, not a shade of
+              grey, is what actually separates from white at a glance. Each
+              pill takes the mockup's own per-action colour (PINK/ORANGE/
+              TEAL->ok) as a real tint + matching border, not just an icon. */}
           <div className="mt-3 grid grid-cols-3 gap-1.5 border-t border-border pt-3">
             <button
               type="button"
@@ -367,7 +372,7 @@ function QuickPostBar() {
                 setOpen(true);
                 requestAnimationFrame(() => fileInputRef.current?.click());
               }}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl border-2 border-foreground/25 bg-background px-2 py-2 text-xs font-semibold text-foreground shadow-sm transition hover:border-tomato hover:bg-muted"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border-2 border-blush bg-blush/20 px-2 py-2 text-xs font-bold text-foreground shadow-sm transition hover:bg-blush/35"
             >
               <Camera size={13} className="text-blush" /> Zdjęcie
             </button>
@@ -377,14 +382,14 @@ function QuickPostBar() {
                 setOpen(true);
                 requestAnimationFrame(() => textareaRef.current?.focus());
               }}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl border-2 border-foreground/25 bg-background px-2 py-2 text-xs font-semibold text-foreground shadow-sm transition hover:border-tomato hover:bg-muted"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border-2 border-tomato bg-tomato/15 px-2 py-2 text-xs font-bold text-foreground shadow-sm transition hover:bg-tomato/25"
             >
               <MapPin size={13} className="text-tomato" /> Z lokalu
             </button>
             <button
               type="button"
               onClick={() => setListModalOpen(true)}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl border-2 border-foreground/25 bg-background px-2 py-2 text-xs font-semibold text-foreground shadow-sm transition hover:border-tomato hover:bg-muted"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border-2 border-ok bg-ok/15 px-2 py-2 text-xs font-bold text-foreground shadow-sm transition hover:bg-ok/25"
             >
               <ListChecks size={13} className="text-ok" /> Lista
             </button>
@@ -1242,8 +1247,16 @@ function PlaceInfoCard({ place }: { place: WallItem["place"] & {} }) {
   const { data: ratings } = usePlaceRatingsMap();
   if (!place) return null;
   const rating = ratings?.get(place.id);
+  // Same fix as the composer pills: a neutral border read as "no cutoff" on
+  // white. This card is already about one specific place, so it borrows that
+  // place's own cuisine colour instead of inventing a new one - same brand
+  // colour already used for its badge, chip, and map pin elsewhere in the app.
+  const meta = cuisineMeta(place.cuisine ?? "");
   return (
-    <div className="mt-3 flex items-center gap-3 rounded-2xl border-2 border-foreground/25 bg-background px-3 py-2.5">
+    <div
+      className="mt-3 flex items-center gap-3 rounded-2xl border-2 px-3 py-2.5"
+      style={{ borderColor: meta.color, backgroundColor: `${meta.color}1A` }}
+    >
       <PlaceAvatarDot place={place as Place} size={40} />
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-bold">{place.name}</div>
