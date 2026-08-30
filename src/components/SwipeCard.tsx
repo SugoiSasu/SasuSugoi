@@ -124,7 +124,7 @@ export function SwipeCard({
               uploaded logo) is cut out client-side so it doesn't show as a
               coloured box; a place can turn that off (avatar_cutout_enabled)
               if its "background" is actually part of the mark. */}
-          <div className="relative grid h-32 w-32 place-items-center">
+          <div className="relative grid h-48 w-48 place-items-center">
             <span
               aria-hidden="true"
               className="absolute inset-[-18%] rounded-full blur-xl"
