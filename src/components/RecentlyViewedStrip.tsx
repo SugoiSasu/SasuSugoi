@@ -51,7 +51,7 @@ export function RecentlyViewedStrip() {
         </button>
       </div>
 
-      <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-none sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+      <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-none [mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:[mask-image:none]">
         {items.map((p) => {
           const meta = cuisineMeta(p.cuisine);
           const cover = p.avatar_url ?? p.cover_image_url;

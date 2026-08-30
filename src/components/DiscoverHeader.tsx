@@ -61,7 +61,7 @@ export function DiscoverHeader({
               type="search"
               value={query}
               onChange={(e) => onQueryChange(e.target.value)}
-              placeholder="Szukaj knajpy, kuchni, dzielnicy…"
+              placeholder="Szukaj lokalu, kuchni…"
               aria-label="Szukaj knajpy lub kuchni"
               className="h-12 w-full rounded-full border border-border bg-card pl-11 pr-10 text-sm outline-none transition focus:border-tomato"
             />
@@ -105,7 +105,7 @@ export function DiscoverHeader({
               </Link>
             </div>
 
-            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-none sm:mx-0 sm:grid sm:grid-cols-5 sm:gap-3 sm:overflow-visible sm:px-0 lg:grid-cols-10 xl:grid-cols-12">
+            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-none [mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] sm:mx-0 sm:grid sm:grid-cols-5 sm:gap-3 sm:overflow-visible sm:px-0 sm:[mask-image:none] lg:grid-cols-10 xl:grid-cols-12">
               <button
                 type="button"
                 onClick={() => onCuisineChange(null)}

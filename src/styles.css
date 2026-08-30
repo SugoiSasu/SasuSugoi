@@ -202,6 +202,12 @@
 
 @layer utilities {
   .font-display { font-family: var(--font-display); }
+  /* Reserve for brandable/social headings that read as the app's own voice
+     (e.g. the Pożeralnia page title) - not for ordinary content headings,
+     which stay on --font-display. Text inside gets its Polish diacritics
+     auto-stripped by polish-stripper.ts, since Persona's own @font-face only
+     declares unicode-range U+0020-00FF - keep that in mind before applying
+     this class somewhere the stripped spelling would look wrong. */
   .font-persona { font-family: var(--font-persona); letter-spacing: -0.01em; }
   .text-balance { text-wrap: balance; }
 

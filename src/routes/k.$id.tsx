@@ -489,14 +489,19 @@ function PlaceProfile() {
           <FavoriteIconButton placeId={place.id} variant="text" className="w-full text-[10px] sm:text-xs px-2 sm:px-4 py-2.5 whitespace-nowrap" />
         </div>
 
-        {/* Secondary quick actions: Navigate / Call / Website / Share (icon-only on mobile) */}
+        {/* Secondary quick actions: Navigate / Call / Website / Share (icon-only on mobile).
+            "Nawiguj" is hidden here below lg: the sticky mobile action bar
+            near the bottom of this page already surfaces it persistently -
+            showing it in both places doubled the same CTA on screen at once
+            near the top of the page. Desktop has no sticky bar, so it stays
+            here as the only copy. */}
         <div className="mb-4 flex items-center gap-2">
           <a
             href={mapsHref}
             target="_blank"
             rel="noreferrer"
             aria-label="Nawiguj do lokalu"
-            className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-foreground/30 text-foreground px-2 py-2 text-xs sm:text-sm font-medium hover:bg-foreground hover:text-background transition"
+            className="hidden lg:inline-flex flex-1 min-w-0 items-center justify-center gap-1.5 rounded-full border-2 border-foreground/30 text-foreground px-2 py-2 text-xs sm:text-sm font-medium hover:bg-foreground hover:text-background transition"
           >
             <Navigation size={16} /> <span className="hidden sm:inline truncate">Nawiguj</span>
           </a>
