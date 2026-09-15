@@ -37,6 +37,12 @@ export const Route = createFileRoute("/sitemap.xml")({
             { auth: { persistSession: false, autoRefreshToken: false, storage: undefined } },
           );
 
+          // No is_published filter needed: this client runs on the anon key,
+          // and the "places public read published" RLS policy
+          // (20260716122040) already restricts anon SELECT to is_published =
+          // true. Draft places therefore cannot reach the sitemap. Verified
+          // against the live endpoint - do not "fix" this by adding a filter
+          // that changes nothing.
           const { data: places } = await supabase
             .from("places")
             .select("id, updated_at");

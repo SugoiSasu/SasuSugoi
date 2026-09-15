@@ -38,14 +38,19 @@ function AchievementsPage() {
   const { data: all, isLoading: loadingAll } = useAchievements();
   const { data: mine } = useUserAchievements(user?.id);
   const { data: leaders, isLoading: loadingLeaders } = useFriendLeaderboard();
-  const { data: reviewStats } = useUserReviewStats(user?.id);
-  const { data: friendsCount } = useFriendsCount(user?.id);
-  const { data: inviteStats } = useInviteStats();
+  const { data: reviewStats, isLoading: loadingReviewStats } = useUserReviewStats(user?.id);
+  const { data: friendsCount, isLoading: loadingFriends } = useFriendsCount(user?.id);
+  const { data: inviteStats, isLoading: loadingInvites } = useInviteStats();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
 
   const points = profile?.points_total ?? 0;
   const unlocked = useMemo(() => new Set((mine ?? []).map((m) => m.achievement_id)), [mine]);
+  // The stat queries feeding the progress rings settle after the achievement
+  // list does. Until they do, every criterion reads 0, computeProgress returns
+  // 0%, and every unearned badge paints as fully locked before snapping to its
+  // real ring a moment later.
+  const statsLoading = loadingReviewStats || loadingFriends || loadingInvites;
   const userStats: Record<CriteriaType, number> = {
     reviews_count: reviewStats?.reviewsCount ?? 0,
     unique_places: reviewStats?.uniquePlaces ?? 0,
@@ -88,7 +93,10 @@ function AchievementsPage() {
       <div>
       <LevelProgressCard
         points={points}
-        unlockedCount={unlocked.size}
+        // Count only badges that are still enabled. `unlocked` holds every row
+        // the user ever earned, so a badge later disabled in the admin panel
+        // used to push the numerator past the denominator ("13 z 12 odznak").
+        unlockedCount={enabled.filter((a) => unlocked.has(a.id)).length}
         totalBadges={enabled.length}
         className="mt-4"
       />
@@ -145,7 +153,7 @@ function AchievementsPage() {
           )}
         </div>
 
-        {loadingAll ? (
+        {loadingAll || statsLoading ? (
           <ul className="mt-4 grid grid-cols-3 gap-4 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7" aria-busy="true">
             {Array.from({ length: 8 }).map((_, i) => (
               <li key={i} className="text-center">
@@ -225,7 +233,7 @@ function AchievementsPage() {
 
         <h2 className="font-display text-lg font-extrabold">Ranking znajomych</h2>
 
-        {loadingLeaders && (
+        {loadingLeaders ? (
           <ul className="mt-4 space-y-2" aria-busy="true">
             {Array.from({ length: 4 }).map((_, i) => (
               <li key={i} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3">
@@ -237,21 +245,25 @@ function AchievementsPage() {
               </li>
             ))}
           </ul>
-        )}
-
+        ) : (
+          <>
         {podium.length > 0 && (
           <ol className="mt-4 grid grid-cols-3 items-end gap-2">
             {[1, 0, 2].map((idx) => {
               const row = podium[idx];
               if (!row) return <li key={idx} />;
               const isMe = row.user_id === user?.id;
-              const h = idx === 0 ? "pt-6" : "pt-3";
+              // The step height has to live on the card, not on the <li>: the
+              // grid is items-end, so padding above the link just added dead
+              // space and all three cards still bottom-aligned at the same
+              // height - the podium had no podium in it.
+              const step = idx === 0 ? "pt-7 pb-4" : idx === 1 ? "pt-5 pb-3.5" : "pt-3 pb-3";
               return (
-                <li key={row.user_id} className={h}>
+                <li key={row.user_id}>
                   <Link
                     to="/u/$username"
                     params={{ username: row.username ?? row.user_id }}
-                    className={`flex flex-col items-center gap-1.5 rounded-2xl border p-3 text-center transition ${
+                    className={`flex flex-col items-center gap-1.5 rounded-2xl border px-3 text-center transition ${step} ${
                       isMe ? "border-accent bg-accent/15" : "border-border bg-card hover:border-accent"
                     }`}
                   >
@@ -297,7 +309,7 @@ function AchievementsPage() {
               </li>
             );
           })}
-          {!loadingLeaders && (leaders ?? []).length === 0 && (
+          {(leaders ?? []).length === 0 && (
             <li className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
               Dodaj znajomych, żeby zobaczyć ranking.
               <Link to="/friends" className="mt-4 block min-h-11">
@@ -306,6 +318,8 @@ function AchievementsPage() {
             </li>
           )}
         </ul>
+          </>
+        )}
       </section>
       </div>
     </main>

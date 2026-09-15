@@ -224,7 +224,15 @@ function ReviewForm({
   const [uploading, setUploading] = useState(false);
   const { data: photoUrl } = useReviewPhotoUrl(photoPath);
 
+  // Re-hydrate only when the form switches to a different review, not on every
+  // new object identity: the my-review query refetches on window focus, and
+  // re-running these setters on the same review wiped a half-typed draft the
+  // moment the user alt-tabbed away and back.
+  const hydratedForRef = useRef<string | null>(null);
   useEffect(() => {
+    const key = existing?.id ?? "new";
+    if (hydratedForRef.current === key) return;
+    hydratedForRef.current = key;
     setRating(existing?.rating ?? 5);
     setBody(existing?.body ?? "");
     setPhotoPath(existing?.photo_url ?? null);

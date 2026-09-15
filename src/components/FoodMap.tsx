@@ -93,6 +93,11 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
   const achievementTried = useRef(false);
   const [mapReady, setMapReady] = useState(false);
 
+  // Read by the delegated popup-click handler, which is bound once and would
+  // otherwise capture whatever `places` held on first render.
+  const placesRef = useRef(places);
+  placesRef.current = places;
+
   useEffect(() => {
     // useEffect alone never runs during SSR, but Vite/Rollup still traces the
     // dynamic import()s below into the server bundle unless the branch is
@@ -177,35 +182,41 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
         }
 
 
-        map.on("popupopen", (e: { popup: { getElement: () => HTMLElement | null } }) => {
-          const el = e.popup.getElement();
-          if (!el) return;
-          const btn = el.querySelector("[data-place-id]") as HTMLAnchorElement | null;
-          if (btn) {
-            btn.addEventListener("click", (ev) => {
-              const id = btn.dataset.placeId;
-              if (!id) return;
-              const place = places.find((x) => x.id === id);
-              if (place?.reel_url) return;
-              ev.preventDefault();
-              ev.stopPropagation();
-              if (place && selectRef.current) {
-                selectRef.current(place);
-              } else {
-                window.location.assign(`/k/${id}`);
-              }
-            });
+        // One delegated listener on the map container, bound once for the map's
+        // lifetime. The previous version attached fresh listeners inside every
+        // `popupopen`; Leaflet reuses the popup DOM, so reopening a popup
+        // stacked another copy and a single click on "Odwiedziłem" dispatched
+        // the toggle twice - flipping the status straight back. Delegation also
+        // drops the stale `places` closure: it reads the ref, which the marker
+        // effect below keeps current.
+        map.getContainer().addEventListener("click", (ev) => {
+          const target = ev.target as HTMLElement | null;
+          if (!target) return;
+
+          const visitBtn = target.closest<HTMLButtonElement>("[data-visit-action]");
+          if (visitBtn) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            const placeId = visitBtn.dataset.placeId;
+            const status = visitBtn.dataset.visitAction as "want" | "visited" | undefined;
+            if (!placeId || !status) return;
+            window.dispatchEvent(new CustomEvent("pz:toggle-visit", { detail: { placeId, status } }));
+            return;
           }
-          el.querySelectorAll<HTMLButtonElement>("[data-visit-action]").forEach((b) => {
-            b.addEventListener("click", (ev) => {
-              ev.preventDefault();
-              ev.stopPropagation();
-              const placeId = b.dataset.placeId;
-              const status = b.dataset.visitAction as "want" | "visited" | undefined;
-              if (!placeId || !status) return;
-              window.dispatchEvent(new CustomEvent("pz:toggle-visit", { detail: { placeId, status } }));
-            });
-          });
+
+          const link = target.closest<HTMLAnchorElement>("[data-place-id]");
+          if (!link) return;
+          const id = link.dataset.placeId;
+          if (!id) return;
+          const place = placesRef.current.find((x) => x.id === id);
+          if (place?.reel_url) return;
+          ev.preventDefault();
+          ev.stopPropagation();
+          if (place && selectRef.current) {
+            selectRef.current(place);
+          } else {
+            window.location.assign(`/k/${id}`);
+          }
         });
 
 
@@ -434,10 +445,6 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
     };
   }, []);
 
-  if (variant === "mini") {
-    return <div ref={containerRef} className="w-full h-full" />;
-  }
-
   // Draws the searched area: a dashed outline plus a veil over everything outside
   // it. Sitting inside the area you only see the border; pan away and the region
   // you are filtering by stays visible, which is the moment the filter otherwise
@@ -528,6 +535,15 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
     if (!m) return;
     m.setStyle(BASEMAP_STYLE[theme]);
   }, [theme, mapReady]);
+
+  // This return used to sit above the three effects before it, which meant the
+  // mini map never ran them - most visibly the theme effect right above, so the
+  // map embedded on a place profile stayed on the light basemap in dark mode.
+  // (It also violated the rules of hooks outright.) Every effect above already
+  // guards on mapReady/refs, so they are safe for both variants.
+  if (variant === "mini") {
+    return <div ref={containerRef} className="w-full h-full" />;
+  }
 
   return (
     <div

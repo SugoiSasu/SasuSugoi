@@ -13,6 +13,7 @@ import {
 } from "@/lib/awards-api";
 import { useCuisines } from "@/lib/cuisines-api";
 import { AuthGate } from "@/components/AuthGate";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/warte-pozarcia")({
   head: () => ({
@@ -103,11 +104,14 @@ function VotingGate({ eventId, cuisineIds }: { eventId: string; cuisineIds: stri
 }
 
 function SubmittedBallot({ eventId, cuisineIds }: { eventId: string; cuisineIds: string[] }) {
-  const { data: cuisines } = useCuisines();
-  const { data: places } = usePlaces();
-  const { data: myVotes } = useMyAwardVotes(eventId);
+  const { data: cuisines, isLoading: loadingCuisines } = useCuisines();
+  const { data: places, isLoading: loadingPlaces } = usePlaces();
+  const { data: myVotes, isLoading: loadingVotes } = useMyAwardVotes(eventId);
   const cuisineById = new Map((cuisines ?? []).map((c) => [c.id, c]));
   const placeById = new Map((places ?? []).map((p) => [p.id, p]));
+  // Right after submitting, all three queries are still in flight and every
+  // row rendered a bare "-" - it read as "your vote was lost", not "loading".
+  const loading = loadingCuisines || loadingPlaces || loadingVotes;
 
   return (
     <div>
@@ -125,7 +129,17 @@ function SubmittedBallot({ eventId, cuisineIds }: { eventId: string; cuisineIds:
               <p className="text-xs font-bold uppercase tracking-wider text-foreground/70 mb-1">
                 {cuisine.emoji} {cuisine.name}
               </p>
-              <p className="text-sm font-semibold">{place?.name ?? "-"}</p>
+              {loading ? (
+                <Skeleton className="h-5 w-32" />
+              ) : (
+                <p className="text-sm font-semibold">
+                  {place?.name ?? (
+                    <span className="font-normal text-muted-foreground">
+                      Lokal niedostępny
+                    </span>
+                  )}
+                </p>
+              )}
             </div>
           );
         })}
@@ -135,10 +149,15 @@ function SubmittedBallot({ eventId, cuisineIds }: { eventId: string; cuisineIds:
 }
 
 function VotingCategories({ eventId, cuisineIds }: { eventId: string; cuisineIds: string[] }) {
-  const { data: cuisines } = useCuisines();
-  const { data: places } = usePlaces();
+  const { data: cuisines, isLoading: loadingCuisines } = useCuisines();
+  const { data: places, isLoading: loadingPlaces } = usePlaces();
   const submitBallot = useSubmitAwardBallot(eventId);
   const [picks, setPicks] = useState<Record<string, string>>({});
+  // Without this, the in-flight state is indistinguishable from a real empty
+  // ballot: every category rendered "Brak lokali w tej kategorii." and the
+  // sticky bar read "Wybrano 0/0" until the queries landed, so on a slow
+  // connection the whole page looked permanently broken.
+  const loading = loadingCuisines || loadingPlaces;
 
   // Picking any single candidate re-renders this component, and none of the
   // derivation below depends on `picks` - without memoizing it, every click
@@ -171,6 +190,22 @@ function VotingCategories({ eventId, cuisineIds }: { eventId: string; cuisineIds
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Nie udało się wysłać głosów.");
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-8 pb-36 lg:pb-24">
+        {cuisineIds.slice(0, 4).map((cid) => (
+          <section key={cid}>
+            <Skeleton className="mb-3 h-7 w-40" />
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Skeleton className="h-16 rounded-2xl" />
+              <Skeleton className="h-16 rounded-2xl" />
+            </div>
+          </section>
+        ))}
+      </div>
+    );
   }
 
   return (
