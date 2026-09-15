@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/use-auth";
+import { trackEvent } from "@/lib/analytics";
 
 export type WallItemKind =
   | "review"
@@ -523,7 +524,12 @@ export function useCreateWallPost() {
       });
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["wall-feed"] }),
+    // Posting to the wall is the app's main social action and had no event at
+    // all, so the funnel could not answer whether new users ever post.
+    onSuccess: (_d, vars) => {
+      trackEvent("wall_post_created", { item_id: vars.placeId || undefined });
+      qc.invalidateQueries({ queryKey: ["wall-feed"] });
+    },
   });
 }
 

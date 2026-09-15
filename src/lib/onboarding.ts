@@ -1,3 +1,10 @@
+// This localStorage flag is NOT the source of truth for "has this user seen
+// the tour" - profiles.onboarding_seen_at is, and OnboardingTour.tsx checks
+// it first. This only prevents a flash of the tour in the moment between
+// sign-in and the profile query resolving, so a cleared cache or a new device
+// does not re-run the tour. Verified: with onboarding_seen_at set, the tour
+// stays closed even on an empty localStorage. Do not "fix" this by moving it
+// to the server - it is already there.
 const STORAGE_PREFIX = "pz_onboarding_seen_v1:";
 
 export function hasSeenOnboarding(userId: string): boolean {

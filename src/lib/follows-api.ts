@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/use-auth";
+import { trackEvent } from "@/lib/analytics";
 
 export function useMyFollowedPlaceIds() {
   const { user } = useUser();
@@ -99,6 +100,11 @@ export function useToggleFollow() {
       qc.invalidateQueries({ queryKey: ["my-followed-place-ids"] });
       qc.invalidateQueries({ queryKey: ["place-follow-counts"] });
       qc.invalidateQueries({ queryKey: ["wall-feed"] });
+    },
+    // Favouriting was tracked but following wasn't, even though following is
+    // the stronger intent signal - it opts the user into that venue's posts.
+    onSuccess: (_d, { placeId, on }) => {
+      if (on) trackEvent("follow_place", { item_id: placeId });
     },
   });
 }

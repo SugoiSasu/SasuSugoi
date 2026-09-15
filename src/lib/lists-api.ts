@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/use-auth";
+import { trackEvent } from "@/lib/analytics";
 import type { Place } from "@/lib/places-api";
 
 export interface PlaceList {
@@ -94,7 +95,8 @@ export function useCreateList() {
       }
       return list.id as string;
     },
-    onSuccess: () => {
+    onSuccess: (listId, vars) => {
+      trackEvent("list_created", { item_id: listId, value: vars.placeIds.length });
       qc.invalidateQueries({ queryKey: ["place-lists"] });
       qc.invalidateQueries({ queryKey: ["wall-feed"] });
     },

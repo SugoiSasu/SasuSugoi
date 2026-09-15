@@ -89,6 +89,10 @@ function KartyPage() {
   // away dropped the write entirely with this in the animation callback.
   function handleSwipeCommit(direction: "left" | "right", place: Place) {
     if (direction === "right") {
+      // Only the skip was tracked, so the deck's analytics showed what people
+      // reject and nothing about what they accept - a swipe funnel with the
+      // positive half missing.
+      trackEvent("karty_want", { item_id: place.id, cuisine: place.cuisine });
       toggleVisit.mutate(
         { placeId: place.id, status: "want", on: true },
         {
