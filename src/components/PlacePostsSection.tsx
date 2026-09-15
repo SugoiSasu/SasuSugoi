@@ -54,12 +54,26 @@ function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString("pl-PL");
 }
 
-export function PlacePostsSection({ placeId, placeName }: { placeId: string; placeName: string }) {
+export function PlacePostsSection({
+  placeId,
+  placeName,
+  hideWhenEmpty = false,
+}: {
+  placeId: string;
+  placeName: string;
+  /** On a public place profile most venues have no announcements yet, and an
+   *  empty "nothing here" panel on every one of them is just noise. With this
+   *  set, the section renders only once there is something to show - or for
+   *  the owner, who needs the entry point to post in the first place. */
+  hideWhenEmpty?: boolean;
+}) {
   const { user } = useUser();
   const { data: isOwner } = useIsOwnerOf(placeId);
   const { data: posts, isLoading } = usePlacePosts(placeId);
   const [composerOpen, setComposerOpen] = useState(false);
   const [editing, setEditing] = useState<PlacePost | null>(null);
+
+  if (hideWhenEmpty && !isOwner && !isLoading && (posts?.length ?? 0) === 0) return null;
 
   return (
     <section className="surface mb-6 rounded-2xl border border-border bg-card overflow-hidden">

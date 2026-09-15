@@ -6,7 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@/lib/use-auth";
 import { useIsOwnerOf } from "@/lib/owners-api";
-import type { OpeningHours } from "@/lib/places-api";
+import type { OpeningHours, MenuCategory } from "@/lib/places-api";
+import { MenuItemsEditor } from "@/components/MenuItemsEditor";
 
 export const Route = createFileRoute("/_authenticated/owner/$placeId")({
   head: () => ({ meta: [{ title: "Edycja knajpy - poŻeramy" }] }),
@@ -69,8 +70,7 @@ function OwnerPlaceEditor() {
   const [menuUrl, setMenuUrl] = useState("");
   const [menuImg, setMenuImg] = useState("");
   const [hours, setHours] = useState<OpeningHours>({});
-  const [menuJson, setMenuJson] = useState("");
-  const [menuJsonErr, setMenuJsonErr] = useState<string | null>(null);
+  const [menuItems, setMenuItems] = useState<MenuCategory[] | null>(null);
 
   // Hydrate the form from the server row exactly once per place, not on every
   // change of the query object's identity. A background refetch (window focus,
@@ -86,7 +86,7 @@ function OwnerPlaceEditor() {
     setMenuUrl(place.menu_url ?? "");
     setMenuImg(place.menu_image_url ?? "");
     setHours(place.opening_hours ?? {});
-    setMenuJson(place.menu_items ? JSON.stringify(place.menu_items, null, 2) : "");
+    setMenuItems((place.menu_items as MenuCategory[] | null) ?? null);
   }, [place]);
 
   const dirty =
@@ -97,7 +97,7 @@ function OwnerPlaceEditor() {
       menuUrl !== (place.menu_url ?? "") ||
       menuImg !== (place.menu_image_url ?? "") ||
       JSON.stringify(hours) !== JSON.stringify(place.opening_hours ?? {}) ||
-      menuJson !== (place.menu_items ? JSON.stringify(place.menu_items, null, 2) : ""));
+      JSON.stringify(menuItems) !== JSON.stringify(place.menu_items ?? null));
 
   // Closing the tab with unsaved edits is the one exit path React Router can't
   // intercept, so it gets the browser's own guard.
@@ -113,14 +113,6 @@ function OwnerPlaceEditor() {
 
   const save = useMutation({
     mutationFn: async () => {
-      let menuItemsParsed: unknown = null;
-      if (menuJson.trim()) {
-        try {
-          menuItemsParsed = JSON.parse(menuJson);
-        } catch (e) {
-          throw new Error("Menu (JSON) nieprawidłowy: " + (e as Error).message);
-        }
-      }
       // A day that is set to open must carry both ends. updateDay no longer
       // invents a closing time the owner never picked, so a half-filled day
       // has to be caught here instead of being saved as a silent default.
@@ -142,7 +134,7 @@ function OwnerPlaceEditor() {
           menu_url: normalizeUrl(menuUrl) || null,
           menu_image_url: normalizeUrl(menuImg) || null,
           opening_hours: (hours as unknown) as never,
-          menu_items: (menuItemsParsed as unknown) as never,
+          menu_items: (menuItems as unknown) as never,
         })
         .eq("id", placeId)
         .select("id");
@@ -356,40 +348,16 @@ function OwnerPlaceEditor() {
             />
           </label>
         </div>
-        <label className="block">
-          <span className="text-xs font-bold uppercase tracking-wider text-foreground/70">
-            Menu strukturalne (JSON, opcjonalnie)
-          </span>
-          <textarea
-            value={menuJson}
-            onChange={(e) => {
-              setMenuJson(e.target.value);
-              if (!e.target.value.trim()) return setMenuJsonErr(null);
-              try {
-                JSON.parse(e.target.value);
-                setMenuJsonErr(null);
-              } catch (err) {
-                setMenuJsonErr((err as Error).message);
-              }
-            }}
-            rows={10}
-            className={inputCx + " font-mono text-xs min-h-[200px]"}
-            placeholder={`[
-  { "category": "Przystawki", "items": [
-    { "name": "Bruschetta", "price": "18 zł" }
-  ] }
-]`}
-          />
-          {menuJsonErr && (
-            <span className="text-xs text-tomato">Błąd JSON: {menuJsonErr}</span>
-          )}
-        </label>
+        {/* Restaurant owners were being asked to hand-write raw JSON in a
+            textarea. This is the same structured editor the admin panel uses,
+            so the two surfaces edit the menu identically. */}
+        <MenuItemsEditor value={menuItems} onChange={setMenuItems} />
       </section>
 
       <div className="flex items-center gap-3 pt-2">
         <button
           type="submit"
-          disabled={save.isPending || !!menuJsonErr}
+          disabled={save.isPending}
           className="inline-flex items-center gap-2 rounded-full bg-tomato text-cream px-5 py-2.5 font-bold hover:bg-tomato/90 disabled:opacity-50"
         >
           {save.isPending ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}

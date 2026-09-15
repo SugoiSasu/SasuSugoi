@@ -15,6 +15,8 @@ import {
   ShoppingBag, Accessibility, Copy, Share2, ChevronDown,
 } from "lucide-react";
 import { PlaceReviewsSection } from "@/components/PlaceReviewsSection";
+import { PlacePostsSection } from "@/components/PlacePostsSection";
+import { PlacePhotosSection } from "@/components/PlacePhotosSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePlaceReviewStats } from "@/lib/reviews-api";
 import { SmartText } from "@/components/SmartText";
@@ -652,6 +654,15 @@ function PlaceProfile() {
         )}
 
         {/* REVIEWS (with rating summary + breakdown at top) */}
+        {/* Both sections were fully built but rendered nowhere - the feed even
+            reads place_posts that no one had any way to create. Photos hide
+            themselves when empty unless you can manage them; announcements do
+            the same via hideWhenEmpty, so a venue with nothing to say doesn't
+            get an empty panel. */}
+        <PlacePostsSection placeId={place.id} placeName={place.name} hideWhenEmpty />
+
+        <PlacePhotosSection placeId={place.id} canManage={canEditImages} />
+
         <PlaceReviewsSection placeId={place.id} />
 
         <OwnerFooter placeId={place.id} placeName={place.name} />
