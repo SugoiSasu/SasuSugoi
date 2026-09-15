@@ -9,6 +9,7 @@ import { useUserReviewStats } from "@/lib/reviews-api";
 import { UserAvatar } from "@/components/UserAvatar";
 import { LevelProgressCard } from "@/components/LevelProgress";
 import { AuthGate } from "@/components/AuthGate";
+import { ChallengesSection } from "@/components/ChallengesSection";
 
 export const Route = createFileRoute("/osiagniecia")({
   head: () => ({
@@ -228,6 +229,8 @@ function AchievementsPage() {
         )}
       </section>
       </div>
+
+      <ChallengesSection userId={user.id} />
 
       <section className="mt-10 lg:mt-4">
 

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { Bookmark, Check, ChevronRight, Heart, Loader2, Search, Star, X } from "lucide-react";
+import { Bookmark, Check, ChevronRight, Heart, ListChecks, Loader2, Search, Star, X } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/lib/use-auth";
 import {
@@ -15,9 +15,10 @@ import { useToggleFavorite } from "@/lib/favorites-api";
 import { usePlaceRatingsMap } from "@/lib/places-api";
 import { useUserLocation, haversineKm, formatDistancePl } from "@/lib/geo";
 import { AuthGate } from "@/components/AuthGate";
+import { useMyLists } from "@/lib/lists-api";
 
 const searchSchema = z.object({
-  tab: z.enum(["want", "visited", "fav"]).catch("want").optional(),
+  tab: z.enum(["want", "visited", "fav", "lists"]).catch("want").optional(),
 });
 
 export const Route = createFileRoute("/moje-miejsca")({
@@ -40,7 +41,7 @@ export const Route = createFileRoute("/moje-miejsca")({
   component: MyPlacesPage,
 });
 
-type Tab = "want" | "visited" | "fav";
+type Tab = "want" | "visited" | "fav" | "lists";
 type Sort = "recent" | "alpha" | "rating" | "near";
 
 function MyPlacesPage() {
@@ -52,6 +53,9 @@ function MyPlacesPage() {
   const { data: want, isLoading: loadingWant } = useUserVisitedPlaces(user?.id, "want");
   const { data: visited, isLoading: loadingVisited } = useUserVisitedPlaces(user?.id, "visited");
   const { data: favs, isLoading: loadingFavs } = useUserFavoritePlaces(user?.id);
+  // Only for the tab counter - the tab body fetches its own copy via the same
+  // query key, so this costs no extra request.
+  const { data: myLists } = useMyLists();
   const { data: ratings } = usePlaceRatingsMap();
   const userLoc = useUserLocation();
   const toggleVisit = useToggleVisit();
@@ -59,6 +63,9 @@ function MyPlacesPage() {
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   function remove(p: VisitedPlace) {
+    // The lists tab renders no place cards, so this is unreachable there - the
+    // guard is what tells the type system that, since `tab` now also covers it.
+    if (tab === "lists") return;
     setRemovingId(p.id);
     if (tab === "fav") {
       toggleFavorite.mutate(
@@ -93,6 +100,7 @@ function MyPlacesPage() {
     { key: "want", label: "Do odwiedzenia", count: want?.length ?? 0 },
     { key: "visited", label: "Odwiedzone", count: visited?.length ?? 0 },
     { key: "fav", label: "Ulubione", count: favs?.length ?? 0 },
+    { key: "lists", label: "Moje listy", count: myLists?.length ?? 0 },
   ];
 
   const base: VisitedPlace[] =
@@ -153,6 +161,10 @@ function MyPlacesPage() {
         ))}
       </div>
 
+      {tab === "lists" ? (
+        <MyListsTab />
+      ) : (
+        <>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search
@@ -302,7 +314,64 @@ function MyPlacesPage() {
           )}
         </ul>
       )}
+        </>
+      )}
     </main>
+  );
+}
+
+/** Lists could be created (wall composer) and opened by direct link, but there
+ *  was nowhere to browse your own - so they were effectively write-only. */
+function MyListsTab() {
+  const { data: lists, isLoading } = useMyLists();
+
+  if (isLoading) {
+    return (
+      <ul className="mt-5 space-y-2" aria-busy="true">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <li key={i} className="pz-skel h-20 rounded-2xl" />
+        ))}
+      </ul>
+    );
+  }
+
+  if (!lists || lists.length === 0) {
+    return (
+      <div className="mt-5">
+        <EmptyState
+          icon={<ListChecks size={22} />}
+          text="Nie masz jeszcze żadnej listy. Stwórz ją z Pożeralni - np. „Najlepszy street food w Poznaniu”."
+        />
+      </div>
+    );
+  }
+
+  return (
+    <ul className="pz-fade-in mt-5 space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
+      {lists.map((l) => (
+        <li key={l.id}>
+          <Link
+            to="/l/$id"
+            params={{ id: l.id }}
+            className="group flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition hover:border-tomato hover:shadow-sm"
+          >
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-tomato/10 text-tomato">
+              <ListChecks size={20} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-display text-sm font-extrabold">{l.title}</p>
+              {l.description && (
+                <p className="truncate text-xs text-muted-foreground">{l.description}</p>
+              )}
+            </div>
+            <ChevronRight
+              size={16}
+              className="shrink-0 text-muted-foreground transition group-hover:text-tomato"
+            />
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 
