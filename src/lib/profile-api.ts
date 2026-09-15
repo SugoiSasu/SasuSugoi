@@ -31,6 +31,8 @@ export interface Profile {
   notification_prefs: Record<string, boolean> | null;
   active_title: string | null;
   active_title_achievement_id: string | null;
+  /** Opt-in: czy znajomi widzą na Pożeralni nasze „Chcę odwiedzić". */
+  share_swipes: boolean | null;
 }
 
 export const POZNAN_DISTRICTS = [
@@ -112,6 +114,7 @@ export interface ProfileUpdate {
   onboarding_seen_at?: string;
   ig_popup_dismissed_at?: string;
   notification_prefs?: Record<string, boolean>;
+  share_swipes?: boolean;
 }
 
 /**

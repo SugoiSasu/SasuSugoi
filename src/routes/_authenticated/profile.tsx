@@ -21,6 +21,7 @@ import {
   Ban,
   Download,
   MapPin,
+  Layers,
 } from "lucide-react";
 import { useUser } from "@/lib/use-auth";
 import { deleteMyAccount } from "@/lib/admin-users.functions";
@@ -78,6 +79,7 @@ function ProfilePage() {
   const [district, setDistrict] = useState("");
   const [favCuisines, setFavCuisines] = useState<string[]>([]);
   const [isPublic, setIsPublic] = useState(true);
+  const [shareSwipes, setShareSwipes] = useState(false);
   const [gender, setGender] = useState<"M" | "K" | null>(null);
   const [avatarPath, setAvatarPath] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -100,6 +102,7 @@ function ProfilePage() {
     setDistrict(profile.district ?? "");
     setFavCuisines(profile.favorite_cuisines ?? []);
     setIsPublic(profile.is_public);
+    setShareSwipes(profile.share_swipes ?? false);
     setGender(profile.gender);
     setAvatarPath(profile.avatar_url);
     setInstagramUrl(profile.instagram_url ?? "");
@@ -613,6 +616,42 @@ function ProfilePage() {
                     {isPublic
                       ? "Każdy może wyświetlić Twój profil i wall."
                       : "Tylko Twoi znajomi widzą wall i listy miejsc."}
+                  </p>
+                </div>
+              </label>
+            </section>
+
+            <section className="rounded-2xl bg-card border border-border p-5">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={shareSwipes}
+                  onChange={async (e) => {
+                    const value = e.target.checked;
+                    setShareSwipes(value);
+                    try {
+                      await updateProfile.mutateAsync({ share_swipes: value });
+                      toast.success(
+                        value
+                          ? "Znajomi zobaczą, co dodajesz do „Chcę odwiedzić”"
+                          : "Twoje wybory z Kart są znowu prywatne",
+                      );
+                    } catch (err) {
+                      setShareSwipes(!value);
+                      toast.error(err instanceof Error ? err.message : "Nie udało się zapisać");
+                    }
+                  }}
+                  className="mt-1"
+                />
+                <div className="flex-1">
+                  <div className="font-semibold flex items-center gap-2">
+                    <Layers size={14} />
+                    Pokaż znajomym moje wybory z Kart
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {shareSwipes
+                      ? "Gdy dodasz lokal do „Chcę odwiedzić”, pojawi się to na Pożeralni u Twoich znajomych."
+                      : "Twoje decyzje z Kart zostają tylko dla Ciebie. Odrzucone lokale nie są pokazywane nigdy, niezależnie od tego ustawienia."}
                   </p>
                 </div>
               </label>

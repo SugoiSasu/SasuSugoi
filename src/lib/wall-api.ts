@@ -10,7 +10,8 @@ export type WallItemKind =
   | "place_post"
   | "post"
   | "list"
-  | "challenge_complete";
+  | "challenge_complete"
+  | "want";
 
 export interface WallAchievement {
   id: string;
@@ -130,6 +131,34 @@ export function useWallFeed() {
             image_url: r.photo_url,
           });
         });
+      };
+
+      // Friends' "chcę odwiedzić" picks - the Karty deck's positive half made
+      // social, which PRODUCT.md promises but nothing implemented. Strictly
+      // opt-in: shared_friend_wants (migration 20260915140000) filters on
+      // profiles.share_swipes IN THE DATABASE, so rows belonging to people who
+      // never opted in are not sent over the wire at all. Skips (left swipes)
+      // are deliberately never exposed, with or without the opt-in.
+      const fetchFriendWants = async () => {
+        const { data, error } = await supabase.rpc("shared_friend_wants" as never, {
+          _user_ids: friendIds,
+          _since: sinceIso,
+        } as never);
+        // Missing function (migration not applied yet) is not an error worth
+        // failing the whole feed over - the section simply stays empty.
+        if (error || !Array.isArray(data)) return;
+        (data as { id: string; user_id: string; place_id: string; created_at: string }[]).forEach(
+          (w) => {
+            placeIdsToFetch.add(w.place_id);
+            items.push({
+              id: `want-${w.id}`,
+              kind: "want",
+              created_at: w.created_at,
+              author: { id: w.user_id } as WallAuthor,
+              place: { id: w.place_id } as WallPlace,
+            });
+          },
+        );
       };
 
       const fetchFavorites = async () => {
@@ -328,6 +357,7 @@ export function useWallFeed() {
         fetchLists(),
         fetchChallenges(),
         fetchPlacePosts(),
+        fetchFriendWants(),
       ]);
 
       // hydrate profiles and places

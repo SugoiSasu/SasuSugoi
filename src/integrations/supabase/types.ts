@@ -1730,6 +1730,7 @@ export type Database = {
           onboarding_seen_at: string | null
           points_total: number
           returned_after_break_at: string | null
+          share_swipes: boolean | null
           tiktok_url: string | null
           updated_at: string
           username: string | null
@@ -1760,6 +1761,7 @@ export type Database = {
           onboarding_seen_at?: string | null
           points_total?: number
           returned_after_break_at?: string | null
+          share_swipes?: boolean | null
           tiktok_url?: string | null
           updated_at?: string
           username?: string | null
@@ -1790,6 +1792,7 @@ export type Database = {
           onboarding_seen_at?: string | null
           points_total?: number
           returned_after_break_at?: string | null
+          share_swipes?: boolean | null
           tiktok_url?: string | null
           updated_at?: string
           username?: string | null

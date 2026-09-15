@@ -22,6 +22,7 @@ import {
   Sparkles,
   Search,
   Bookmark,
+  Layers,
 } from "lucide-react";
 import {
   useWallFeed,
@@ -1117,6 +1118,12 @@ function HeaderLine({ item }: { item: WallItem }) {
         {authorLink} dodał(a) <strong>{placeLink}</strong> do ulubionych
       </>
     );
+  if (item.kind === "want")
+    return (
+      <>
+        {authorLink} chce odwiedzić <strong>{placeLink}</strong>
+      </>
+    );
   if (item.kind === "achievement_group") {
     const n = item.achievements?.length ?? 1;
     return (
@@ -1168,6 +1175,11 @@ function KindBadge({ kind }: { kind: WallItem["kind"] }) {
       cls: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
     },
     favorite: { icon: <Heart size={11} />, label: "Ulubione", cls: "bg-pink-500/10 text-pink-500" },
+    want: {
+      icon: <Layers size={11} />,
+      label: "Z Kart",
+      cls: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+    },
     achievement_group: {
       icon: <Trophy size={11} />,
       label: "Odznaka",
