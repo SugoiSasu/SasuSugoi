@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
  *  The SQL function stays the source of truth for actually awarding a
  *  completion - this only recreates the same arithmetic so the user can see
  *  how far along they are before it fires. Keep the two in step. */
-function progressFor(
+export function progressFor(
   c: Challenge,
   reviews: { created_at: string; place: { cuisine: string | null } | null }[],
 ): { current: number; threshold: number } {
