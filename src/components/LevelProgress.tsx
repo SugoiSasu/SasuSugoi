@@ -55,7 +55,7 @@ interface LevelProgressCardProps {
 /** Shared "Poziom X · Y/Z XP" card - keep this the single source of truth for
  * the level formula so /osiagniecia and /u/$username never drift apart. */
 export function LevelProgressCard({ points, unlockedCount, totalBadges, className = "" }: LevelProgressCardProps) {
-  const { level, pct, xpToNext } = levelInfo(points);
+  const { level, inLevel, pct, xpToNext } = levelInfo(points);
   const [barPct, setBarPct] = useState(0);
   useEffect(() => {
     const id = requestAnimationFrame(() => setBarPct(pct));
@@ -77,8 +77,14 @@ export function LevelProgressCard({ points, unlockedCount, totalBadges, classNam
         <p className="text-xs font-semibold uppercase tracking-wide text-cream/60">Twój postęp</p>
         <div className="mt-1 flex items-end justify-between gap-3">
           <p className="font-display text-3xl font-extrabold">Poziom {level}</p>
+          {/* Was showing cumulative points / (level * LEVEL_STEP) - e.g.
+              "225 / 300 XP" at level 2 reads as 75% done, but the bar below
+              is filled to `pct` (inLevel/LEVEL_STEP), 50% at that same
+              point - the two disagreed at every level past the first. This
+              is the same inLevel/LEVEL_STEP fraction the bar uses, so the
+              number always matches what's drawn next to it. */}
           <p className="text-sm font-semibold text-cream/70">
-            {points} / {level * LEVEL_STEP} XP
+            {inLevel} / {LEVEL_STEP} XP
           </p>
         </div>
         <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-cream/15 shadow-inner">
