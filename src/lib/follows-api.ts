@@ -23,14 +23,26 @@ export function useIsFollowing(placeId: string) {
   return (ids ?? []).includes(placeId);
 }
 
+/** Grouped in Postgres (place_follow_counts RPC, migration 20260915130000)
+ *  instead of downloading the whole place_follows table to count in JS. Same
+ *  fallback rationale as useFavoriteCounts in favorites-api.ts. */
 export function useFollowCounts() {
   return useQuery({
     queryKey: ["place-follow-counts"],
     queryFn: async (): Promise<Record<string, number>> => {
-      const { data, error } = await supabase.from("place_follows").select("place_id");
-      if (error) throw error;
       const counts: Record<string, number> = {};
-      for (const row of data ?? []) counts[row.place_id] = (counts[row.place_id] ?? 0) + 1;
+      const { data, error } = await supabase.rpc("place_follow_counts" as never);
+      if (!error && Array.isArray(data)) {
+        for (const row of data as { place_id: string; count: number }[]) {
+          counts[row.place_id] = row.count;
+        }
+        return counts;
+      }
+      const { data: rows, error: fallbackError } = await supabase
+        .from("place_follows")
+        .select("place_id");
+      if (fallbackError) throw fallbackError;
+      for (const row of rows ?? []) counts[row.place_id] = (counts[row.place_id] ?? 0) + 1;
       return counts;
     },
     staleTime: 30_000,

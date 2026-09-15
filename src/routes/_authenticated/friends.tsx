@@ -275,6 +275,7 @@ function SearchBar({ myId }: { myId: string }) {
   const debounced = useDebounced(q, 250);
   const { data: results, isFetching } = useUserSearch(debounced);
   const send = useSendFriendRequest();
+  const [sendingId, setSendingId] = useState<string | null>(null);
   const filtered = useMemo(() => (results ?? []).filter((u) => u.id !== myId), [results, myId]);
 
   return (
@@ -323,13 +324,20 @@ function SearchBar({ myId }: { myId: string }) {
                 <ViewProfileLink username={u.username} userId={u.id} />
                 <SendFriendButton
                   targetId={u.id}
-                  onAdd={(id) =>
-                    runWithToast(() => send.mutateAsync(id), {
-                      success: "Zaproszenie wysłane",
-                      error: "Nie udało się wysłać zaproszenia",
-                    })
-                  }
-                  pending={send.isPending}
+                  onAdd={async (id) => {
+                    setSendingId(id);
+                    try {
+                      await runWithToast(() => send.mutateAsync(id), {
+                        success: "Zaproszenie wysłane",
+                        error: "Nie udało się wysłać zaproszenia",
+                      });
+                    } finally {
+                      setSendingId(null);
+                    }
+                  }}
+                  // Per-row, not send.isPending: one shared mutation instance
+                  // put every search result into a loading state at once.
+                  pending={sendingId === u.id}
                 />
               </div>
             ))
@@ -620,6 +628,11 @@ function RequestsTab({ myId }: { myId: string }) {
   const respond = useRespondToFriendRequest();
   const remove = useRemoveFriendship();
   const [profiles, setProfiles] = useState<Record<string, FriendProfile>>({});
+  // One mutation instance is shared by the whole list, so `respond.isPending`
+  // is true for every row at once - accepting one invite used to grey out the
+  // buttons on all the others until it settled. Track which row is actually
+  // in flight instead.
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   useEffect(() => {
     const ids = Array.from(
@@ -652,16 +665,28 @@ function RequestsTab({ myId }: { myId: string }) {
     (f) => f.status === "pending" && f.requester_id === myId,
   );
 
-  const handleRespond = (id: string, accept: boolean) =>
-    runWithToast(() => respond.mutateAsync({ id, accept }), {
-      success: accept ? "Dodano do znajomych" : "Zaproszenie odrzucone",
-      error: accept ? "Nie udało się zaakceptować" : "Nie udało się odrzucić",
-    });
-  const handleCancel = (id: string) =>
-    runWithToast(() => remove.mutateAsync(id), {
-      success: "Cofnięto zaproszenie",
-      error: "Nie udało się cofnąć zaproszenia",
-    });
+  const handleRespond = async (id: string, accept: boolean) => {
+    setBusyId(id);
+    try {
+      await runWithToast(() => respond.mutateAsync({ id, accept }), {
+        success: accept ? "Dodano do znajomych" : "Zaproszenie odrzucone",
+        error: accept ? "Nie udało się zaakceptować" : "Nie udało się odrzucić",
+      });
+    } finally {
+      setBusyId(null);
+    }
+  };
+  const handleCancel = async (id: string) => {
+    setBusyId(id);
+    try {
+      await runWithToast(() => remove.mutateAsync(id), {
+        success: "Cofnięto zaproszenie",
+        error: "Nie udało się cofnąć zaproszenia",
+      });
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   return (
     <AsyncState
@@ -690,11 +715,11 @@ function RequestsTab({ myId }: { myId: string }) {
                 </div>
                 <ViewProfileLink username={p?.username} userId={f.requester_id} />
                 <button
-                  disabled={respond.isPending}
+                  disabled={busyId === f.id}
                   onClick={() => handleRespond(f.id, true)}
                   className="inline-flex items-center gap-1 rounded-full bg-tomato text-cream px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
                 >
-                  {respond.isPending ? (
+                  {busyId === f.id ? (
                     <Loader2 size={12} className="animate-spin" />
                   ) : (
                     <Check size={12} />
@@ -702,7 +727,7 @@ function RequestsTab({ myId }: { myId: string }) {
                   Akceptuj
                 </button>
                 <button
-                  disabled={respond.isPending}
+                  disabled={busyId === f.id}
                   onClick={() => handleRespond(f.id, false)}
                   className="inline-flex items-center gap-1 rounded-full bg-card border border-border px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
                 >
@@ -733,7 +758,7 @@ function RequestsTab({ myId }: { myId: string }) {
                 </div>
                 <ViewProfileLink username={p?.username} userId={f.addressee_id} />
                 <button
-                  disabled={remove.isPending}
+                  disabled={busyId === f.id}
                   onClick={() => handleCancel(f.id)}
                   className="inline-flex items-center gap-1 rounded-full bg-card border border-border px-3 py-1.5 text-xs font-semibold hover:border-destructive hover:text-destructive disabled:opacity-50"
                 >

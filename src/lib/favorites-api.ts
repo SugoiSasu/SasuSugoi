@@ -128,15 +128,31 @@ export function useToggleFavorite() {
   });
 }
 
-/** Map of placeId -> number of users who favorited it. */
+/** Map of placeId -> number of users who favorited it.
+ *
+ *  Grouped in Postgres (place_favorite_counts RPC, migration
+ *  20260915130000), not by downloading every row of place_favorites and
+ *  counting in JS - that payload grew with total app usage rather than with
+ *  what the page shows. The client-side path stays as a fallback so the
+ *  counters keep working on an environment where the migration has not been
+ *  applied yet; drop it once it is applied everywhere. */
 export function useFavoriteCounts() {
   return useQuery({
     queryKey: ["place-favorite-counts"],
     queryFn: async (): Promise<Record<string, number>> => {
-      const { data, error } = await supabase.from("place_favorites").select("place_id");
-      if (error) throw error;
       const counts: Record<string, number> = {};
-      for (const row of data ?? []) {
+      const { data, error } = await supabase.rpc("place_favorite_counts" as never);
+      if (!error && Array.isArray(data)) {
+        for (const row of data as { place_id: string; count: number }[]) {
+          counts[row.place_id] = row.count;
+        }
+        return counts;
+      }
+      const { data: rows, error: fallbackError } = await supabase
+        .from("place_favorites")
+        .select("place_id");
+      if (fallbackError) throw fallbackError;
+      for (const row of rows ?? []) {
         counts[row.place_id] = (counts[row.place_id] ?? 0) + 1;
       }
       return counts;
