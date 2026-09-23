@@ -16,6 +16,12 @@ COMMENT ON COLUMN public.profiles.share_swipes IS
 -- Celowo NIE zwraca odrzuceń (place_swipe_skips). Informacja "ktoś odrzucił
 -- ten lokal" jest z natury negatywna i nie ma powodu, żeby kiedykolwiek
 -- opuszczała konto użytkownika.
+--
+-- _user_ids przychodzi z klienta, więc NIE jest dowodem znajomości - bez
+-- warunku is_friend_with() dowolne konto mogłoby podać cudze UUID-y (łatwe do
+-- zebrania z publicznych wall_posts/reviews) i przez SECURITY DEFINER, które
+-- omija RLS, czytać "Chcę odwiedzić" także z profili prywatnych. Relację
+-- sprawdza baza, lista z klienta tylko zawęża wynik.
 CREATE OR REPLACE FUNCTION public.shared_friend_wants(_user_ids uuid[], _since timestamptz)
 RETURNS TABLE(id uuid, user_id uuid, place_id uuid, created_at timestamptz)
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
@@ -24,6 +30,7 @@ AS $$
   FROM public.place_visits pv
   JOIN public.profiles p ON p.id = pv.user_id
   WHERE pv.user_id = ANY(_user_ids)
+    AND public.is_friend_with(pv.user_id)
     AND pv.status = 'want'
     AND pv.created_at >= _since
     AND p.share_swipes = true
