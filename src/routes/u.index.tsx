@@ -1,3 +1,4 @@
+import { displayNameOf } from "@/lib/display-name";
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useQuery, keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
@@ -253,7 +254,7 @@ function UsersBrowse() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1 min-w-0">
                       <span className="text-sm font-semibold truncate" style={vipNameStyle(p)}>
-                        {p.display_name || `@${p.username ?? "user"}`}
+                        {displayNameOf(p)}
                       </span>
                       {isVipActive(p) && <VipBadge />}
                     </div>
@@ -642,7 +643,7 @@ function PodiumCard({
         to="/u/$username"
         params={{ username: profile.username ?? profile.id }}
         className={`relative flex flex-col items-center text-center gap-1 sm:gap-2 rounded-2xl bg-card border p-2 pt-6 sm:p-4 sm:pt-7 transition ${styles.glow} ${isMe ? "border-tomato" : "border-border hover:border-tomato"}`}
-        aria-label={`${styles.label}: ${profile.display_name || profile.username || "użytkownik"}`}
+        aria-label={`${styles.label}: ${displayNameOf(profile)}`}
       >
         <span
           className={`absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-[11px] font-bold ${styles.badge}`}
@@ -667,7 +668,7 @@ function PodiumCard({
         />
         <div className="min-w-0 w-full">
           <div className="text-xs sm:text-sm font-semibold truncate" style={vipNameStyle(profile)}>
-            {profile.display_name || `@${profile.username ?? "user"}`}
+            {displayNameOf(profile)}
             {isMe && <span className="text-tomato"> (Ty)</span>}
           </div>
           {profile.username && profile.display_name && (
@@ -725,7 +726,7 @@ function RankRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1 min-w-0">
             <span className="text-sm font-semibold truncate" style={vipNameStyle(profile)}>
-              {profile.display_name || `@${profile.username ?? "user"}`}
+              {displayNameOf(profile)}
             </span>
             {isMe && <span className="text-tomato text-xs">(Ty)</span>}
             {isVipActive(profile) && <VipBadge />}

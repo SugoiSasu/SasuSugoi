@@ -1,3 +1,4 @@
+import { displayNameOf, profileParamOf } from "@/lib/display-name";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -398,14 +399,14 @@ function ReviewCard({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            {review.author?.username ? (
+            {review.author ? (
               <Link
                 to="/u/$username"
-                params={{ username: review.author.username }}
+                params={{ username: profileParamOf(review.author) }}
                 className="font-semibold text-sm hover:text-tomato"
                 style={vipNameStyle(review.author)}
               >
-                {review.author.display_name || `@${review.author.username}`}
+                {displayNameOf(review.author)}
               </Link>
             ) : (
               <span className="font-semibold text-sm">Anonim</span>

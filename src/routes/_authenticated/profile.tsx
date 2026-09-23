@@ -1,3 +1,4 @@
+import { displayNameOf, handleOf } from "@/lib/display-name";
 import { BackButton } from "@/components/BackButton";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
@@ -283,11 +284,35 @@ function ProfilePage() {
           />
           <div className="min-w-0">
             <h1 className="font-display text-2xl sm:text-3xl leading-tight truncate">
-              {displayName || profile?.display_name || `@${username || profile?.username}`}
+              {displayNameOf(
+                { display_name: displayName || profile?.display_name, username: username || profile?.username },
+                "Twój profil",
+              )}
             </h1>
-            <p className="text-sm text-muted-foreground truncate">
-              @{username || profile?.username}
-            </p>
+            {handleOf({ username: username || profile?.username }) ? (
+              <p className="text-sm text-muted-foreground truncate">
+                {handleOf({ username: username || profile?.username })}
+              </p>
+            ) : (
+              // No signup path sets a nick, so a fresh account lands here without one.
+              <button
+                type="button"
+                onClick={() => {
+                  setTab("profil");
+                  // setTimeout, nie requestAnimationFrame: rAF nie odpala w ukrytej
+                  // karcie, a fokus ma zadzialac takze wtedy, gdy React wlasnie
+                  // przerenderowal panel po zmianie zakladki.
+                  setTimeout(() => {
+                    const el = document.getElementById("profile-username");
+                    el?.scrollIntoView({ block: "center", behavior: "smooth" });
+                    el?.focus();
+                  }, 0);
+                }}
+                className="text-sm font-semibold text-tomato hover:underline"
+              >
+                Ustaw swój nick →
+              </button>
+            )}
           </div>
         </div>
 
@@ -398,6 +423,7 @@ function ProfilePage() {
                 <div className="flex items-center rounded-xl border-2 border-border focus-within:border-tomato">
                   <span className="pl-3 text-muted-foreground">@</span>
                   <input
+                    id="profile-username"
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value.toLowerCase())}
@@ -858,7 +884,7 @@ function BlockedUsersSection() {
                   size={32}
                 />
                 <span className="text-sm font-semibold truncate">
-                  {p.display_name || `@${p.username}`}
+                  {displayNameOf(p)}
                 </span>
               </div>
               <button

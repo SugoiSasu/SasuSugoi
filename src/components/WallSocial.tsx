@@ -1,3 +1,4 @@
+import { displayNameOf } from "@/lib/display-name";
 import { useState, type FormEvent } from "react";
 import { MessageCircle, Send, Pencil, Trash2, Check, X } from "lucide-react";
 import { toast } from "sonner";
@@ -168,8 +169,7 @@ function CommentItem({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-semibold" style={vipNameStyle(comment.author)}>
-            {comment.author?.display_name ||
-              (comment.author?.username ? `@${comment.author.username}` : "Anonim")}
+            {displayNameOf(comment.author, "Anonim")}
           </span>
           {wasEdited && (
             <TooltipProvider delayDuration={200}>

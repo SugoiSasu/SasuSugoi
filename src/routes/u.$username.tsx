@@ -1,3 +1,4 @@
+import { displayNameOf, secondaryHandleOf } from "@/lib/display-name";
 import { BackButton } from "@/components/BackButton";
 import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
 import { useRef, useState } from "react";
@@ -27,7 +28,7 @@ import {
   Sparkles,
   Store,
 } from "lucide-react";
-import { useProfileByUsername, useUpdateProfile, uploadAvatar } from "@/lib/profile-api";
+import { UUID_RE, useProfileByUsername, useUpdateProfile, uploadAvatar } from "@/lib/profile-api";
 import { cuisineMeta } from "@/data/places";
 import { usePlacesOwnedByUser } from "@/lib/owners-api";
 import { useUserRanks } from "@/lib/ranks-api";
@@ -84,8 +85,10 @@ function relativeTimePl(iso: string): string {
 
 export const Route = createFileRoute("/u/$username")({
   head: ({ params }) => {
-    const title = `@${params.username} - profil foodie | poŻeramy`;
-    const description = `Profil @${params.username} na poŻeramy - recenzje restauracji, ulubione miejscówki, achievementy i punkty PoŻarcia z Poznania.`;
+    // Accounts without a nick are linked by UUID - keep that out of the title.
+    const who = UUID_RE.test(params.username) ? null : `@${params.username}`;
+    const title = who ? `${who} - profil foodie | poŻeramy` : "Profil foodie | poŻeramy";
+    const description = `${who ? `Profil ${who}` : "Profil foodie"} na poŻeramy - recenzje restauracji, ulubione miejscówki, achievementy i punkty PoŻarcia z Poznania.`;
     const url = `https://pozeramy.live/u/${params.username}`;
     return {
       meta: [
@@ -290,12 +293,14 @@ function PublicProfile() {
           <div className="flex-1 min-w-0">
             <h1 className="font-display text-3xl sm:text-4xl leading-tight tracking-tight flex flex-wrap items-center gap-2.5">
               <span style={vipNameStyle(profile)}>
-                {profile.display_name || `@${profile.username}`}
+                {displayNameOf(profile)}
               </span>
               {isVipActive(profile) && <VipBadge size="md" />}
               <TitleTag title={profile.active_title} size="md" />
             </h1>
-            <p className="text-cream/70 text-sm mt-1.5">@{profile.username}</p>
+            {secondaryHandleOf(profile) && (
+              <p className="text-cream/70 text-sm mt-1.5">{secondaryHandleOf(profile)}</p>
+            )}
             {(ranks ?? []).length > 0 && (
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {(ranks ?? []).map((r) => (
@@ -470,7 +475,7 @@ function FriendsList({ userId, count }: { userId: string; count: number }) {
                 <div className="min-w-0">
                   <div className="flex items-center gap-1 min-w-0">
                     <span className="text-sm font-semibold truncate" style={vipNameStyle(f)}>
-                      {f.display_name || (f.username ? `@${f.username}` : "Użytkownik")}
+                      {displayNameOf(f)}
                     </span>
                     {isVipActive(f) && <VipBadge />}
                   </div>

@@ -1,3 +1,4 @@
+import { displayNameOf } from "@/lib/display-name";
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Lock, Search, Trophy, X } from "lucide-react";
@@ -279,7 +280,7 @@ function AchievementsPage() {
                       username={row.username}
                       size={idx === 0 ? 56 : 44}
                     />
-                    <p className="w-full truncate text-xs font-semibold">{isMe ? "Ty" : row.display_name || row.username}</p>
+                    <p className="w-full truncate text-xs font-semibold">{isMe ? "Ty" : displayNameOf(row)}</p>
                     <p className="text-[11px] text-muted-foreground">{row.points_total} pkt</p>
                   </Link>
                 </li>
@@ -303,7 +304,7 @@ function AchievementsPage() {
                   <span className="w-5 shrink-0 text-center text-sm font-extrabold text-muted-foreground">{i + 4}</span>
                   <UserAvatar avatarUrl={row.avatar_url} displayName={row.display_name} username={row.username} size={40} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{isMe ? "Ty" : row.display_name || row.username}</p>
+                    <p className="truncate text-sm font-semibold">{isMe ? "Ty" : displayNameOf(row)}</p>
                     <p className="truncate text-xs text-muted-foreground">
                       {row.points_total} pkt • {row.achievements_count} odznak
                     </p>

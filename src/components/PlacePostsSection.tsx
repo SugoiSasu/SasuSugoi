@@ -1,3 +1,4 @@
+import { displayNameOf, profileParamOf } from "@/lib/display-name";
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -391,17 +392,17 @@ function PostSocial({ postId }: { postId: string }) {
                 />
                 <div className="flex-1 min-w-0 rounded-xl bg-foreground/5 px-3 py-2">
                   <div className="flex items-center gap-2 text-xs">
-                    {c.author?.username ? (
+                    {c.author ? (
                       <Link
                         to="/u/$username"
-                        params={{ username: c.author.username }}
+                        params={{ username: profileParamOf(c.author) }}
                         className="font-bold text-foreground hover:text-tomato"
                       >
-                        {c.author.display_name || `@${c.author.username}`}
+                        {displayNameOf(c.author)}
                       </Link>
                     ) : (
                       <span className="font-bold text-foreground">
-                        {c.author?.display_name || "Ktoś"}
+                        Ktoś
                       </span>
                     )}
                     <span className="text-foreground/40">{timeAgo(c.created_at)}</span>

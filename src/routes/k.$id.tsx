@@ -1,3 +1,4 @@
+import { displayNameOf } from "@/lib/display-name";
 import { BackButton } from "@/components/BackButton";
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
@@ -1072,7 +1073,7 @@ function FriendsFavoritedNotice({ placeId, placeName }: { placeId: string; place
   if (!user || !friends || friends.length === 0) return null;
 
   const names = friends
-    .map((f) => f.display_name || (f.username ? `@${f.username}` : "Znajomy"))
+    .map((f) => displayNameOf(f, "Znajomy"))
     .filter(Boolean);
   const first = names.slice(0, 2).join(", ");
   const more = names.length > 2 ? ` i ${names.length - 2} innych` : "";

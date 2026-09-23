@@ -1,3 +1,4 @@
+import { displayNameOf } from "@/lib/display-name";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState, type FormEvent } from "react";
 import {
@@ -865,7 +866,7 @@ function FeedCard({ item }: { item: WallItem }) {
 }
 
 function shareInfoFor(item: WallItem): { title: string; text: string; path: string } | null {
-  const author = item.author?.display_name || item.author?.username || "Ktoś";
+  const author = displayNameOf(item.author, "Ktoś");
   if (item.kind === "review" && item.place)
     return {
       title: "poŻeramy",
@@ -1048,8 +1049,7 @@ function PostSocial({ postId }: { postId: string }) {
               />
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-semibold" style={vipNameStyle(c.author)}>
-                  {c.author?.display_name ||
-                    (c.author?.username ? `@${c.author.username}` : "Anonim")}
+                  {displayNameOf(c.author, "Anonim")}
                 </div>
                 <SmartText>{c.body}</SmartText>
               </div>
@@ -1084,7 +1084,7 @@ function PostSocial({ postId }: { postId: string }) {
 
 function HeaderLine({ item }: { item: WallItem }) {
   const a = item.author;
-  const authorName = a?.display_name || (a?.username ? `@${a.username}` : "Znajomy");
+  const authorName = displayNameOf(a, "Znajomy");
   const authorLink = a?.username ? (
     <Link
       to="/u/$username"

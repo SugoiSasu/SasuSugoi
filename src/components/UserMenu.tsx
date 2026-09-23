@@ -1,3 +1,4 @@
+import { displayNameOf } from "@/lib/display-name";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -78,7 +79,7 @@ export function UserMenu() {
   }
 
   const topRank = (ranks ?? [])[0];
-  const label = profile?.display_name || (profile?.username ? `@${profile.username}` : "Profil");
+  const label = displayNameOf(profile, "Profil");
 
 
 

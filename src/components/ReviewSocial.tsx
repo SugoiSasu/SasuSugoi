@@ -1,3 +1,4 @@
+import { displayNameOf } from "@/lib/display-name";
 import { useEffect, useState } from "react";
 import { Heart, MessageCircle, Trash2, Send, Loader2, AlertCircle } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -128,7 +129,7 @@ function CommentsBlock({ reviewId }: { reviewId: string }) {
         <ul className="space-y-2">
           {(comments ?? []).map((c) => {
             const a = c.author;
-            const name = a?.display_name || (a?.username ? `@${a.username}` : "Użytkownik");
+            const name = displayNameOf(a);
             return (
               <li key={c.id} className="bg-background border border-border rounded-xl p-2 text-sm flex items-start gap-2">
                 {a?.username ? (

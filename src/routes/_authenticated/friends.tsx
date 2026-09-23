@@ -1,3 +1,4 @@
+import { displayNameOf } from "@/lib/display-name";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -315,7 +316,7 @@ function SearchBar({ myId }: { myId: string }) {
                 />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold truncate">
-                    {u.display_name || (u.username ? `@${u.username}` : "Użytkownik")}
+                    {displayNameOf(u)}
                   </div>
                   {u.username && u.display_name && (
                     <div className="text-[11px] text-muted-foreground truncate">@{u.username}</div>
@@ -491,7 +492,7 @@ function FriendRow({
         <FriendAvatar profile={profile} size={40} />
         <div className="flex-1 min-w-0">
           <div className="font-semibold truncate">
-            {profile.display_name || `@${profile.username}`}
+            {displayNameOf(profile)}
           </div>
           {profile.username && profile.display_name && (
             <div className="text-xs text-muted-foreground truncate">@{profile.username}</div>
@@ -558,7 +559,7 @@ function FriendRow({
               onClick={() => {
                 if (
                   !confirm(
-                    `Zablokować ${profile.display_name || profile.username}? Znajomość zostanie usunięta.`,
+                    `Zablokować ${displayNameOf(profile)}? Znajomość zostanie usunięta.`,
                   )
                 )
                   return;
@@ -856,7 +857,7 @@ function SuggestionsBlock() {
           >
             <FriendAvatar profile={s} size={36} />
             <div className="flex-1 min-w-0">
-              <div className="font-semibold truncate">{s.display_name || `@${s.username}`}</div>
+              <div className="font-semibold truncate">{displayNameOf(s)}</div>
               <div className="text-xs text-muted-foreground">
                 {s.mutuals > 0 && <span>{s.mutuals} wsp. znajomych</span>}
                 {s.mutuals > 0 && s.shared_places > 0 && " · "}
@@ -1056,7 +1057,7 @@ function InviteBlock() {
                 <FriendAvatar profile={r.profile ?? undefined} size={36} />
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold truncate">
-                    {r.profile?.display_name || (r.profile?.username ? `@${r.profile.username}` : "Użytkownik")}
+                    {displayNameOf(r.profile)}
                   </div>
                   {r.acceptedAt && (
                     <div className="text-xs text-muted-foreground">
@@ -1140,7 +1141,7 @@ function Empty({ text }: { text: string }) {
 
 function FriendName({ profile }: { profile?: FriendProfile }) {
   if (!profile) return <div className="text-muted-foreground text-sm">Ładowanie…</div>;
-  const label = profile.display_name || (profile.username ? `@${profile.username}` : "Użytkownik");
+  const label = displayNameOf(profile);
   const inner = (
     <>
       <div className="flex items-center gap-1 min-w-0">

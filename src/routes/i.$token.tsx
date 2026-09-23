@@ -1,3 +1,4 @@
+import { displayNameOf } from "@/lib/display-name";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2, PartyPopper, UserPlus2 } from "lucide-react";
@@ -24,7 +25,10 @@ function InvitePage() {
   const accept = useAcceptInvite();
   const [accepted, setAccepted] = useState(false);
 
-  const inviterName = preview?.inviter_display_name || (preview?.inviter_username ? `@${preview.inviter_username}` : "Ktoś");
+  const inviterName = displayNameOf(
+    { display_name: preview?.inviter_display_name, username: preview?.inviter_username },
+    "Ktoś",
+  );
 
   useEffect(() => {
     if (accept.isSuccess) setAccepted(true);
