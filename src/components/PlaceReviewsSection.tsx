@@ -124,6 +124,7 @@ export function PlaceReviewsSection({ placeId }: { placeId: string }) {
                 </div>
                 <RatingStars rating={myReview.rating} />
                 {myReview.body && <p className="text-sm mt-2">{myReview.body}</p>}
+                <MyReviewPhoto path={myReview.photo_url} />
               </div>
               <button onClick={() => setOpenForm(true)} className="chip bg-tomato text-cream">
                 Edytuj
@@ -223,6 +224,7 @@ function ReviewForm({
   const [body, setBody] = useState(existing?.body ?? "");
   const [photoPath, setPhotoPath] = useState<string | null>(existing?.photo_url ?? null);
   const [uploading, setUploading] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const { data: photoUrl } = useReviewPhotoUrl(photoPath);
 
   // Re-hydrate only when the form switches to a different review, not on every
@@ -242,8 +244,13 @@ function ReviewForm({
   async function handlePhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f || !user) return;
-    if (f.size > 8 * 1024 * 1024) {
-      toast.error("Zdjęcie max 8 MB");
+    setPhotoError(null);
+    // Zdjecie i tak jest skalowane przed wyslaniem, wiec liczy sie tylko to,
+    // czy przegladarka da rade je odczytac - stad hojny limit na oryginal.
+    if (f.size > 25 * 1024 * 1024) {
+      const msg = "Zdjęcie jest za duże (max 25 MB)";
+      setPhotoError(msg);
+      toast.error(msg);
       return;
     }
     setUploading(true);
@@ -251,7 +258,11 @@ function ReviewForm({
       const path = await uploadReviewPhoto(user.id, f);
       setPhotoPath(path);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Błąd uploadu");
+      // Wczesniej lecial tylko toast, wiec po jego zniknieciu nic nie mowilo,
+      // ze recenzja zapisze sie bez zdjecia.
+      const msg = err instanceof Error ? err.message : "Nie udało się wgrać zdjęcia";
+      setPhotoError(msg);
+      toast.error(msg);
     } finally {
       setUploading(false);
     }
@@ -343,11 +354,16 @@ function ReviewForm({
             {uploading ? "Wgrywam…" : "Dodaj zdjęcie (+5 pkt)"}
           </button>
         )}
+        {photoError && (
+          <p role="alert" className="mt-2 text-xs font-semibold text-destructive">
+            {photoError} Recenzja zapisze się bez zdjęcia.
+          </p>
+        )}
       </div>
       <div className="flex flex-wrap gap-2 pt-1">
         <button
           type="submit"
-          disabled={save.isPending}
+          disabled={save.isPending || uploading}
           className="inline-flex items-center gap-2 rounded-full bg-tomato text-cream px-5 py-2 font-semibold hover:bg-tomato/90 disabled:opacity-50"
         >
           {save.isPending ? <Loader2 size={14} className="animate-spin" /> : null}
@@ -364,6 +380,23 @@ function ReviewForm({
         )}
       </div>
     </form>
+  );
+}
+
+/** Wlasna recenzja pokazywala tylko gwiazdki i tekst - zdjecie renderowalo
+ *  sie WYLACZNIE w ReviewCard, czyli na liscie CUDZYCH recenzji. Autor nigdy
+ *  nie widzial wlasnej fotki i mial prawo sadzic, ze sie nie wgrala. */
+function MyReviewPhoto({ path }: { path: string | null | undefined }) {
+  const { data: photoUrl } = useReviewPhotoUrl(path);
+  if (!path) return null;
+  if (!photoUrl) return <div className="mt-2.5 h-24 w-24 animate-pulse rounded-xl bg-muted" />;
+  return (
+    <img
+      src={photoUrl}
+      alt="Zdjęcie z Twojej recenzji"
+      loading="lazy"
+      className="mt-2.5 max-h-56 w-auto rounded-xl border border-border object-cover"
+    />
   );
 }
 

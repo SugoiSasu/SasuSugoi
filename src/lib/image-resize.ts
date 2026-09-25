@@ -36,6 +36,43 @@ export async function resizeImageCover(
   }
 }
 
+/**
+ * Skaluje obraz tak, zeby zmiescil sie w ramce maxW x maxH, ZACHOWUJAC
+ * proporcje i nigdy nie powiekszajac. Uzywane do zdjec w recenzjach: kadr
+ * jedzenia nie moze byc przyciety do stalego formatu tak jak okladka lokalu.
+ * Wynik to zawsze WebP (albo JPEG, gdy przegladarka nie umie WebP) - dzieki
+ * temu plik trafia do kubelka w formacie, ktory ten akceptuje, niezaleznie
+ * od tego, co wybral uzytkownik (np. HEIC z iPhone'a).
+ */
+export async function resizeImageContain(
+  file: File,
+  maxWidth: number,
+  maxHeight: number,
+  quality = 0.85,
+): Promise<{ blob: Blob; ext: string; width: number; height: number }> {
+  const bitmap = await loadBitmap(file);
+  try {
+    const scale = Math.min(1, maxWidth / bitmap.width, maxHeight / bitmap.height);
+    const w = Math.max(1, Math.round(bitmap.width * scale));
+    const h = Math.max(1, Math.round(bitmap.height * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas niedostępny w tej przeglądarce");
+    ctx.drawImage(bitmap, 0, 0, w, h);
+
+    const webp = await canvasToBlob(canvas, "image/webp", quality);
+    if (webp && webp.size > 0) return { blob: webp, ext: "webp", width: w, height: h };
+    const jpeg = await canvasToBlob(canvas, "image/jpeg", quality);
+    if (!jpeg) throw new Error("Nie udało się przetworzyć obrazu");
+    return { blob: jpeg, ext: "jpg", width: w, height: h };
+  } finally {
+    bitmap.close?.();
+  }
+}
+
 async function loadBitmap(file: File): Promise<ImageBitmap> {
   if ("createImageBitmap" in window) {
     return createImageBitmap(file);

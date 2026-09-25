@@ -147,13 +147,28 @@ export function useDeleteReview() {
   });
 }
 
-/** Upload review photo to private bucket; returns storage path. */
+/**
+ * Upload review photo to private bucket; returns storage path.
+ *
+ * Zdjecie jest najpierw skalowane i przekodowane na WebP. Wczesniej szedl tu
+ * oryginalny plik z telefonu i przez to wysylka cicho padala w dwoch bardzo
+ * typowych przypadkach: kubelek ma limit 5 MB (a formularz przepuszczal 8 MB)
+ * i przyjmuje wylacznie image/jpeg|png|webp (a iPhone wysyla HEIC). Recenzja
+ * zapisywala sie wtedy BEZ zdjecia - i bez bonusu review_with_photo.
+ */
 export async function uploadReviewPhoto(userId: string, file: File): Promise<string> {
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const { resizeImageContain } = await import("@/lib/image-resize");
+  let blob: Blob;
+  let ext: string;
+  try {
+    ({ blob, ext } = await resizeImageContain(file, 1600, 1600));
+  } catch {
+    throw new Error("Nie udało się odczytać tego zdjęcia. Spróbuj JPG, PNG lub WEBP.");
+  }
   const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
   const { error } = await supabase.storage
     .from("review-photos")
-    .upload(path, file, { contentType: file.type, upsert: false });
+    .upload(path, blob, { contentType: blob.type, upsert: false });
   if (error) throw error;
   return path;
 }
