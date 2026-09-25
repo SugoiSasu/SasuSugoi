@@ -24,6 +24,9 @@ import {
 } from "@/lib/reviews-api";
 import { usePlaceRatingBreakdown } from "@/lib/places-api";
 import { UserAvatar } from "@/components/UserAvatar";
+import { TitleTag } from "@/components/TitleTag";
+import { levelInfo } from "@/components/LevelProgress";
+import { useMyProfile } from "@/lib/profile-api";
 import { VipBadge, isVipActive, vipNameStyle } from "@/components/VipBadge";
 import { useIsOwnerOf } from "@/lib/owners-api";
 import {
@@ -118,11 +121,14 @@ export function PlaceReviewsSection({ placeId }: { placeId: string }) {
         myReview && !openForm ? (
           <div className="mb-6">
             <div className="bg-card border border-border rounded-2xl p-4 flex items-start gap-3">
-              <div className="flex-1">
-                <div className="text-xs uppercase tracking-wider font-semibold text-muted-foreground mb-1">
-                  Twoja recenzja
+              <div className="flex-1 min-w-0">
+                <MyReviewAuthorLine />
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <RatingStars rating={myReview.rating} />
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {new Date(myReview.created_at).toLocaleDateString("pl-PL")}
+                  </span>
                 </div>
-                <RatingStars rating={myReview.rating} />
                 {myReview.body && <p className="text-sm mt-2">{myReview.body}</p>}
                 <MyReviewPhoto path={myReview.photo_url} />
               </div>
@@ -386,6 +392,91 @@ function ReviewForm({
 /** Wlasna recenzja pokazywala tylko gwiazdki i tekst - zdjecie renderowalo
  *  sie WYLACZNIE w ReviewCard, czyli na liscie CUDZYCH recenzji. Autor nigdy
  *  nie widzial wlasnej fotki i mial prawo sadzic, ze sie nie wgrala. */
+/**
+ * Kto napisal recenzje: awatar z pierscieniem rangi (linkuje do profilu),
+ * nick, plakietka VIP, wybrany tytul i poziom konta.
+ *
+ * Wlasna recenzja pokazywala dotad tylko etykiete "Twoja recenzja" - bez
+ * awatara, nicku, rangi i poziomu, ktore widac przy cudzych. Ta sama linia
+ * jest teraz uzyta w obu miejscach, wiec nie moga sie rozjechac.
+ */
+function ReviewAuthorLine({
+  author,
+  isMe = false,
+}: {
+  author: Review["author"] | null | undefined;
+  isMe?: boolean;
+}) {
+  if (!author) {
+    return <span className="text-sm font-semibold">Anonim</span>;
+  }
+  const level = levelInfo(author.points_total ?? 0).level;
+  const handle = profileParamOf(author);
+  return (
+    <div className="flex min-w-0 items-center gap-2.5">
+      <Link to="/u/$username" params={{ username: handle }} className="shrink-0">
+        <UserAvatar
+          avatarUrl={author.avatar_url}
+          avatarSource={author.avatar_source}
+          displayName={author.display_name}
+          username={author.username}
+          size={40}
+          level={level}
+        />
+      </Link>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Link
+            to="/u/$username"
+            params={{ username: handle }}
+            className="truncate text-sm font-semibold hover:text-tomato"
+            style={vipNameStyle(author)}
+          >
+            {displayNameOf(author)}
+          </Link>
+          {isVipActive(author) && <VipBadge />}
+          {isMe && (
+            <span className="rounded-full bg-tomato/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-tomato">
+              Ty
+            </span>
+          )}
+        </div>
+        <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+          <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground/70">
+            Poziom {level}
+          </span>
+          <TitleTag title={author.active_title} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Ta sama linia dla wlasnej recenzji. Dane autora ida z profilu, bo
+ *  zapytanie o wlasna recenzje nie dociaga autora - to zawsze zalogowany
+ *  uzytkownik. */
+function MyReviewAuthorLine() {
+  const { data: profile } = useMyProfile();
+  if (!profile) return null;
+  return (
+    <ReviewAuthorLine
+      isMe
+      author={{
+        id: profile.id,
+        username: profile.username,
+        display_name: profile.display_name,
+        avatar_url: profile.avatar_url,
+        avatar_source: profile.avatar_source,
+        is_vip: profile.is_vip,
+        vip_until: profile.vip_until,
+        vip_nick_color: profile.vip_nick_color,
+        points_total: profile.points_total,
+        active_title: profile.active_title,
+      }}
+    />
+  );
+}
+
 function MyReviewPhoto({ path }: { path: string | null | undefined }) {
   const { data: photoUrl } = useReviewPhotoUrl(path);
   if (!path) return null;
@@ -414,37 +505,10 @@ function ReviewCard({
   const { data: photoUrl } = useReviewPhotoUrl(review.photo_url);
   return (
     <li className="bg-card border border-border rounded-2xl p-4">
-      <div className="flex gap-3">
-        <div className="shrink-0">
-          {review.author?.username ? (
-            <Link to="/u/$username" params={{ username: review.author.username }}>
-              <UserAvatar
-                avatarUrl={review.author.avatar_url}
-                avatarSource={review.author.avatar_source}
-                displayName={review.author.display_name}
-                username={review.author.username}
-                size={40}
-              />
-            </Link>
-          ) : (
-            <UserAvatar size={40} />
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
+      <div className="flex flex-col gap-2">
+        <ReviewAuthorLine author={review.author} />
+        <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            {review.author ? (
-              <Link
-                to="/u/$username"
-                params={{ username: profileParamOf(review.author) }}
-                className="font-semibold text-sm hover:text-tomato"
-                style={vipNameStyle(review.author)}
-              >
-                {displayNameOf(review.author)}
-              </Link>
-            ) : (
-              <span className="font-semibold text-sm">Anonim</span>
-            )}
-            {review.author && isVipActive(review.author) && <VipBadge />}
             <RatingStars rating={review.rating} />
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
               {new Date(review.created_at).toLocaleDateString("pl-PL")}

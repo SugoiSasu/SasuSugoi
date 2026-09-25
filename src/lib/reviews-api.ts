@@ -24,6 +24,10 @@ export interface Review {
     is_vip: boolean;
     vip_until: string | null;
     vip_nick_color: string | null;
+    /** Do plakietki "Poziom X" i pierscienia rangi przy awatarze. */
+    points_total: number | null;
+    /** Wybrany tytul gracza (LoL-style), pokazywany obok nicku. */
+    active_title: string | null;
   } | null;
 }
 
@@ -51,7 +55,7 @@ export function usePlaceReviews(placeId: string | undefined) {
       const { data: authors } = await supabase
         .from("profiles")
         .select(
-          "id, username, display_name, avatar_url, avatar_source, is_vip, vip_until, vip_nick_color",
+          "id, username, display_name, avatar_url, avatar_source, is_vip, vip_until, vip_nick_color, points_total, active_title",
         )
         .in("id", userIds);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
