@@ -22,6 +22,17 @@ import mixCover from "@/assets/brand/po_zeramy-mix-smakow.png.asset.json";
 import kebabCover from "@/assets/brand/po_zeramy-kebab-pattern.jpg.asset.json";
 import sweetCover from "@/assets/brand/po_zeramy-sweet-baby.png.asset.json";
 import confettiPattern from "@/assets/brand/po_zeramy-confetti-pattern.svg.asset.json";
+// Pelnoekranowe wzory 2000x1116 - to samo zrodlo co chipy, ale w rozmiarze na
+// duza powierzchnie. Uzywane jako tlo hero na stronie lokalu, gdy knajpa nie
+// ma jeszcze wlasnego zdjecia. Celowo NIE sa to plakaty z logotypem POZERAMY
+// (pola `cover`) - te na karcie kazdej knajpy wygladalyby jak reklama
+// aplikacji, a nie jak lokal.
+import asiaHero from "@/assets/brand/po_zeramy-asia-pattern.jpg.asset.json";
+import burgerHero from "@/assets/brand/po_zeramy-burger-pattern.jpg.asset.json";
+import italianoHero from "@/assets/brand/po_zeramy-italiano-pattern.jpg.asset.json";
+import kebabHero from "@/assets/brand/po_zeramy-kebab-pattern.jpg.asset.json";
+import polskaHero from "@/assets/brand/po_zeramy-polska-pattern.jpg.asset.json";
+import sweetHero from "@/assets/brand/po_zeramy-sweet-pattern.jpg.asset.json";
 // The "Kategorie" chip renders these at 56x56 CSS px. The *-pattern.jpg files
 // above are 2000x1116 full-bleed hero images (~200-260KB each) meant for a
 // larger surface - these are 128px center-crop WebPs of the same art,
@@ -37,6 +48,10 @@ export interface CuisineMeta {
   color: string;
   cover: string;
   emoji: string;
+  /** Full-bleed art for the venue hero when the place has no photo of its
+   * own. Unset for cuisines with no dedicated pattern - those fall back to
+   * the designed gradient hero instead of borrowing someone else's food. */
+  heroPattern?: string;
   /** Background pattern for the "Kategorie" chip. Falls back to a flat
    * `color` chip when unset. */
   chipBackground?: string;
@@ -47,13 +62,21 @@ const META: Record<string, CuisineMeta> = {
     color: "#3b4cc7",
     cover: italianoCover.url,
     emoji: "🍕",
+    heroPattern: italianoHero.url,
     chipBackground: italianoChip.url,
   },
-  Kebaby: { color: "#e26a3a", cover: kebabCover.url, emoji: "🌯", chipBackground: kebabChip.url },
+  Kebaby: {
+    color: "#e26a3a",
+    cover: kebabCover.url,
+    emoji: "🌯",
+    heroPattern: kebabHero.url,
+    chipBackground: kebabChip.url,
+  },
   Azjatycka: {
     color: "#d4582a",
     cover: asiaCover.url,
     emoji: "🍜",
+    heroPattern: asiaHero.url,
     chipBackground: asiaChip.url,
   },
   Śniadania: {
@@ -66,12 +89,14 @@ const META: Record<string, CuisineMeta> = {
     color: "#e89aab",
     cover: sweetCover.url,
     emoji: "🍦",
+    heroPattern: sweetHero.url,
     chipBackground: sweetChip.url,
   },
   Polska: {
     color: "#c4416a",
     cover: mixCover.url,
     emoji: "🥟",
+    heroPattern: polskaHero.url,
     chipBackground: polskaChip.url,
   },
   Meksykańska: {
@@ -90,18 +115,21 @@ const META: Record<string, CuisineMeta> = {
     color: "#e35d2e",
     cover: americanCover.url,
     emoji: "🍔",
+    heroPattern: burgerHero.url,
     chipBackground: burgerChip.url,
   },
   Ramen: {
     color: "#8e5cd9",
     cover: asiaCover.url,
     emoji: "🍲",
+    heroPattern: asiaHero.url,
     chipBackground: confettiPattern.url,
   },
   Sushi: {
     color: "#e35d2e",
     cover: asiaCover.url,
     emoji: "🍣",
+    heroPattern: asiaHero.url,
     chipBackground: confettiPattern.url,
   },
   Mix: {

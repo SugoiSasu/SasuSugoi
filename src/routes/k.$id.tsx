@@ -39,6 +39,18 @@ import { trackEvent } from "@/lib/analytics";
 
 const FoodMap = lazy(() => import("@/components/FoodMap"));
 
+/** Stabilna liczba 0-1 z id lokalu. Dwie knajpy tej samej kuchni dziela te
+ *  sama ilustracje, wiec bez tego ich hero wygladalyby identycznie - to
+ *  przesuwa kadr i zrodlo poswiaty, zawsze tak samo dla danego lokalu. */
+function seedFromId(id: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) {
+    h ^= id.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return ((h >>> 0) % 1000) / 1000;
+}
+
 function clamp(str: string, max: number) {
   if (str.length <= max) return str;
   return str.slice(0, max - 1).trimEnd() + "…";
@@ -343,6 +355,7 @@ function PlaceProfile() {
   if (!place) return null;
 
   const meta = cuisineMeta(place.cuisine);
+  const heroSeed = seedFromId(place.id);
   const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.address)}`;
   const openInfo = isOpenNow(place.opening_hours);
   const showPromo = !!place.promo_active && !!place.promo_label?.trim();
@@ -413,8 +426,38 @@ function PlaceProfile() {
               loading="eager"
               className="absolute inset-0 h-full w-full object-cover"
             />
+          ) : meta.heroPattern ? (
+            <>
+              {/* Lokal bez wlasnego zdjecia dostaje firmowa ilustracje swojej
+                  kuchni (cuisineMeta.cover) zamiast pustego slotu - te grafiki
+                  leza w repo od dawna, ale hero ich nie uzywalo. Kadr i zrodlo
+                  poswiaty sa przesuwane deterministycznie po id, zeby dwie
+                  knajpy tej samej kuchni nie mialy identycznego hero. */}
+              <img
+                src={meta.heroPattern}
+                alt=""
+                aria-hidden="true"
+                loading="eager"
+                className="absolute inset-0 h-full w-full scale-[1.06] object-cover"
+                style={{ objectPosition: `${28 + heroSeed * 44}% ${38 + heroSeed * 24}%` }}
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 mix-blend-soft-light"
+                style={{
+                  background: `radial-gradient(80% 110% at ${22 + heroSeed * 56}% 22%, ${meta.color} 0%, transparent 62%)`,
+                }}
+              />
+              {/* Scrim: chip kuchni i plakietki musza byc czytelne niezaleznie
+                  od tego, jak jasna jest ilustracja w danym rogu. */}
+              <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-b from-navy/55 via-navy/10 to-navy/45" />
+            </>
           ) : (
             <>
+              {/* Kuchnie bez wlasnego wzoru (Sniadania, Meksykanska, Weganska,
+                  Mix) dostaja hero z handoffu: gradient w kolorze kuchni,
+                  poswiata i nazwa jako "duch". Lepsze to niz pozyczanie im
+                  cudzego jedzenia ze wzoru innej kuchni. */}
               <span
                 aria-hidden="true"
                 className="font-persona pointer-events-none absolute -top-[6%] left-1/2 -translate-x-1/2 whitespace-nowrap leading-none tracking-[-0.04em] text-[clamp(6rem,26vw,18rem)] text-cream/[0.05]"
@@ -427,9 +470,9 @@ function PlaceProfile() {
                 style={{ background: `radial-gradient(circle, ${meta.color} 0%, transparent 68%)` }}
               />
               <div className="absolute inset-0 grid place-items-center">
-                <div className="grid h-[92px] w-[130px] place-items-center rounded-3xl border-2 border-dashed border-cream/30 bg-cream/10 px-3 text-center text-[9px] font-extrabold uppercase tracking-[0.1em] text-cream/60 backdrop-blur-md sm:h-[110px] sm:w-[150px]">
-                  {meta.emoji} Brak zdjęcia
-                </div>
+                <span className="text-[3.5rem] drop-shadow-[0_10px_24px_rgba(0,0,0,0.35)] sm:text-[4.5rem]" aria-hidden="true">
+                  {meta.emoji}
+                </span>
               </div>
             </>
           )}
