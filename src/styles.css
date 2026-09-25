@@ -478,6 +478,27 @@
     mix-blend-mode: multiply;
   }
   @keyframes pz-ripple { to { transform: scale(3); opacity: 0; } }
+
+  /* Zdobyte punkty: wjezdza od dolu, zatrzymuje sie na chwile, odplywa w gore.
+     Czas trwania musi zgadzac sie z setTimeout w PointsCelebration (2.4s), bo
+     to on zdejmuje element - inaczej animacja skonczylaby sie przed lub po. */
+  @keyframes pz-points-burst {
+    0%   { opacity: 0; transform: translateY(18px) scale(0.9); }
+    12%  { opacity: 1; transform: translateY(0) scale(1.04); }
+    20%  { transform: translateY(0) scale(1); }
+    78%  { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-22px) scale(0.97); }
+  }
+
+  .pz-points-burst {
+    animation: pz-points-burst 2.4s ease-out forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pz-points-burst {
+      animation: pz-fade-in 0.2s ease-out forwards;
+    }
+  }
   .pz-tile-icon { transition: transform .35s cubic-bezier(.2,.8,.2,1); }
   .group:hover .pz-tile-icon { transform: scale(1.15) rotate(-6deg); }
   .group:active .pz-tile-icon { transform: scale(1.05) rotate(0); }
