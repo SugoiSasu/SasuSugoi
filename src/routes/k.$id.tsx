@@ -362,8 +362,21 @@ function PlaceProfile() {
   return (
     <div className="bg-background min-h-dvh">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 pb-40 lg:max-w-6xl lg:pb-24">
-        <div className="mb-5 flex items-center justify-between gap-2 flex-wrap">
-          <BackButton to="/" hash="mapa" label="Wróć do mapy" ariaLabel="Wróć do mapy lokali" />
+        <div className="mb-4 flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex min-w-0 items-center gap-2.5 text-[12.5px]">
+            <BackButton to="/" hash="mapa" label="Wróć do mapy" ariaLabel="Wróć do mapy lokali" />
+            <nav aria-label="Ścieżka nawigacji" className="hidden min-w-0 items-center gap-2.5 sm:flex">
+              <span className="text-muted-foreground">Mapa</span>
+              {place.district && (
+                <>
+                  <span className="text-foreground/30">/</span>
+                  <span className="text-muted-foreground">{place.district}</span>
+                </>
+              )}
+              <span className="text-foreground/30">/</span>
+              <SmartText className="truncate font-extrabold uppercase">{place.name}</SmartText>
+            </nav>
+          </div>
           {isSuper && (
             <Link
               to="/admin/places/$id"
@@ -383,183 +396,203 @@ function PlaceProfile() {
 
       <div className="lg:grid lg:grid-cols-[1.6fr_1fr] lg:items-start lg:gap-8">
       <div className="lg:col-start-1 lg:row-start-1">
-        {/* HERO cover */}
-        <div className="mb-5 relative rounded-3xl overflow-hidden border-2 border-foreground/30 shadow-lg h-[180px] sm:h-[280px]">
+        {/* HERO - radialny gradient w kolorze kuchni, nazwa jako "duch" w tle
+            i szklany slot, gdy lokal nie ma jeszcze okladki. Karta naglowka
+            nachodzi na hero ujemnym marginesem, dlatego hero konczy sie
+            -mb-11/-mb-14 zamiast zwyklego odstepu. */}
+        <div
+          className="relative h-[210px] sm:h-[300px] rounded-[26px] overflow-hidden -mb-11 sm:-mb-14"
+          style={{
+            background: `radial-gradient(90% 120% at 50% 30%, color-mix(in oklab, ${meta.color} 55%, transparent) 0%, #2A2C5E 58%, #1B1D42 100%)`,
+          }}
+        >
           {place.cover_image_url ? (
             <img
               src={place.cover_image_url}
               alt={`Zdjęcie lokalu ${place.name}`}
-              className="w-full h-full object-cover"
               loading="eager"
+              className="absolute inset-0 h-full w-full object-cover"
             />
           ) : (
-            <CuisineFallbackCover cuisine={place.cuisine} emojiClassName="text-[7.5rem]" />
+            <>
+              <span
+                aria-hidden="true"
+                className="font-persona pointer-events-none absolute -top-[6%] left-1/2 -translate-x-1/2 whitespace-nowrap leading-none tracking-[-0.04em] text-[clamp(6rem,26vw,18rem)] text-cream/[0.05]"
+              >
+                {place.name}
+              </span>
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-1/2 top-1/2 h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-80 blur-[50px]"
+                style={{ background: `radial-gradient(circle, ${meta.color} 0%, transparent 68%)` }}
+              />
+              <div className="absolute inset-0 grid place-items-center">
+                <div className="grid h-[92px] w-[130px] place-items-center rounded-3xl border-2 border-dashed border-cream/30 bg-cream/10 px-3 text-center text-[9px] font-extrabold uppercase tracking-[0.1em] text-cream/60 backdrop-blur-md sm:h-[110px] sm:w-[150px]">
+                  {meta.emoji} Brak zdjęcia
+                </div>
+              </div>
+            </>
           )}
-          <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-navy/80 via-navy/15 to-transparent" />
-          <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3">
-            <span className="chip bg-cream/95 text-navy text-xs font-semibold">{meta.emoji} {place.cuisine}</span>
+
+          <span
+            className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-[18px] px-3 py-1.5 text-xs font-extrabold sm:left-[18px] sm:top-[18px]"
+            style={{ backgroundColor: meta.color }}
+          >
+            <span className={readableTextClass(meta.color)}>{meta.emoji} {place.cuisine}</span>
+          </span>
+
+          <div className="absolute right-4 top-4 flex flex-wrap justify-end gap-2 sm:right-[18px] sm:top-[18px]">
+            <FriendsHereBadge placeId={place.id} />
             {reviewStats.count > 0 && reviewStats.avg !== null && (
-              <span className="chip bg-navy text-cream text-xs font-bold inline-flex items-center gap-1">
+              <span className="inline-flex items-center gap-1 rounded-2xl bg-navy/60 px-3 py-1.5 text-[11.5px] font-extrabold text-cream backdrop-blur-sm">
                 <Star size={12} className="fill-cream text-cream" /> {reviewStats.avg.toFixed(1)}
               </span>
             )}
           </div>
+
           {canEditImages && (
             <EditableImageButton
               placeId={place.id}
               kind="cover"
               label="Zmień okładkę"
-              className="absolute right-3 top-3 h-9 w-9"
+              className="absolute bottom-3 right-3 h-9 w-9"
             />
           )}
         </div>
 
+        {/* KARTA NAGLOWKA - nachodzi na hero, logo wystaje ponad jej krawedz */}
+        <div className="relative mx-1 rounded-[22px] border border-border bg-card px-5 pb-6 pt-5 shadow-[0_14px_34px_rgba(35,37,94,0.10)] sm:mx-4 sm:px-6">
+          <div className="mb-3.5 flex flex-wrap items-start gap-4">
+            <div className="relative -mt-12 shrink-0 sm:-mt-[44px]">
+              <PlaceAvatar name={place.name} cover={place.avatar_url ?? place.cover_image_url} color={meta.color} />
+              {canEditImages && (
+                <EditableImageButton
+                  placeId={place.id}
+                  kind="avatar"
+                  label="Zmień logo"
+                  className="absolute -bottom-1 -right-1 h-7 w-7"
+                />
+              )}
+            </div>
 
-
-
-        {/* Name + badges + rating summary (no colored image card) */}
-        <header className="mb-5">
-          <div className="flex items-start justify-between gap-3 flex-wrap">
-            <div className="min-w-0 flex-1 flex items-start gap-3">
-              <div className="relative shrink-0">
-                <PlaceAvatar name={place.name} cover={place.avatar_url ?? place.cover_image_url} color={meta.color} />
-                {canEditImages && (
-                  <EditableImageButton
-                    placeId={place.id}
-                    kind="avatar"
-                    label="Zmień logo"
-                    className="absolute -right-1 -bottom-1 h-7 w-7"
-                  />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <SmartText as="h1" className="font-persona text-3xl sm:text-5xl text-balance leading-tight mb-2">{place.name}</SmartText>
-                <div className="flex flex-wrap gap-2 items-center mb-2">
-                  <span className={`chip text-xs ${readableTextClass(meta.color)}`} style={{ backgroundColor: meta.color }}>
-                    {meta.emoji} {place.cuisine}
+            <div className="min-w-[200px] flex-1">
+              <SmartText as="h1" className="font-persona mb-2 text-[clamp(1.6rem,2.6vw,2.15rem)] leading-[1.05] text-balance">
+                {place.name}
+              </SmartText>
+              <div className="flex flex-wrap items-center gap-2 text-[12.5px]">
+                {place.district && (
+                  <span className="inline-flex items-center gap-1.5 rounded-[14px] bg-background px-2.5 py-1 font-extrabold">
+                    <MapPin size={11} className="text-tomato" /> {place.district}
                   </span>
-                  {place.district && (
-                    <span className="chip bg-foreground/10 text-foreground text-xs inline-flex items-center gap-1">
-                      <MapPin size={11} /> {place.district}
-                    </span>
-                  )}
-                  {verifiedOwner && (
-                    <span className="chip bg-emerald-700 text-white text-xs inline-flex items-center gap-1" title="Profil zarządzany przez zweryfikowanego właściciela">
-                      <ShieldCheck size={12} /> Zweryfikowany właściciel
-                    </span>
-                  )}
-                  {(awardWins ?? []).map((w) => (
-                    <span
-                      key={w.id}
-                      className="chip bg-mustard text-foreground text-xs inline-flex items-center gap-1"
-                      title={`${w.vote_count} głosów`}
-                    >
-                      <Trophy size={12} /> {w.event?.name ?? "Warte poŻarcia"} - {w.cuisine?.name}
-                    </span>
-                  ))}
-                </div>
-                <div className="flex items-center gap-3 text-sm flex-wrap">
-                  {reviewStats.count > 0 && reviewStats.avg !== null ? (
-                    <span className="inline-flex items-center gap-1 font-bold">
-                      <Star size={15} className="fill-tomato text-tomato" /> {reviewStats.avg.toFixed(1)}
-                      <span className="text-muted-foreground font-normal">({reviewStats.count})</span>
-                    </span>
-                  ) : (
-                    <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">Brak ocen</span>
-                  )}
-                  <FavoriteCountBadge placeId={place.id} />
-                  <FollowCountBadge placeId={place.id} />
-                  <a href={mapsHref} target="_blank" rel="noreferrer" className="text-muted-foreground inline-flex items-center gap-1 hover:text-tomato">
-                    <MapPin size={14} /> {place.address}
-                  </a>
-                </div>
+                )}
+                <a href={mapsHref} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-tomato">
+                  {place.address}
+                </a>
+                <span className="text-foreground/30">·</span>
+                {reviewStats.count > 0 && reviewStats.avg !== null ? (
+                  <span className="inline-flex items-center gap-1 font-extrabold">
+                    <Star size={13} className="fill-tomato text-tomato" /> {reviewStats.avg.toFixed(1)}
+                    <span className="font-normal text-muted-foreground">({reviewStats.count})</span>
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">Brak ocen</span>
+                )}
+                <FavoriteCountBadge placeId={place.id} />
+                <FollowCountBadge placeId={place.id} />
               </div>
             </div>
-            <div className="flex gap-2 shrink-0 items-center">
+
+            <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">
               <FollowButton placeId={place.id} />
             </div>
           </div>
 
+          {(verifiedOwner || (awardWins ?? []).length > 0) && (
+            <div className="mb-3.5 flex flex-wrap items-center gap-2">
+              {verifiedOwner && (
+                <span className="chip bg-ok text-white text-xs inline-flex items-center gap-1" title="Profil zarządzany przez zweryfikowanego właściciela">
+                  <ShieldCheck size={12} /> Zweryfikowany właściciel
+                </span>
+              )}
+              {(awardWins ?? []).map((w) => (
+                <span key={w.id} className="chip bg-mustard text-navy text-xs inline-flex items-center gap-1" title={`${w.vote_count} głosów`}>
+                  <Trophy size={12} /> {w.event?.name ?? "Warte poŻarcia"} - {w.cuisine?.name}
+                </span>
+              ))}
+            </div>
+          )}
+
           {place.description && (
-            <p className="text-base text-foreground/80 mt-3 leading-relaxed">{place.description}</p>
+            <p className="mb-4 max-w-[640px] text-[14.5px] leading-relaxed text-foreground/80 text-pretty">
+              {place.description}
+            </p>
           )}
-        </header>
 
-        {/* Main action row: 3 equal primary buttons */}
-        <div className="mb-3 grid grid-cols-3 gap-2">
-          <VisitStatusButton placeId={place.id} status="want" className="w-full justify-center text-[10px] sm:text-xs px-2 sm:px-4 py-2.5 whitespace-nowrap" />
-          <VisitStatusButton placeId={place.id} status="visited" className="w-full justify-center text-[10px] sm:text-xs px-2 sm:px-4 py-2.5 whitespace-nowrap" />
-          <FavoriteIconButton placeId={place.id} variant="text" className="w-full text-[10px] sm:text-xs px-2 sm:px-4 py-2.5 whitespace-nowrap" />
-        </div>
+          {/* Status: Chce odwiedzic / Bylem tutaj / Ulubione */}
+          <div className="mb-2 grid grid-cols-3 gap-2">
+            <VisitStatusButton placeId={place.id} status="want" className="w-full min-w-0 justify-center rounded-[14px] px-1.5 py-3 text-[10px] font-extrabold whitespace-nowrap sm:px-2 sm:text-[13px]" />
+            <VisitStatusButton placeId={place.id} status="visited" className="w-full min-w-0 justify-center rounded-[14px] px-1.5 py-3 text-[10px] font-extrabold whitespace-nowrap sm:px-2 sm:text-[13px]" />
+            <FavoriteIconButton placeId={place.id} variant="text" className="w-full min-w-0 rounded-[14px] px-1.5 py-3 text-[10px] font-extrabold whitespace-nowrap sm:px-2 sm:text-[13px]" />
+          </div>
 
-        {/* Secondary quick actions: Navigate / Call / Website / Share (icon-only on mobile).
-            "Nawiguj" is hidden here below lg: the sticky mobile action bar
-            near the bottom of this page already surfaces it persistently -
-            showing it in both places doubled the same CTA on screen at once
-            near the top of the page. Desktop has no sticky bar, so it stays
-            here as the only copy. */}
-        <div className="mb-4 flex items-center gap-2">
-          <a
-            href={mapsHref}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Nawiguj do lokalu"
-            className="hidden lg:inline-flex flex-1 min-w-0 items-center justify-center gap-1.5 rounded-full border-2 border-foreground/30 text-foreground px-2 py-2 text-xs sm:text-sm font-medium hover:bg-foreground hover:text-background transition"
-          >
-            <Navigation size={16} /> <span className="hidden sm:inline truncate">Nawiguj</span>
-          </a>
-          {place.phone ? (
+          {/* Akcje: Nawiguj / Zadzwon / Strona www / Udostepnij.
+              Handoff pokazuje Nawiguj takze na mobile, mimo ze przypiety pasek
+              u dolu ma ten sam przycisk - swiadome powtorzenie CTA. */}
+          <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <a
-              href={`tel:${place.phone.replace(/\s/g, "")}`}
-              aria-label="Zadzwoń do lokalu"
-              className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-foreground/30 text-foreground px-2 py-2 text-xs sm:text-sm font-medium hover:bg-foreground hover:text-background transition"
-            >
-              <Phone size={16} /> <span className="hidden sm:inline truncate">Zadzwoń</span>
-            </a>
-          ) : (
-            <span
-              title="Brak numeru telefonu"
-              className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-border text-muted-foreground px-2 py-2 text-xs sm:text-sm font-medium cursor-not-allowed"
-            >
-              <Phone size={16} /> <span className="hidden sm:inline truncate">Zadzwoń</span>
-            </span>
-          )}
-          {place.website ? (
-            <a
-              href={place.website}
+              href={mapsHref}
               target="_blank"
               rel="noreferrer"
-              aria-label="Strona www lokalu"
-              className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-foreground/30 text-foreground px-2 py-2 text-xs sm:text-sm font-medium hover:bg-foreground hover:text-background transition"
+              aria-label="Nawiguj do lokalu"
+              className="inline-flex min-w-0 items-center justify-center gap-2 rounded-[14px] border border-border bg-tomato/10 px-2 py-2.5 text-[12.5px] font-bold text-tomato transition hover:bg-tomato/15"
             >
-              <Globe size={16} /> <span className="hidden sm:inline truncate">Strona www</span>
+              <Navigation size={15} /> <span className="truncate">Nawiguj</span>
             </a>
-          ) : (
-            <span
-              title="Brak strony www"
-              className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-border text-muted-foreground px-2 py-2 text-xs sm:text-sm font-medium cursor-not-allowed"
+            {place.phone ? (
+              <a
+                href={`tel:${place.phone.replace(/\s/g, "")}`}
+                aria-label="Zadzwoń do lokalu"
+                className="inline-flex min-w-0 items-center justify-center gap-2 rounded-[14px] border border-border bg-card px-2 py-2.5 text-[12.5px] font-bold transition hover:bg-tomato/10"
+              >
+                <Phone size={15} /> <span className="truncate">Zadzwoń</span>
+              </a>
+            ) : (
+              <span title="Brak numeru telefonu" className="inline-flex min-w-0 cursor-not-allowed items-center justify-center gap-2 rounded-[14px] border border-border px-2 py-2.5 text-[12.5px] font-bold text-muted-foreground">
+                <Phone size={15} /> <span className="truncate">Zadzwoń</span>
+              </span>
+            )}
+            {place.website ? (
+              <a
+                href={place.website}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Strona www lokalu"
+                className="inline-flex min-w-0 items-center justify-center gap-2 rounded-[14px] border border-border bg-card px-2 py-2.5 text-[12.5px] font-bold transition hover:bg-tomato/10"
+              >
+                <Globe size={15} /> <span className="truncate">Strona www</span>
+              </a>
+            ) : (
+              <span title="Brak strony www" className="inline-flex min-w-0 cursor-not-allowed items-center justify-center gap-2 rounded-[14px] border border-border px-2 py-2.5 text-[12.5px] font-bold text-muted-foreground">
+                <Globe size={15} /> <span className="truncate">Strona www</span>
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={share}
+              aria-label="Udostępnij"
+              className="inline-flex min-w-0 items-center justify-center gap-2 rounded-[14px] border border-border bg-card px-2 py-2.5 text-[12.5px] font-bold transition hover:bg-tomato/10"
             >
-              <Globe size={16} /> <span className="hidden sm:inline truncate">Strona www</span>
-            </span>
-          )}
-          <button
-            type="button"
-            onClick={share}
-            aria-label="Udostępnij"
-            className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-foreground/30 text-foreground px-2 py-2 text-xs sm:text-sm font-medium hover:bg-foreground hover:text-background transition"
-          >
-            <Share2 size={16} /> <span className="hidden sm:inline truncate">Udostępnij</span>
-          </button>
-        </div>
+              <Share2 size={15} /> <span className="truncate">Udostępnij</span>
+            </button>
+          </div>
 
-        {/* QUICK INFO bar */}
-        <div className="mb-6 -mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto scrollbar-none [mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] sm:[mask-image:none]">
-          <div className="flex gap-2 min-w-min pr-6">
+          {/* Chipy informacyjne */}
+          <div className="-mx-1 flex gap-2 overflow-x-auto scrollbar-none px-1 sm:flex-wrap sm:overflow-visible">
             {(openInfo.today || place.opening_hours) && (
               <QuickChip
                 icon={<Clock size={14} />}
-                label={openInfo.today ? `Dziś: ${openInfo.today.open}–${openInfo.today.close}` : "Dziś zamknięte"}
-                badge={openInfo.open ? { text: "Otwarte", color: "#059669" } : { text: "Zamknięte", color: "#dc2626" }}
+                label={openInfo.today ? `Dziś ${openInfo.today.open}–${openInfo.today.close}` : "Dziś zamknięte"}
+                badge={openInfo.open ? { text: "Otwarte", color: "#3C8A5A" } : { text: "Zamknięte", color: "#B23A3A" }}
               />
             )}
             {place.price_range && <QuickChip icon={<Wallet size={14} />} label={place.price_range} />}
@@ -631,10 +664,11 @@ function PlaceProfile() {
             </>
           )}
         </Collapsible>
+
+        <FriendsFavoritedNotice placeId={place.id} placeName={place.name} />
       </div>
 
       <div className="lg:col-start-1 lg:row-start-2">
-        <FriendsFavoritedNotice placeId={place.id} placeName={place.name} />
 
         {/* MENU - collapsible */}
         <MenuSection place={place} />
@@ -682,10 +716,12 @@ function PlaceProfile() {
           >
             <Navigation size={16} /> Nawiguj
           </a>
+          <VisitStatusButton
+            placeId={place.id}
+            status="want"
+            className="flex-1 justify-center rounded-full px-3 py-2.5 text-sm font-bold whitespace-nowrap"
+          />
           <FavoriteIconButton placeId={place.id} tone="dark" />
-          <button onClick={share} aria-label="Udostępnij" className="w-11 h-11 shrink-0 rounded-full border-2 border-foreground/25 text-foreground grid place-items-center">
-            <Share2 size={18} />
-          </button>
         </div>
       </div>
 
@@ -719,7 +755,7 @@ function FollowButton({ placeId }: { placeId: string }) {
         aria-label="Zaloguj się aby obserwować"
         className="h-11 px-4 inline-flex items-center gap-2 rounded-full border-2 border-foreground/25 text-foreground hover:bg-foreground hover:text-background text-sm font-semibold transition"
       >
-        <Bell size={16} /> <span className="hidden sm:inline">Obserwuj</span>
+        <Bell size={16} /> <span>Obserwuj</span>
       </Link>
     );
   }
@@ -1067,44 +1103,61 @@ function FavoriteIconButton({
   );
 }
 
+/** Plakietka w hero: ilu znajomych ma ten lokal u siebie. Cicha, gdy nie ma
+ *  zalogowanego uzytkownika albo nikt znajomy tu nie byl. */
+function FriendsHereBadge({ placeId }: { placeId: string }) {
+  const { user } = useUser();
+  const { data: friends } = useFriendsWhoFavorited(placeId);
+  const n = friends?.length ?? 0;
+  if (!user || n === 0) return null;
+  const word = n === 1 ? "znajomy" : "znajomych";
+  return (
+    <span className="inline-flex items-center rounded-2xl bg-cream/95 px-3 py-1.5 text-[11.5px] font-extrabold text-navy">
+      {n} {word} tu {n === 1 ? "był" : "było"}
+    </span>
+  );
+}
+
 function FriendsFavoritedNotice({ placeId, placeName }: { placeId: string; placeName: string }) {
   const { user } = useUser();
   const { data: friends } = useFriendsWhoFavorited(placeId);
   if (!user || !friends || friends.length === 0) return null;
 
-  const names = friends
-    .map((f) => displayNameOf(f, "Znajomy"))
-    .filter(Boolean);
-  const first = names.slice(0, 2).join(", ");
-  const more = names.length > 2 ? ` i ${names.length - 2} innych` : "";
-  const verb = names.length === 1 ? "ma" : "mają";
-
+  // Handoff pokazuje to jako rozowa karte w prawej kolumnie, z wierszem na
+  // osobe, a nie jako jedno zdanie - latwiej wtedy kliknac konkretnego
+  // znajomego, a karta nie rosnie w nieskonczonosc przy wielu osobach.
   return (
-    <div className="mb-6 rounded-2xl border-2 border-tomato/40 bg-tomato/10 px-4 py-3 flex items-center gap-3 flex-wrap">
-      <div className="flex -space-x-2">
-        {friends.slice(0, 4).map((f) => (
-          <Link
-            key={f.user_id}
-            to={f.username ? "/u/$username" : "/"}
-            params={f.username ? { username: f.username } : undefined}
-            className="ring-2 ring-cream rounded-full hover:scale-105 transition"
-            title={f.display_name || f.username || ""}
-          >
-            <UserAvatar
-              avatarUrl={f.avatar_url}
-              avatarSource={f.avatar_source}
-              displayName={f.display_name}
-              username={f.username}
-              size={32}
-            />
-          </Link>
+    <section aria-label={`Znajomi, ktorzy maja ${placeName} w ulubionych`} className="mb-4 rounded-[20px] bg-blush p-[18px]">
+      <h2 className="mb-3 text-sm font-extrabold text-navy">Znajomi tu byli</h2>
+      <ul className="flex flex-col gap-2.5">
+        {friends.slice(0, 5).map((f) => (
+          <li key={f.user_id}>
+            <Link
+              to={f.username ? "/u/$username" : "/"}
+              params={f.username ? { username: f.username } : undefined}
+              className="flex items-center gap-3 rounded-[13px] bg-cream/75 px-3 py-2.5 transition hover:bg-cream"
+            >
+              <UserAvatar
+                avatarUrl={f.avatar_url}
+                avatarSource={f.avatar_source}
+                displayName={f.display_name}
+                username={f.username}
+                size={34}
+              />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[12.5px] font-extrabold text-navy">
+                  {displayNameOf(f, "Znajomy")}
+                </span>
+                <span className="block text-[11px] text-navy/60">Ma w ulubionych</span>
+              </span>
+            </Link>
+          </li>
         ))}
-      </div>
-      <p className="text-sm text-foreground font-medium">
-        <span className="font-bold">{first}</span>
-        {more} {verb} <span className="font-bold">{placeName}</span> w ulubionych ❤️
-      </p>
-    </div>
+      </ul>
+      {friends.length > 5 && (
+        <p className="mt-2.5 text-[11px] font-bold text-navy/60">i {friends.length - 5} więcej</p>
+      )}
+    </section>
   );
 }
 
