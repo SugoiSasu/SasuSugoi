@@ -61,6 +61,27 @@ export const submitCollab = createServerFn({ method: "POST" })
     if (data.contact_consent) {
       // Fire-and-forget confirmation email - never block or fail the submission.
       try {
+        // Limiter po stronie bazy (1 mail na adres / 24 h, 30 / h globalnie).
+        // Honeypot i elapsed_ms przychodza z inputu klienta, wiec curl je
+        // omija - a ten formularz jest otwarty dla niezalogowanych i wysyla z
+        // noreply@pozeramy.live na niezweryfikowany adres. Bez limitu byl
+        // gotowym narzedziem do mail-bombingu cudzej skrzynki.
+        const gate = createClient(
+          process.env.SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
+        );
+        const { data: allowed, error: gateErr } = await gate.rpc(
+          "collab_send_allowed" as never,
+          { _email: data.email } as never,
+        );
+        // Brak funkcji (migracja jeszcze niezaaplikowana) nie moze wywrocic
+        // wysylki - wtedy zachowujemy dotychczasowe zachowanie.
+        if (!gateErr && allowed === false) {
+          console.warn("collab confirmation email throttled");
+          return { ok: true as const };
+        }
+
         const { enqueueTransactionalEmailInternal } = await import(
           "./email/enqueue-internal.server"
         );

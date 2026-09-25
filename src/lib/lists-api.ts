@@ -52,20 +52,69 @@ export function useList(id: string | undefined) {
     queryKey: ["place-list", id ?? null],
     enabled: !!id,
     queryFn: async (): Promise<{ list: PlaceList; items: PlaceListItem[] } | null> => {
-      const { data: list, error } = await supabase
-        .from("place_lists")
-        .select(LIST_COLUMNS)
-        .eq("id", id!)
-        .maybeSingle();
-      if (error) throw error;
+      // Czytane przez get_shared_list/get_shared_list_items, a nie wprost z
+      // tabel. Polityka na place_lists zawęża odczyt do "wlasciciel / znajomy
+      // / profil publiczny" (migracja 20260925140000), bo inaczej kazdy mogl
+      // pobrac listy WSZYSTKICH uzytkownikow jednym zapytaniem - wbrew
+      // obietnicy w Ustawieniach. Te dwie funkcje przyjmuja konkretne id, wiec
+      // UUID listy dziala jak klucz: kto ma link, ten widzi liste, ale nikt
+      // nie wylistuje tabeli.
+      const { data: listRows, error } = await supabase.rpc("get_shared_list" as never, {
+        _id: id!,
+      } as never);
+
+      // Dopoki migracja 20260925140000 nie jest zaaplikowana, funkcji nie ma
+      // (PGRST202) - wtedy czytamy po staremu wprost z tabel, ktore w tym
+      // stanie i tak maja jeszcze stara, otwarta polityke. Bez tego strona
+      // listy przestalaby dzialac miedzy deployem a wklejeniem migracji.
+      if (error) {
+        if (error.code !== "PGRST202") throw error;
+        const { data: legacyList, error: legacyErr } = await supabase
+          .from("place_lists")
+          .select(LIST_COLUMNS)
+          .eq("id", id!)
+          .maybeSingle();
+        if (legacyErr) throw legacyErr;
+        if (!legacyList) return null;
+        const { data: legacyItems, error: legacyItemsErr } = await supabase
+          .from("place_list_items")
+          .select(`id, list_id, place_id, note, sort_order, added_at, place:places(${PLACE_PICK})`)
+          .eq("list_id", id!)
+          .order("sort_order", { ascending: true });
+        if (legacyItemsErr) throw legacyItemsErr;
+        return {
+          list: legacyList as PlaceList,
+          items: (legacyItems ?? []) as unknown as PlaceListItem[],
+        };
+      }
+
+      const list = (listRows as PlaceList[] | null)?.[0];
       if (!list) return null;
-      const { data: items, error: itemsErr } = await supabase
-        .from("place_list_items")
-        .select(`id, list_id, place_id, note, sort_order, added_at, place:places(${PLACE_PICK})`)
-        .eq("list_id", id!)
-        .order("sort_order", { ascending: true });
+
+      const { data: itemRows, error: itemsErr } = await supabase.rpc(
+        "get_shared_list_items" as never,
+        { _id: id! } as never,
+      );
       if (itemsErr) throw itemsErr;
-      return { list: list as PlaceList, items: (items ?? []) as unknown as PlaceListItem[] };
+      const items = ((itemRows ?? []) as PlaceListItem[]).slice();
+
+      // Lokale dociagane osobno - wczesniej szly zagniezdzonym selectem, ktory
+      // przez RPC nie przechodzi. `places` i tak ma wlasna polityke (tylko
+      // opublikowane), wiec nie obchodzi to niczyich uprawnien.
+      const placeIds = Array.from(new Set(items.map((i) => i.place_id).filter(Boolean)));
+      if (placeIds.length) {
+        const { data: places, error: placesErr } = await supabase
+          .from("places")
+          .select(PLACE_PICK)
+          .in("id", placeIds);
+        if (placesErr) throw placesErr;
+        const byId = new Map((places ?? []).map((p) => [p.id, p]));
+        for (const item of items) {
+          item.place = (byId.get(item.place_id) ?? null) as PlaceListItem["place"];
+        }
+      }
+
+      return { list, items };
     },
   });
 }
