@@ -68,7 +68,13 @@ export const submitCollab = createServerFn({ method: "POST" })
           templateName: "collab-confirmation",
           recipientEmail: data.email,
           idempotencyKey: `collab-confirmation-${data.email}-${Date.now()}`,
-          templateData: { brandName: data.brand, message: data.message },
+          // Celowo BEZ `message`. Ten mail leci z noreply@pozeramy.live na
+          // adres, ktorego nikt nie zweryfikowal, a formularz jest otwarty dla
+          // niezalogowanych - wiec przepisanie tresci zglaszajacego do maila
+          // zamienialo go w bramke phishingowa podpisana nasza domena
+          // (2000 znakow, do 4 linkow, poprawny SPF/DKIM). Szablon ma pole
+          // `message` opcjonalne i bez niego renderuje samo potwierdzenie.
+          templateData: { brandName: data.brand },
         });
         if (!result.ok) {
           console.warn("collab confirmation email not sent", result.reason);
