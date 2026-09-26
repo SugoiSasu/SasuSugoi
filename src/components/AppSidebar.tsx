@@ -238,7 +238,12 @@ export function AppSidebar() {
           </div>
         </div>
         <style>{`
-          @media (max-height: 780px) { .sidebar-ad-card { display: none; } }
+          /* Slot reklamowy byl tu ukrywany przy oknie <= 780px. Ukrywalo to nie
+             tylko wlasna zajawke "Tu moze byc Twoja reklama", ale i KAZDA platna
+             kampanie - a 780px to zwykly laptop, wiec reklamodawca placil za
+             ekspozycje, ktorej duza czesc uzytkownikow w ogole nie widziala.
+             Srodkowa kolumna panelu ma overflow-y-auto, a stopka jest poza nia,
+             wiec zamiast chowac slot pozwalamy tej kolumnie sie przewijac. */
           @media (max-height: 680px) { .sidebar-random-card { display: none; } }
         `}</style>
       </div>
