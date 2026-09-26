@@ -4,6 +4,7 @@ import { Megaphone } from "lucide-react";
 import { useActiveAds, trackAdClick, trackAdImpression, DEFAULT_AD_CTA, type Ad } from "@/lib/ads-api";
 import { useUser } from "@/lib/use-auth";
 import { pickSeeded } from "@/lib/seeded-pick";
+import { HouseAdCard } from "@/components/HouseAdCard";
 
 /** Sidebar-sized ad card, visually matching RandomPlaceCard's footprint so it
  * reads as part of the same widget stack rather than a bolted-on banner.
@@ -22,7 +23,9 @@ export function SidebarAdCard() {
     trackAdImpression(ad.id, user?.id);
   }, [ad?.id, user?.id]);
 
-  if (!ad) return null;
+  // Brak platnej kampanii nie znaczy pusta dziura w panelu - slot pokazuje
+  // wtedy wlasna zajawke prowadzaca do formularza wspolpracy.
+  if (!ad) return <HouseAdCard />;
 
   const onClick = () => trackAdClick(ad.id, user?.id);
   const cardClass =
