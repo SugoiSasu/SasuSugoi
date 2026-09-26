@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, ChevronDown, ChevronRight, Clock, Heart, List, Map as MapIcon, Search, Star, UtensilsCrossed, Users, X } from "lucide-react";
+import { Accessibility, Check, ChevronDown, ChevronRight, Clock, Heart, List, Map as MapIcon, Search, ShoppingBag, Star, UtensilsCrossed, Users, X } from "lucide-react";
+import { OpenStatus, isNewPlace } from "@/components/OpenStatus";
 import FoodMap, { type MapBounds } from "@/components/FoodMap";
 import { useMyFavoritePlaceIds, useFriendFavoriteCounts } from "@/lib/favorites-api";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -532,11 +533,36 @@ function SelectedCard({
   stat?: { avg: number; count: number };
   dist?: number | null;
 }) {
+  // Skrot najwazniejszych cech lokalu. Kazda plakietka pojawia sie tylko, gdy
+  // faktycznie cos znaczy - "Na wynos: nie" nie jest informacja, ktorej ktos
+  // szuka na mapie, wiec brak cechy nie rysuje nic.
+  const chips: { label: string; cls: string; icon?: ReactNode }[] = [];
+  if (place.promo_active && place.promo_label) {
+    chips.push({ label: place.promo_label, cls: "bg-tomato text-cream" });
+  }
+  if (isNewPlace(place.created_at)) {
+    chips.push({ label: "Nowość", cls: "bg-mustard text-navy" });
+  }
+  if (place.has_takeaway) {
+    chips.push({
+      label: "Na wynos",
+      cls: "bg-muted text-muted-foreground",
+      icon: <ShoppingBag size={10} />,
+    });
+  }
+  if (place.wheelchair_accessible) {
+    chips.push({
+      label: "Bez barier",
+      cls: "bg-muted text-muted-foreground",
+      icon: <Accessibility size={10} />,
+    });
+  }
+
   return (
     <Link
       to="/k/$id"
       params={{ id: place.slug }}
-      className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-xl transition hover:border-tomato"
+      className="flex items-start gap-3 rounded-2xl border border-border bg-card p-3 shadow-xl transition hover:border-tomato"
     >
       <div
         className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl text-2xl"
@@ -567,8 +593,7 @@ function SelectedCard({
       <div className="min-w-0 flex-1">
         <p className="truncate font-display text-sm font-extrabold">{place.name}</p>
         <p className="truncate text-xs text-muted-foreground">
-          {place.cuisine}
-          {place.price_range ? ` • ${place.price_range}` : ""}
+          {[place.cuisine, place.district, place.price_range].filter(Boolean).join(" • ")}
         </p>
         <p className="mt-0.5 flex items-center gap-1 text-xs font-semibold">
           {stat ? (
@@ -584,6 +609,22 @@ function SelectedCard({
             <span className="font-normal text-muted-foreground">· {formatDistancePl(dist)}</span>
           )}
         </p>
+        {/* OpenStatus sam nic nie rysuje, gdy lokal nie ma godzin otwarcia -
+            wtedy ten wiersz po prostu znika, zamiast klamac "Zamkniete". */}
+        <OpenStatus hours={place.opening_hours} className="mt-1 text-[11px]" />
+        {!!chips.length && (
+          <p className="mt-1.5 flex flex-wrap items-center gap-1">
+            {chips.map((chip) => (
+              <span
+                key={chip.label}
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${chip.cls}`}
+              >
+                {chip.icon}
+                {chip.label}
+              </span>
+            ))}
+          </p>
+        )}
       </div>
       <ChevronRight size={18} className="shrink-0 text-muted-foreground" />
     </Link>

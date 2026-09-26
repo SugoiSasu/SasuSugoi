@@ -67,6 +67,10 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
   const clusterRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markerByPlaceRef = useRef<Map<string, any>>(new Map());
+  // Aktualnie zaznaczony marker - trzymany osobno, bo tylko jego trzeba
+  // sciagnac z podniesionego z-indexu przy zmianie zaznaczenia.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const activeMarkerRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const youAreHereRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -353,11 +357,20 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
   }, [places, variant, query, ratings, friendCounts]);
 
   useEffect(() => {
-    // Clear pulse from every marker, then apply to the focused one.
-    markerByPlaceRef.current.forEach((m) => {
-      const el = m?._icon as HTMLElement | undefined;
-      el?.querySelector(".pz-pin")?.classList.remove("pz-pin--active");
-    });
+    // Zdjecie stanu z poprzedniej pinezki idzie po DOM, a nie po
+    // markerByPlaceRef. Markercluster przy rozwijaniu grupy usuwa marker i
+    // dodaje go z powrotem, przez co dostaje NOWY element ikony - referencja
+    // w mapie wskazywala wtedy inny wezel niz ten na ekranie i poprzednia
+    // pinezka zostawala powiekszona. Zaznaczonych bylo wtedy dwie naraz.
+    const mapEl = mapRef.current?.getContainer?.() as HTMLElement | undefined;
+    mapEl
+      ?.querySelectorAll(".pz-pin--active")
+      .forEach((el) => el.classList.remove("pz-pin--active"));
+    // Powiekszona pinezka wchodzi sasiadom w kadr, wiec musi lezec nad nimi.
+    // z-index w CSS tego nie zalatwi: Leaflet trzyma markery we wlasnym
+    // kontekscie ukladania i sam ustawia im z-index z szerokosci geograficznej.
+    activeMarkerRef.current?.setZIndexOffset?.(0);
+    activeMarkerRef.current = null;
     if (!focusPlaceId) return;
     const marker = markerByPlaceRef.current.get(focusPlaceId);
     const map = mapRef.current;
@@ -381,6 +394,8 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
         void pin.offsetWidth;
         pin.classList.add("pz-pin--active");
       }
+      marker.setZIndexOffset?.(1000);
+      activeMarkerRef.current = marker;
     };
     if (cluster && cluster.hasLayer(marker)) {
       cluster.zoomToShowLayer(marker, openAndPulse);

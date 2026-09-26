@@ -279,9 +279,29 @@
     transition: transform .2s ease-out;
     display: flex; align-items: center; justify-content: center;
   }
+  /* Pinezka rosnie razem z ekranem. Skalujemy OPAKOWANIE, nie sama krople:
+     Leaflet kotwiczy ikone przez iconAnchor [14,28], czyli dol-srodek tego
+     pudelka, wiec przy transform-origin na dole czubek zostaje dokladnie nad
+     punktem lokalu. Podmiana width/height rozjechalaby kotwice - pinezka
+     wskazywalaby obok knajpy. Drabinka zamiast clamp(), bo skala jest
+     bezwymiarowa, a CSS nie podzieli dlugosci przez dlugosc. */
+  .leaflet-container { --pz-pin-scale: 1; }
+  @media (min-width: 1024px) { .leaflet-container { --pz-pin-scale: 1.12; } }
+  @media (min-width: 1440px) { .leaflet-container { --pz-pin-scale: 1.24; } }
+  @media (min-width: 1920px) { .leaflet-container { --pz-pin-scale: 1.36; } }
+
   .pz-pin-wrap {
     position: relative;
     width: 28px; height: 28px;
+    transform: scale(var(--pz-pin-scale, 1));
+    transform-origin: 50% 100%;
+    transition: transform .18s ease-out;
+  }
+  /* Wybrana pinezka jest wyrazniej wieksza. Powiekszenie siedzi na opakowaniu,
+     a nie na .pz-pin: skalowanie samej kropli obraca sie wokol jej srodka i
+     czubek odjezdza od wspolrzednych. */
+  .pz-pin-wrap:has(.pz-pin--active) {
+    transform: scale(calc(var(--pz-pin-scale, 1) * 1.3));
   }
   /* Sits outside .pz-pin so it escapes that element's -45deg rotation. */
   .pz-pin-friends {
@@ -319,10 +339,12 @@
     filter: drop-shadow(0 1px 1px rgba(0,0,0,.35));
     pointer-events: none;
   }
+  /* Sam rozmiar wybranej pinezki robi .pz-pin-wrap:has(...) wyzej - tu zostaje
+     tylko puls. Wyniesienie nad sasiadow robi marker.setZIndexOffset w JS:
+     z-index na tym elemencie nie wyszedlby poza kontekst ukladania, ktory
+     Leaflet zaklada na .leaflet-marker-icon. */
   .pz-pin--active {
-    transform: rotate(-45deg) scale(1.15);
     animation: pz-pin-pulse 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    z-index: 1000;
   }
   @keyframes pz-pin-pulse {
     0%   { box-shadow: 0 4px 10px -2px oklch(0.22 0.09 270 / 0.45), 0 0 0 0 oklch(0.66 0.21 35 / 0.55); }
