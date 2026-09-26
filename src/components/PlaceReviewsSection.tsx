@@ -128,6 +128,7 @@ export function PlaceReviewsSection({ placeId }: { placeId: string }) {
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
                     {new Date(myReview.created_at).toLocaleDateString("pl-PL")}
                   </span>
+                  <EditedMarker createdAt={myReview.created_at} updatedAt={myReview.updated_at} />
                 </div>
                 {myReview.body && <p className="text-sm mt-2">{myReview.body}</p>}
                 <MyReviewPhoto path={myReview.photo_url} />
@@ -400,6 +401,33 @@ function ReviewForm({
  * awatara, nicku, rangi i poziomu, ktore widac przy cudzych. Ta sama linia
  * jest teraz uzyta w obu miejscach, wiec nie moga sie rozjechac.
  */
+/**
+ * Znacznik "edytowano". Byl tylko w karcie CUDZYCH recenzji - wlasna go nie
+ * miala, tak samo jak nie miala zdjecia ani autorstwa.
+ *
+ * Minuta karencji: reviews_set_updated_at rusza updated_at przy kazdym
+ * zapisie, wiec bez tego progu poprawka literowki zrobiona chwile po dodaniu
+ * recenzji juz oznaczalaby ja jako edytowana.
+ */
+function EditedMarker({
+  createdAt,
+  updatedAt,
+}: {
+  createdAt: string;
+  updatedAt: string | null | undefined;
+}) {
+  if (!updatedAt) return null;
+  if (new Date(updatedAt).getTime() - new Date(createdAt).getTime() <= 60_000) return null;
+  return (
+    <span
+      className="text-[10px] uppercase tracking-wider text-muted-foreground italic"
+      title={`Edytowano ${new Date(updatedAt).toLocaleString("pl-PL")}`}
+    >
+      · edytowano
+    </span>
+  );
+}
+
 function ReviewAuthorLine({
   author,
   isMe = false,
@@ -513,16 +541,7 @@ function ReviewCard({
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
               {new Date(review.created_at).toLocaleDateString("pl-PL")}
             </span>
-            {review.updated_at &&
-              new Date(review.updated_at).getTime() - new Date(review.created_at).getTime() >
-                60_000 && (
-                <span
-                  className="text-[10px] uppercase tracking-wider text-muted-foreground italic"
-                  title={`Edytowano ${new Date(review.updated_at).toLocaleString("pl-PL")}`}
-                >
-                  · edytowano
-                </span>
-              )}
+            <EditedMarker createdAt={review.created_at} updatedAt={review.updated_at} />
           </div>
           {review.body && <p className="text-sm mt-1.5 leading-relaxed">{review.body}</p>}
           {photoUrl && (
