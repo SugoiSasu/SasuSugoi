@@ -342,7 +342,10 @@ function AchievementsTab() {
           onClick={() => setEditing("new")}
           className="inline-flex items-center gap-2 rounded-full bg-tomato text-cream px-5 py-2.5 font-semibold hover:bg-tomato/90"
         >
-          <Plus size={16} /> Dodaj
+          {/* Byl tu sam "Dodaj", podczas gdy dwie pozostale sekcje tej strony
+              maja "Dodaj wyzwanie" i "Dodaj range" - przy trzech przyciskach
+              obok siebie generyczna etykieta nie mowi, czego dotyczy. */}
+          <Plus size={16} /> Dodaj odznakę
         </button>
       </div>
 
