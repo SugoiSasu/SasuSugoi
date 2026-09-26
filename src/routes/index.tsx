@@ -104,6 +104,14 @@ function Index() {
     [places],
   );
 
+  // Podtytul naglowka z paczki designu: "N lokali w okolicy · M nowych".
+  // Liczone z juz odfiltrowanej listy opublikowanych, zeby szkice nie
+  // podbijaly licznika pokazywanego odwiedzajacym.
+  const newPlacesCount = useMemo(() => {
+    const prog = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    return published.filter((p) => p.created_at && new Date(p.created_at).getTime() >= prog).length;
+  }, [published]);
+
   const { data: favIds } = useMyFavoritePlaceIds();
 
   /** One predicate per intent filter, reused for both the filtering and the
@@ -220,6 +228,8 @@ function Index() {
         onQuickChange={setQuick}
         quickAvailable={quickAvailable}
         quickCounts={quickCounts}
+        placesCount={published.length}
+        newPlacesCount={newPlacesCount}
       />
 
       <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:max-w-7xl">
@@ -262,6 +272,7 @@ function Index() {
             <RecentlyViewedStrip />
             <PlaceRail
               title="Polecane dla Ciebie"
+              subtitle="Na podstawie Twoich wizyt"
               icon={<Sparkles size={12} />}
               places={topPicks}
               loading={isLoading}
@@ -301,9 +312,12 @@ function Index() {
           <SuggestPlacePanel />
         </section>
 
+        <p className="border-t border-border pt-6 text-center text-xs text-muted-foreground">
+          poŻeramy © {new Date().getFullYear()}
+        </p>
         <nav
           aria-label="Informacje"
-          className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-border pt-6 text-xs text-muted-foreground"
+          className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 pt-3 text-xs text-muted-foreground"
         >
           <Link
             to="/polityka-prywatnosci"
@@ -340,6 +354,7 @@ function Index() {
 /* --------------------------- horizontal rail --------------------------- */
 function PlaceRail({
   title,
+  subtitle,
   icon,
   places,
   loading,
@@ -348,6 +363,8 @@ function PlaceRail({
   adPosition = 2,
 }: {
   title: string;
+  /** Jedno zdanie pod tytulem - mowi, SKAD te propozycje. */
+  subtitle?: string;
   icon: React.ReactNode;
   places: Place[];
   loading: boolean;
@@ -360,10 +377,13 @@ function PlaceRail({
   return (
     <section className="py-5">
       <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h2 className="inline-flex items-center gap-2 font-display text-xl">
-          <span className="chip bg-tomato text-cream">{icon}</span>
-          {title}
-        </h2>
+        <div className="min-w-0">
+          <h2 className="inline-flex items-center gap-2 font-display text-xl">
+            <span className="chip bg-tomato text-cream">{icon}</span>
+            {title}
+          </h2>
+          {subtitle && <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>}
+        </div>
         <Link
           to="/mapa"
           className="pz-hit inline-flex items-center text-xs font-semibold text-tomato hover:underline"

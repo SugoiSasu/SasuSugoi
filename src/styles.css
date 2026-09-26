@@ -482,6 +482,13 @@
   /* Zdobyte punkty: wjezdza od dolu, zatrzymuje sie na chwile, odplywa w gore.
      Czas trwania musi zgadzac sie z setTimeout w PointsCelebration (2.4s), bo
      to on zdejmuje element - inaczej animacja skonczylaby sie przed lub po. */
+  /* Kafelek kategorii z paczki designu. Ramka nie dziala z clip-path (jest
+     przycinana razem z tlem), wiec zaznaczenie robi zewnetrzny heksagon
+     widoczny jako obwodka - stad .pz-hex-ring. */
+  .pz-hex {
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  }
+
   @keyframes pz-points-burst {
     0%   { opacity: 0; transform: translateY(18px) scale(0.9); }
     12%  { opacity: 1; transform: translateY(0) scale(1.04); }
