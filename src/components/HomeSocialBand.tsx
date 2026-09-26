@@ -292,7 +292,11 @@ function NextBadgeCard() {
         </p>
       ) : (
         <div className="flex items-center gap-4">
-          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-tomato/12 text-2xl">
+          {/* Heksagon, nie kolo: paczka designu podaje go jako ksztalt odznak
+              w calej marce (te same punkty clip-path co kafelki kategorii).
+              Strona Osiagniec zostaje na razie na kolach - jej w paczce nie ma,
+              a tam stan odznaki niesie ramka, ktorej clip-path by przycial. */}
+          <span className="pz-hex grid h-14 w-14 shrink-0 place-items-center bg-tomato/12 text-2xl">
             {next.a.icon_url && !next.a.icon_url.startsWith("http") ? (
               next.a.icon_url
             ) : (
