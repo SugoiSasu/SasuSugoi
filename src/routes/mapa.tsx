@@ -413,7 +413,26 @@ function MapaPage() {
             })}
             {listResults.length === 0 && (
               <li className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-                Brak lokali dla tych filtrów. Zmień kuchnię, ocenę albo sprawdź pisownię.
+                {/* Gdy wyszukiwanie jest zawezone do obszaru mapy, sam filtr nie
+                    jest cala prawda - lokale moga istniec, tylko poza kadrem.
+                    Komunikat mowil wtedy wylacznie o filtrach, wiec kierowal na
+                    zle rozwiazanie. Stanu "pusty obszar" nie da sie osiagnac
+                    przyciskiem (canSearchArea wymaga areaHits > 0), wiec ten
+                    wariant dotyczy zawezenia filtrow WEWNATRZ obszaru. */}
+                {areaActive ? (
+                  <>
+                    Brak lokali dla tych filtrów w tym obszarze mapy.
+                    <button
+                      type="button"
+                      onClick={() => setAreaBounds(null)}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground transition hover:border-tomato active:scale-95"
+                    >
+                      <X size={13} /> Szukaj w całym Poznaniu
+                    </button>
+                  </>
+                ) : (
+                  "Brak lokali dla tych filtrów. Zmień kuchnię, ocenę albo sprawdź pisownię."
+                )}
               </li>
             )}
           </ul>
