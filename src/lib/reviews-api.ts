@@ -128,6 +128,15 @@ export function useSaveReview() {
       // review and immediately checking /wall could miss it for up to the
       // feed's staleTime (own-activity should always feel instant).
       qc.invalidateQueries({ queryKey: ["wall-feed"] });
+      // Agregaty ocen licza sie w bazie, a nie z listy recenzji, wiec same z
+      // siebie nie wiedza, ze cokolwiek sie zmienilo. Bez tego po usunieciu
+      // recenzji karta oceny nadal pokazywala "1 opinia" i pasek 5* na 100%
+      // dla lokalu, ktory nie ma juz zadnej recenzji (sprawdzone na zywo),
+      // a gwiazdki na kafelkach w calej aplikacji zostawaly ze stara wartoscia.
+      qc.invalidateQueries({ queryKey: ["place-rating-breakdown"] });
+      qc.invalidateQueries({ queryKey: ["places-ratings-map"] });
+      qc.invalidateQueries({ queryKey: ["user-review-stats"] });
+      qc.invalidateQueries({ queryKey: ["friend-recommend-counts"] });
       if (!vars.id) {
         trackEvent("write_review", { item_id: vars.values.place_id, rating: vars.values.rating });
       }
@@ -147,6 +156,17 @@ export function useDeleteReview() {
       qc.invalidateQueries({ queryKey: ["my-review"] });
       qc.invalidateQueries({ queryKey: ["user-reviews"] });
       qc.invalidateQueries({ queryKey: ["profile"] });
+      // Usunieta recenzja znika tez z feedu.
+      qc.invalidateQueries({ queryKey: ["wall-feed"] });
+      // Agregaty ocen licza sie w bazie, a nie z listy recenzji, wiec same z
+      // siebie nie wiedza, ze cokolwiek sie zmienilo. Bez tego po usunieciu
+      // recenzji karta oceny nadal pokazywala "1 opinia" i pasek 5* na 100%
+      // dla lokalu, ktory nie ma juz zadnej recenzji (sprawdzone na zywo),
+      // a gwiazdki na kafelkach w calej aplikacji zostawaly ze stara wartoscia.
+      qc.invalidateQueries({ queryKey: ["place-rating-breakdown"] });
+      qc.invalidateQueries({ queryKey: ["places-ratings-map"] });
+      qc.invalidateQueries({ queryKey: ["user-review-stats"] });
+      qc.invalidateQueries({ queryKey: ["friend-recommend-counts"] });
     },
   });
 }
