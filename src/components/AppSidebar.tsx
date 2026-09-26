@@ -30,6 +30,7 @@ import { levelInfo } from "@/components/LevelProgress";
 import { VipBadge, isVipActive, vipNameStyle } from "@/components/VipBadge";
 import { RandomPlaceCard } from "@/components/RandomPlaceCard";
 import { SidebarAdCard } from "@/components/SidebarAdCard";
+import { SidebarFollowedPlaces } from "@/components/SidebarFollowedPlaces";
 import { InviteFriendsModal } from "@/components/InviteFriendsModal";
 import { useCurrentAwardsEvent } from "@/lib/awards-api";
 import logoDark from "@/assets/brand/po_zeramy-logo-dark-nav.webp.asset.json";
@@ -227,6 +228,8 @@ export function AppSidebar() {
               <StatChip to="/friends" icon={Users} value={friends?.length ?? 0} label="Znajomi" />
             </div>
           )}
+
+          {user && <SidebarFollowedPlaces />}
 
           {user && (
             <div className="sidebar-random-card">
