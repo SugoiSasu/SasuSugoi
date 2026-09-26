@@ -53,13 +53,14 @@ const socialItems = [
 ] as const;
 
 const linkBase =
-  "group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-cream/75 transition-all duration-200 ease-out hover:translate-x-0.5 hover:bg-cream/10 hover:text-cream";
+  "pz-nav-row group flex items-center gap-3 rounded-xl px-3 py-1.5 text-sm font-medium text-cream/75 transition-all duration-200 ease-out hover:translate-x-0.5 hover:bg-cream/10 hover:text-cream";
 const iconCls = "shrink-0 transition-transform duration-200 ease-out group-hover:scale-110";
 const activeCls = {
   className:
     "animate-in fade-in zoom-in-95 duration-300 ease-out bg-tomato text-cream shadow-md shadow-tomato/25 hover:translate-x-0 hover:bg-tomato",
 };
-const sectionPanel = "space-y-0.5 rounded-2xl bg-cream/[0.05] p-1.5 ring-1 ring-cream/[0.06]";
+const sectionPanel =
+  "pz-sidebar-nav space-y-0.5 rounded-2xl bg-cream/[0.05] p-1.5 ring-1 ring-cream/[0.06]";
 
 /** Desktop-only app sidebar (navy), matching the poŻeramy app layout. */
 export function AppSidebar() {
@@ -95,7 +96,7 @@ export function AppSidebar() {
   const level = profile ? levelInfo(profile.points_total ?? 0) : null;
 
   return (
-    <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-[236px] flex-col bg-[linear-gradient(180deg,oklch(0.35_0.14_268),oklch(0.31_0.14_268)_45%,oklch(0.25_0.13_268))] px-3 py-3.5 shadow-[6px_0_28px_-12px_rgba(0,0,0,0.45)]">
+    <aside className="pz-sidebar hidden lg:flex fixed inset-y-0 left-0 z-40 w-[236px] flex-col bg-[linear-gradient(180deg,oklch(0.35_0.14_268),oklch(0.31_0.14_268)_45%,oklch(0.25_0.13_268))] px-3 py-3.5 shadow-[6px_0_28px_-12px_rgba(0,0,0,0.45)]">
       <Link
         to="/"
         className="mb-1 flex items-center gap-2 px-2 transition-transform duration-200 ease-out hover:scale-[1.02]"
@@ -104,9 +105,9 @@ export function AppSidebar() {
         <img
           src={logoDark.url}
           alt="poŻeramy"
-          width={44}
-          height={44}
-          className="h-11 w-11 rounded-xl object-cover shadow-sm"
+          width={40}
+          height={40}
+          className="h-10 w-10 rounded-xl object-cover shadow-sm"
         />
         <span className="leading-tight">
           <span className="block font-persona text-lg font-extrabold text-cream">poŻeramy</span>
@@ -180,7 +181,7 @@ export function AppSidebar() {
             ))}
           </nav>
 
-          <div className="my-2.5 flex items-center gap-2 px-1">
+          <div className="pz-sidebar-divider my-2.5 flex items-center gap-2 px-1">
             <span className="text-[10px] font-bold uppercase tracking-wider text-cream/35">
               Społeczność
             </span>
@@ -222,14 +223,18 @@ export function AppSidebar() {
 
         <div className="space-y-2.5">
           {user && (
-            <div className="pz-fade-in grid grid-cols-3 gap-1.5 rounded-2xl border border-cream/15 bg-cream/[0.06] p-2">
+            <div className="pz-sidebar-stats pz-fade-in grid grid-cols-3 gap-1.5 rounded-2xl border border-cream/15 bg-cream/[0.06] p-2">
               <StatChip to="/moje-miejsca" search={{ tab: "visited" }} icon={MapPinCheck} value={visited?.length ?? 0} label="Odwiedzone" />
               <StatChip to="/moje-miejsca" search={{ tab: "fav" }} icon={Heart} value={favs?.length ?? 0} label="Ulubione" />
               <StatChip to="/friends" icon={Users} value={friends?.length ?? 0} label="Znajomi" />
             </div>
           )}
 
-          {user && <SidebarFollowedPlaces />}
+          {user && (
+            <div className="pz-sidebar-followed">
+              <SidebarFollowedPlaces />
+            </div>
+          )}
 
           {user && (
             <div className="sidebar-random-card">
@@ -241,50 +246,112 @@ export function AppSidebar() {
           </div>
         </div>
         <style>{`
-          /* Slot reklamowy byl tu ukrywany przy oknie <= 780px. Ukrywalo to nie
-             tylko wlasna zajawke "Tu moze byc Twoja reklama", ale i KAZDA platna
-             kampanie - a 780px to zwykly laptop, wiec reklamodawca placil za
-             ekspozycje, ktorej duza czesc uzytkownikow w ogole nie widziala.
-             Srodkowa kolumna panelu ma overflow-y-auto, a stopka jest poza nia,
-             wiec zamiast chowac slot pozwalamy tej kolumnie sie przewijac. */
-          @media (max-height: 680px) { .sidebar-random-card { display: none; } }
+          /* Panel boczny nie ma prawa sie przewijac. Pasek przewijania w
+             nawigacji znaczy, ze czesc menu jest niewidoczna, a nikt nie
+             szuka tam scrolla - po prostu nie znajduje pozycji. Zamiast
+             chowac sam pasek (to ukrywa tresc, nie problem), zageszczamy
+             panel i zdejmujemy ozdobniki w kolejnosci od najmniej potrzebnego.
+
+             Slot reklamowy zostaje na kazdej wysokosci: chowany byl juz raz
+             przy <= 780px i zabieralo to ekspozycje ROWNIEZ platnym
+             kampaniom, za ktore ktos zaplacil.
+
+             Kolejnosc zdejmowania jest od najmniej potrzebnego: zageszczenie
+             wierszy -> liczniki -> losowa polecajka -> obserwowane lokale ->
+             etykiety w stopce -> scalenie paneli nawigacji -> slot reklamowy.
+             Same pozycje menu nie znikaja na zadnej wysokosci.
+
+             Progi sa zmierzone, nie zgadniete: przy kazdym z nich nadmiar
+             (scrollHeight - clientHeight) srodkowej kolumny wynosi 0. */
+          @media (max-height: 1024px) {
+            .pz-sidebar .pz-nav-row { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+            .pz-sidebar-stats { display: none; }
+          }
+          @media (max-height: 940px) { .sidebar-random-card { display: none; } }
+          @media (max-height: 900px) { .pz-sidebar-followed { display: none; } }
+
+          /* Ponizej ~860px stopka zwija sie do rzedu samych ikon. Kazda
+             pozycja ma aria-label i title, wiec nazwa nie ginie - znika
+             tylko napis. */
+          @media (max-height: 860px) {
+            .pz-sidebar-foot { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+            .pz-sidebar-foot > * { flex: 1 0 auto; width: auto; justify-content: center; }
+            .pz-sidebar-foot .pz-foot-label { display: none; }
+            .pz-sidebar-foot .pz-nav-row { gap: 0; padding-left: 0.6rem; padding-right: 0.6rem; }
+          }
+
+          /* Ponizej ~800px dwa panele nawigacji scalaja sie w jedna liste:
+             znika naglowek "Spolecznosc" i wlasne tlo paneli. Pozycje menu
+             zostaja co do jednej, ubywa tylko chromu miedzy nimi. */
+          @media (max-height: 800px) {
+            .pz-sidebar-divider { display: none; }
+            .pz-sidebar-nav {
+              padding: 0;
+              background: none;
+              --tw-ring-color: transparent;
+            }
+          }
+
+          /* Ostatni krok, ~720px i nizej (np. laptop 1366x768 z pelnym
+             chromem przegladarki). Slot reklamowy przy takiej wysokosci i
+             tak lezy pod krawedzia ekranu - z paskiem przewijania byl tak
+             samo niewidoczny, tylko dodatkowo chowal za soba pol menu.
+             Powyzej tego progu slot zostaje zawsze, rowniez dla platnych
+             kampanii. */
+          @media (max-height: 720px) { .sidebar-ad-card { display: none; } }
         `}</style>
       </div>
 
-      <div className="mt-2.5 border-t border-cream/10 pt-2">
+      <div className="pz-sidebar-foot mt-2.5 border-t border-cream/10 pt-2">
         {user && (
           <button
             type="button"
             onClick={inviteFriends}
             disabled={inviteLink.isLoading}
+            aria-label="Zaproś znajomych"
+            title="Zaproś znajomych"
             className={`${linkBase} w-full text-left text-tomato-on-dark hover:bg-tomato-on-dark/10 hover:text-tomato-on-dark disabled:opacity-50`}
           >
             <UserPlus2 size={18} className={iconCls} />
-            <span className="truncate">Zaproś znajomych</span>
+            <span className="pz-foot-label truncate">Zaproś znajomych</span>
           </button>
         )}
         <ThemeToggle variant="sidebar" className="mb-1" />
-        <Link to="/profile" className={linkBase} activeProps={activeCls}>
+        <Link
+          to="/profile"
+          className={linkBase}
+          activeProps={activeCls}
+          aria-label="Ustawienia"
+          title="Ustawienia"
+        >
           <Settings size={18} className={iconCls} />
-          <span className="truncate">Ustawienia</span>
+          <span className="pz-foot-label truncate">Ustawienia</span>
         </Link>
         <Link
           to="/wspolpraca"
           className={`${linkBase} text-cream/50 hover:text-cream/85`}
           activeProps={activeCls}
+          aria-label="Współpraca"
+          title="Współpraca"
         >
           <Handshake size={18} className={iconCls} />
-          <span className="truncate">Współpraca</span>
+          <span className="pz-foot-label truncate">Współpraca</span>
         </Link>
         {user ? (
-          <button type="button" onClick={signOut} className={`${linkBase} w-full text-left`}>
+          <button
+            type="button"
+            onClick={signOut}
+            className={`${linkBase} w-full text-left`}
+            aria-label="Wyloguj"
+            title="Wyloguj"
+          >
             <LogOut size={18} className={iconCls} />
-            <span className="truncate">Wyloguj</span>
+            <span className="pz-foot-label truncate">Wyloguj</span>
           </button>
         ) : (
-          <Link to="/auth" className={linkBase}>
+          <Link to="/auth" className={linkBase} aria-label="Zaloguj" title="Zaloguj">
             <UserIcon size={18} className={iconCls} />
-            <span className="truncate">Zaloguj</span>
+            <span className="pz-foot-label truncate">Zaloguj</span>
           </Link>
         )}
       </div>
