@@ -271,6 +271,7 @@
   .pz-back .pz-back-arrow { transition: transform .25s cubic-bezier(.2,.8,.2,1); }
   .pz-back:hover .pz-back-arrow { transform: translateX(-4px); }
   .pz-pin {
+    position: relative;
     width: 28px; height: 28px; border-radius: 50% 50% 50% 0;
     transform: rotate(-45deg);
     border: 3px solid var(--cream);
@@ -297,6 +298,20 @@
     text-align: center;
     pointer-events: none;
   }
+  /* Logo lokalu w pinezce. Kropla jest obrocona o -45deg, wiec logo dostaje
+     kontr-obrot, zeby stalo prosto. Kolo jest odporne na obrot, wiec kadr nie
+     ucieka. Lezy NAD emoji: gdy obrazek sie nie wczyta, onerror go chowa i
+     spod spodu wraca emoji kuchni. */
+  .pz-pin-logo {
+    position: absolute;
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    transform: rotate(45deg);
+    background: var(--cream);
+    pointer-events: none;
+  }
+
   .pz-pin-emoji {
     transform: rotate(45deg);
     font-size: 14px;

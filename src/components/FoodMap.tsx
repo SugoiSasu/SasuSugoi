@@ -256,9 +256,12 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
             friends > 0 && pin.main
               ? `<span class="pz-pin-friends" aria-hidden="true">${friends > 9 ? "9+" : friends}</span>`
               : "";
+          const logo = p.avatar_url
+            ? `<img class="pz-pin-logo" src="${escapeHtml(p.avatar_url)}" alt="" loading="lazy" onerror="this.remove()" />`
+            : "";
           const icon = L.divIcon({
             className: "",
-            html: `<div class="pz-pin-wrap"><div class="pz-pin" style="background:${color};${pin.main ? "" : "opacity:.85"}"><span class="pz-pin-emoji">${emoji}</span></div>${badge}</div>`,
+            html: `<div class="pz-pin-wrap"><div class="pz-pin" style="background:${color};${pin.main ? "" : "opacity:.85"}"><span class="pz-pin-emoji">${emoji}</span>${logo}</div>${badge}</div>`,
             iconSize: [28, 28],
             iconAnchor: [14, 28],
             popupAnchor: [0, -26],
