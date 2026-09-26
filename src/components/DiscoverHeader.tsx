@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
 import { Search, SlidersHorizontal, Star, X } from "lucide-react";
 import { useCuisines } from "@/lib/cuisines-api";
@@ -135,13 +135,11 @@ export function DiscoverHeader({
                 className="flex w-16 shrink-0 flex-col items-center gap-1.5 text-[11px] font-semibold sm:w-auto"
               >
                 <span
-                  className={`pz-hex grid h-14 w-14 transform-gpu place-items-center p-[3px] transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-105 active:scale-95 active:duration-75 ${
-                    cuisine ? "bg-transparent" : "bg-tomato"
+                  className={`pz-kv-tile grid h-14 w-14 transform-gpu place-items-center rounded-[18px] ring-2 ring-offset-2 ring-offset-background transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-105 active:scale-95 active:duration-75 ${
+                    cuisine ? "ring-transparent" : "ring-tomato"
                   }`}
                 >
-                  <span className="pz-hex grid h-full w-full place-items-center bg-navy">
-                    <Star size={20} className="text-tomato-on-dark" fill="currentColor" />
-                  </span>
+                  <Star size={20} className="text-tomato-on-dark" fill="currentColor" />
                 </span>
                 <span className="text-center leading-tight text-muted-foreground">Wszystko</span>
               </button>
@@ -162,7 +160,6 @@ export function DiscoverHeader({
                 const meta = cuisineMeta(c.name);
                 const color = c.color ?? meta.color;
                 const emoji = c.emoji ?? meta.emoji;
-                const bg = meta.chipBackground;
                 return (
                   <button
                     key={c.id}
@@ -172,28 +169,16 @@ export function DiscoverHeader({
                     className="flex w-16 shrink-0 flex-col items-center gap-1.5 text-[11px] font-semibold sm:w-auto"
                   >
                     <span
-                      className={`pz-hex grid h-14 w-14 transform-gpu place-items-center p-[3px] transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-105 active:scale-95 active:duration-75 ${
-                        active ? "bg-navy" : "bg-transparent"
+                      className={`pz-kv-tile grid h-14 w-14 transform-gpu place-items-center rounded-[18px] text-2xl ring-2 ring-offset-2 ring-offset-background transition-all duration-200 ease-out hover:-translate-y-1 hover:scale-105 active:scale-95 active:duration-75 ${
+                        active ? "ring-tomato" : "ring-transparent"
                       }`}
+                      // Tlo jest keyvisualem marki (granat + konfetti); kolor
+                      // kuchni wchodzi tylko jako poswiata w rogach, zeby
+                      // kategorie dalo sie od siebie odroznic.
+                      style={{ "--kv-accent": color } as CSSProperties}
                       aria-hidden
                     >
-                      <span
-                        className="pz-hex relative grid h-full w-full place-items-center overflow-hidden text-2xl"
-                        style={
-                          bg
-                            ? {
-                                backgroundImage: `url(${bg})`,
-                                backgroundSize: "cover",
-                                backgroundPosition: "center",
-                              }
-                            : { backgroundColor: color }
-                        }
-                      >
-                        {bg && <span className="absolute inset-0 bg-navy/35" />}
-                        <span className="relative drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">
-                          {emoji}
-                        </span>
-                      </span>
+                      <span className="drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]">{emoji}</span>
                     </span>
                     <span className="line-clamp-2 text-center leading-tight text-muted-foreground">
                       {c.name}

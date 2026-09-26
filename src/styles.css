@@ -519,9 +519,33 @@
   /* Zdobyte punkty: wjezdza od dolu, zatrzymuje sie na chwile, odplywa w gore.
      Czas trwania musi zgadzac sie z setTimeout w PointsCelebration (2.4s), bo
      to on zdejmuje element - inaczej animacja skonczylaby sie przed lub po. */
-  /* Kafelek kategorii z paczki designu. Ramka nie dziala z clip-path (jest
-     przycinana razem z tlem), wiec zaznaczenie robi zewnetrzny heksagon
-     widoczny jako obwodka - stad .pz-hex-ring. */
+  /* Uwaga na promien: w tym projekcie `rounded-2xl` to var(--radius)+14px,
+     czyli 30px. Na kafelku 56x56 daje to kolo, nie zaokraglony kwadrat -
+     dlatego kafelki kategorii maja promien podany wprost (18px).
+
+     Kafelek ikony w keyvisualu marki: granat + konfetti w barwach poZeramy.
+     To ten sam zestaw gradientow co .bg-terrazzo-navy, tylko w mniejszej
+     skali - przy kafelku 56px siatka 64px pokazalaby ledwie jedna kropke.
+
+     Poswiata w dwoch rogach idzie z --kv-accent, ktory kafelek ustawia na
+     kolor swojej kuchni. Dzieki temu kategorie nie sa scianka identycznych
+     granatowych kwadratow, a tlo dalej jest keyvisualem, nie zdjeciem. */
+  .pz-kv-tile {
+    --kv-accent: var(--tomato);
+    background-color: var(--navy);
+    background-image:
+      radial-gradient(circle at 20% 24%, color-mix(in oklab, var(--blush) 42%, transparent) 0 1.6px, transparent 2.4px),
+      radial-gradient(circle at 76% 16%, color-mix(in oklab, var(--tomato) 38%, transparent) 0 1.2px, transparent 2px),
+      radial-gradient(circle at 34% 76%, color-mix(in oklab, var(--cream) 26%, transparent) 0 1.2px, transparent 2px),
+      radial-gradient(circle at 72% 80%, color-mix(in oklab, var(--mustard) 30%, transparent) 0 1.6px, transparent 2.4px),
+      radial-gradient(ellipse at 15% 0%, color-mix(in oklab, var(--kv-accent) 46%, transparent), transparent 62%),
+      radial-gradient(ellipse at 100% 100%, color-mix(in oklab, var(--kv-accent) 30%, transparent), transparent 58%);
+    background-size: 32px 32px, 32px 32px, 32px 32px, 32px 32px, 100% 100%, 100% 100%;
+  }
+
+  /* Heksagon zostal po poprzedniej wersji kafelkow kategorii - dzis kafelki sa
+     zaokraglonymi kwadratami (.pz-kv-tile). Klasa czeka na ewentualne uzycie
+     na stronie Osiagniec, gdzie 71 odznak nadal nosi stan na ramce. */
   .pz-hex {
     clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
   }
