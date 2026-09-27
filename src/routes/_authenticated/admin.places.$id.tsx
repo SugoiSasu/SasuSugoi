@@ -23,7 +23,9 @@ import {
   AlertCircle,
   Upload,
   Sparkles,
+  MapPin,
 } from "lucide-react";
+import { DOMYSLNY_PUNKT, czyDomyslnyPunkt, geokodujAdres } from "@/lib/geocode";
 import { MigratePlaceImagesButton } from "@/components/PlaceImageMigration";
 import { MenuItemsEditor } from "@/components/MenuItemsEditor";
 import { initialsFromName, colorFromKey } from "@/lib/avatar-utils";
@@ -40,8 +42,8 @@ function emptyPlace(defaultCuisine: string): PlaceInput {
     description: "",
     rating: 4.5,
     address: "",
-    lat: 52.4082,
-    lng: 16.9335,
+    lat: DOMYSLNY_PUNKT.lat,
+    lng: DOMYSLNY_PUNKT.lng,
     reel_url: "",
     cover_image_url: "",
     avatar_url: "",
@@ -89,6 +91,29 @@ function EditPlace() {
   const callExtractMenu = useServerFn(extractMenuFromImage);
 
   const [form, setForm] = useState<PlaceInput>(() => emptyPlace(defaultCuisine));
+  const [geoStan, setGeoStan] = useState<
+    { rodzaj: "szukam" } | { rodzaj: "ok"; opis: string; dokladny: boolean } | { rodzaj: "brak" } | null
+  >(null);
+
+  async function ustawZAdresu() {
+    if (!form.address.trim()) {
+      toast.error("Najpierw wpisz adres");
+      return;
+    }
+    setGeoStan({ rodzaj: "szukam" });
+    try {
+      const w = await geokodujAdres(form.address);
+      if (!w) {
+        setGeoStan({ rodzaj: "brak" });
+        return;
+      }
+      setForm((f) => ({ ...f, lat: Number(w.lat.toFixed(6)), lng: Number(w.lng.toFixed(6)) }));
+      setGeoStan({ rodzaj: "ok", opis: w.opis, dokladny: w.dokladny });
+    } catch (e) {
+      setGeoStan(null);
+      toast.error(e instanceof Error ? e.message : "Nie udało się znaleźć adresu");
+    }
+  }
   const [hydrated, setHydrated] = useState(false);
   const [extractingMenu, setExtractingMenu] = useState(false);
 
@@ -347,6 +372,37 @@ function EditPlace() {
               className="input"
             />
           </FormField>
+          {/* Przycisk zamiast recznego przepisywania liczb z Google Maps: tak
+              36 lokali zostalo na domyslnym punkcie, bo nikt tego nie robil. */}
+          <div className="-mt-1 space-y-2">
+            <button
+              type="button"
+              onClick={ustawZAdresu}
+              disabled={geoStan?.rodzaj === "szukam"}
+              className="inline-flex items-center gap-1.5 rounded-full bg-navy px-3.5 py-2 text-xs font-semibold text-cream transition hover:bg-navy/90 disabled:opacity-60"
+            >
+              {geoStan?.rodzaj === "szukam" ? <Loader2 size={13} className="animate-spin" /> : <MapPin size={13} />}
+              Ustaw współrzędne z adresu
+            </button>
+            {geoStan?.rodzaj === "ok" && (
+              <p className={`text-xs ${geoStan.dokladny ? "text-ok" : "text-tomato"}`}>
+                {geoStan.dokladny ? "✓ Znaleziono dokładnie: " : "Tylko ulica, bez numeru - sprawdź na mapie: "}
+                <span className="text-muted-foreground">{geoStan.opis}</span>
+              </p>
+            )}
+            {geoStan?.rodzaj === "brak" && (
+              <p className="text-xs text-tomato">
+                Nie znaleziono tego adresu w Poznaniu. Sprawdź pisownię albo wpisz współrzędne ręcznie.
+              </p>
+            )}
+          </div>
+          {czyDomyslnyPunkt(form.lat, form.lng) && (
+            <p className="flex items-start gap-1.5 rounded-xl bg-tomato/10 px-3 py-2 text-xs font-semibold text-tomato">
+              <AlertCircle size={14} className="mt-px shrink-0" />
+              Współrzędne to domyślny punkt w centrum Poznania - na mapie lokal stanie w złym miejscu. Użyj
+              przycisku wyżej.
+            </p>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <FormField label="Szerokość (lat)">
               <input
@@ -370,7 +426,7 @@ function EditPlace() {
             </FormField>
           </div>
           <p className="text-xs text-muted-foreground -mt-1">
-            Tip: znajdź miejsce na{" "}
+            Ręcznie: znajdź miejsce na{" "}
             <a
               className="underline"
               target="_blank"
