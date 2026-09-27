@@ -1,6 +1,6 @@
 import { displayNameOf } from "@/lib/display-name";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   Loader2,
   Star,
@@ -290,6 +290,15 @@ function QuickPostBar() {
   const [placeId, setPlaceId] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Esc zamyka arkusz, ale - tak jak klikniecie tla - nie kasuje szkicu.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open]);
   const {
     uploading,
     upload,
@@ -340,7 +349,10 @@ function QuickPostBar() {
           if (f) void handlePhoto(f);
         }}
       />
-      {!open ? (
+      {/* Na telefonie karta zostaje pod arkuszem (przygaszona tlem), zeby po
+          otwarciu w strumieniu nie zostawala pusta ramka. Na desktopie znika,
+          bo formularz zajmuje jej miejsce w tresci. */}
+      <div className={open ? "lg:hidden" : ""}>
         <>
           <button
             type="button"
@@ -401,8 +413,26 @@ function QuickPostBar() {
           </div>
           {listModalOpen && <CreateListModal onClose={() => setListModalOpen(false)} />}
         </>
-      ) : (
-        <form onSubmit={submit} className="space-y-2.5">
+      </div>
+
+      {open && (
+        <>
+          {/* Tlo tylko na telefonie. Klikniecie ZAMYKA, ale NIE kasuje szkicu -
+              przypadkowe tkniecie obok nie moze zabrac komus wpisanego tekstu.
+              Kasuje wylacznie "Anuluj". */}
+          <button
+            type="button"
+            aria-label="Zamknij nowy wpis"
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 z-[69] bg-navy/50 lg:hidden"
+          />
+        <form
+          onSubmit={submit}
+          aria-label="Nowy wpis"
+          className="fixed inset-x-0 bottom-0 z-[70] space-y-2.5 rounded-t-3xl border border-border bg-card p-4 pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] shadow-2xl lg:static lg:z-auto lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none"
+        >
+          <div className="mx-auto h-1 w-10 rounded-full bg-border lg:hidden" aria-hidden />
+          <p className="font-display text-sm font-extrabold lg:hidden">Nowy wpis</p>
           <textarea
             ref={textareaRef}
             value={body}
@@ -467,6 +497,7 @@ function QuickPostBar() {
             </div>
           </div>
         </form>
+        </>
       )}
     </div>
   );
