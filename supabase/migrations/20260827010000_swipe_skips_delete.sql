@@ -9,5 +9,6 @@
 
 GRANT DELETE ON public.place_swipe_skips TO authenticated;
 
+DROP POLICY IF EXISTS "swipe_skips owner delete" ON public.place_swipe_skips;
 CREATE POLICY "swipe_skips owner delete" ON public.place_swipe_skips FOR DELETE TO authenticated
   USING (user_id = auth.uid());
