@@ -2625,6 +2625,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: { Args: never; Returns: boolean }
       is_blocked: { Args: { _a: string; _b: string }; Returns: boolean }
       is_friend_with: { Args: { _user_id: string }; Returns: boolean }
       is_place_owner: {
