@@ -1197,6 +1197,7 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          visibility: string
         }
         Insert: {
           cover_image_url?: string | null
@@ -1206,6 +1207,7 @@ export type Database = {
           title: string
           updated_at?: string
           user_id: string
+          visibility?: string
         }
         Update: {
           cover_image_url?: string | null
@@ -1215,6 +1217,7 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          visibility?: string
         }
         Relationships: []
       }
@@ -2443,6 +2446,14 @@ export type Database = {
     }
     Functions: {
       accept_friend_invite: { Args: { _token: string }; Returns: string }
+      achievement_stats: {
+        Args: never
+        Returns: {
+          achievement_id: string
+          holders: number
+          total_players: number
+        }[]
+      }
       ad_stats: {
         Args: never
         Returns: {
@@ -2589,6 +2600,7 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          visibility: string
         }[]
       }
       get_shared_list_items: {
@@ -2616,6 +2628,7 @@ export type Database = {
         Returns: boolean
       }
       is_verified_owner: { Args: { _user_id: string }; Returns: boolean }
+      list_is_visible_to_me: { Args: { _list_id: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -2720,6 +2733,20 @@ export type Database = {
         Returns: undefined
       }
       unlock_manual_achievement: { Args: { _slug: string }; Returns: boolean }
+      visible_lists: {
+        Args: { _owner?: string }
+        Returns: {
+          cover_image_url: string
+          created_at: string
+          description: string
+          id: string
+          places_count: number
+          title: string
+          updated_at: string
+          user_id: string
+          visibility: string
+        }[]
+      }
       wall_item_owner: {
         Args: { _kind: string; _ref_id: string }
         Returns: string
