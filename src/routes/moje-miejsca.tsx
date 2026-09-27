@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { Bookmark, Check, ChevronRight, Heart, ListChecks, Loader2, Search, Star, X } from "lucide-react";
+import { Bookmark, Check, ChevronRight, Heart, Eye, EyeOff, ListChecks, ListPlus, Loader2, Users, Search, Star, X } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@/lib/use-auth";
 import {
@@ -12,10 +12,18 @@ import {
   type VisitedPlace,
 } from "@/lib/visits-api";
 import { useToggleFavorite } from "@/lib/favorites-api";
-import { usePlaceRatingsMap } from "@/lib/places-api";
+import { usePlaceRatingsMap, usePlaces } from "@/lib/places-api";
 import { useUserLocation, haversineKm, formatDistancePl } from "@/lib/geo";
 import { AuthGate } from "@/components/AuthGate";
-import { useMyLists } from "@/lib/lists-api";
+import {
+  useMyLists,
+  useMyListMembership,
+  useListsCovers,
+  VISIBILITY_LABEL,
+} from "@/lib/lists-api";
+import { pluralPl } from "@/lib/plural-pl";
+import { AddToListModal } from "@/components/AddToListModal";
+import { cuisineMeta } from "@/data/places";
 
 const searchSchema = z.object({
   tab: z.enum(["want", "visited", "fav", "lists"]).catch("want").optional(),
@@ -56,6 +64,9 @@ function MyPlacesPage() {
   // Only for the tab counter - the tab body fetches its own copy via the same
   // query key, so this costs no extra request.
   const { data: myLists } = useMyLists();
+  const { data: przynaleznosc } = useMyListMembership();
+  // Lokal, dla ktorego otwarte jest okno "Dodaj do listy" - null, gdy zamkniete.
+  const [doListy, setDoListy] = useState<{ id: string; name: string } | null>(null);
   const { data: ratings } = usePlaceRatingsMap();
   const userLoc = useUserLocation();
   const toggleVisit = useToggleVisit();
@@ -267,7 +278,30 @@ function MyPlacesPage() {
                         </span>
                       )}
                     </p>
+                    {/* Ile WLASNYCH list zawiera ten lokal - odpowiedz na
+                        "czy juz to gdzies zapisalem", a nie licznik cudzych. */}
+                    {(przynaleznosc?.get(p.id)?.length ?? 0) > 0 && (
+                      <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-tomato/10 px-2 py-0.5 text-[10px] font-extrabold text-tomato">
+                        <ListChecks size={10} />
+                        {przynaleznosc!.get(p.id)!.length === 1
+                          ? "Na 1 liście"
+                          : `Na ${przynaleznosc!.get(p.id)!.length} listach`}
+                      </p>
+                    )}
                   </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setDoListy({ id: p.id, name: p.name });
+                    }}
+                    aria-label={`Dodaj „${p.name}" do listy`}
+                    title="Dodaj do listy"
+                    className="pz-hit grid shrink-0 place-items-center rounded-full text-muted-foreground transition hover:bg-tomato/10 hover:text-tomato"
+                  >
+                    <ListPlus size={16} />
+                  </button>
                   <button
                     type="button"
                     onClick={(e) => {
@@ -316,20 +350,35 @@ function MyPlacesPage() {
       )}
         </>
       )}
+
+      {doListy && (
+        <AddToListModal
+          placeId={doListy.id}
+          placeName={doListy.name}
+          onClose={() => setDoListy(null)}
+        />
+      )}
     </main>
   );
 }
 
-/** Lists could be created (wall composer) and opened by direct link, but there
- *  was nowhere to browse your own - so they were effectively write-only. */
+/**
+ * Zakladka "Moje listy" wedlug nowej paczki designu.
+ *
+ * Wczesniej byl tu plaski wiersz z generyczna ikona - nie dalo sie odroznic
+ * listy z pieciu knajp od pustej ani zobaczyc, kto ja widzi. Teraz kazda karta
+ * niesie okladke zlozona z logo lokali, licznik miejsc i poziom widocznosci.
+ */
 function MyListsTab() {
   const { data: lists, isLoading } = useMyLists();
+  const { data: places } = usePlaces();
+  const { data: items } = useListsCovers();
 
   if (isLoading) {
     return (
-      <ul className="mt-5 space-y-2" aria-busy="true">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <li key={i} className="pz-skel h-20 rounded-2xl" />
+      <ul className="mt-5 grid gap-3 sm:grid-cols-2" aria-busy="true">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <li key={i} className="pz-skel h-28 rounded-2xl" />
         ))}
       </ul>
     );
@@ -340,37 +389,89 @@ function MyListsTab() {
       <div className="mt-5">
         <EmptyState
           icon={<ListChecks size={22} />}
-          text="Nie masz jeszcze żadnej listy. Stwórz ją z Pożeralni - np. „Najlepszy street food w Poznaniu”."
+          text="Nie masz jeszcze żadnej listy. Dodaj knajpę do listy z tej strony albo z jej profilu."
         />
       </div>
     );
   }
 
+  const placeById = new Map((places ?? []).map((p) => [p.id, p]));
+
   return (
-    <ul className="pz-fade-in mt-5 space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
-      {lists.map((l) => (
-        <li key={l.id}>
-          <Link
-            to="/l/$id"
-            params={{ id: l.id }}
-            className="group flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition hover:border-tomato hover:shadow-sm"
-          >
-            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-tomato/10 text-tomato">
-              <ListChecks size={20} />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-display text-sm font-extrabold">{l.title}</p>
-              {l.description && (
-                <p className="truncate text-xs text-muted-foreground">{l.description}</p>
-              )}
-            </div>
-            <ChevronRight
-              size={16}
-              className="shrink-0 text-muted-foreground transition group-hover:text-tomato"
-            />
-          </Link>
-        </li>
-      ))}
+    <ul className="pz-fade-in mt-5 grid gap-3 sm:grid-cols-2">
+      {lists.map((l) => {
+        // Okladka 2x2 z logo pierwszych czterech lokali listy. Puste pola
+        // zostaja przygaszonymi kwadratami - inaczej lista z jednym miejscem
+        // wygladalaby na zepsuta.
+        const idsLokali = (items?.get(l.id) ?? []).slice(0, 4);
+        const kafelki = Array.from({ length: 4 }, (_, i) => {
+          const pid = idsLokali[i];
+          return pid ? (placeById.get(pid) ?? null) : null;
+        });
+        return (
+          <li key={l.id}>
+            <Link
+              to="/l/$id"
+              params={{ id: l.id }}
+              className="group flex items-center gap-3 rounded-2xl border border-border bg-card p-3 transition hover:border-tomato hover:shadow-sm"
+            >
+              <span
+                className="grid h-16 w-16 shrink-0 grid-cols-2 grid-rows-2 gap-px overflow-hidden rounded-xl bg-border"
+                aria-hidden
+              >
+                {kafelki.map((pl, i) => (
+                  <span key={i} className="relative overflow-hidden bg-muted">
+                    {pl?.avatar_url ? (
+                      <img
+                        src={pl.avatar_url}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : pl ? (
+                      <span
+                        className="grid h-full w-full place-items-center text-[11px]"
+                        style={{ background: `${cuisineMeta(pl.cuisine ?? "").color}26` }}
+                      >
+                        {cuisineMeta(pl.cuisine ?? "").emoji}
+                      </span>
+                    ) : null}
+                  </span>
+                ))}
+              </span>
+
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-display text-sm font-extrabold">{l.title}</span>
+                {l.description && (
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {l.description}
+                  </span>
+                )}
+                <span className="mt-1 flex items-center gap-2 text-[11px] font-semibold text-muted-foreground">
+                  <span>
+                    {l.places_count} {pluralPl(l.places_count, "miejsce", "miejsca", "miejsc")}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    {l.visibility === "public" ? (
+                      <Eye size={11} />
+                    ) : l.visibility === "friends" ? (
+                      <Users size={11} />
+                    ) : (
+                      <EyeOff size={11} />
+                    )}
+                    {VISIBILITY_LABEL[l.visibility]}
+                  </span>
+                </span>
+              </span>
+
+              <ChevronRight
+                size={16}
+                className="shrink-0 text-muted-foreground transition group-hover:translate-x-0.5"
+              />
+            </Link>
+          </li>
+        );
+      })}
     </ul>
   );
 }
