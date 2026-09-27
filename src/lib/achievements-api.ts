@@ -67,7 +67,10 @@ export function useAchievements() {
     queryFn: async (): Promise<Achievement[]> => {
       const { data, error } = await supabase
         .from("achievements")
-        .select("id, slug, name, description, icon_url, criteria, sort_order, enabled")
+        // `category` i `title` sa czescia typu Achievement, ale nie bylo ich
+        // na liscie kolumn - przez to strona Osiagniec wrzucala wszystkie 71
+        // odznak do jednego worka "Inne", bo kazda miala category: undefined.
+        .select("id, slug, name, description, icon_url, criteria, sort_order, enabled, category, title")
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return (data ?? []) as Achievement[];
