@@ -16,6 +16,7 @@
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
     "test:domains": "node scripts/check-domains.mjs",
+    "smoke:anon": "node scripts/smoke-anon.mjs",
     "predeploy": "node scripts/check-domains.mjs",
     "format": "prettier --write .",
     "map:style": "node scripts/build-map-style.mjs"
