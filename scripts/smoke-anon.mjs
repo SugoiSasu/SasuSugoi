@@ -47,7 +47,31 @@ const zapisz = (nazwa, ok, szczegol = "") => {
 };
 
 // 1. Trasy renderowane po stronie serwera. 500 tutaj znaczy, ze SSR sie wywrocil.
-const TRASY = ["/", "/mapa", "/osiagniecia", "/moje-miejsca", "/wall", "/karty"];
+const TRASY = ["/", "/mapa", "/osiagniecia", "/moje-miejsca", "/wall", "/karty", "/u", "/wspolpraca", "/regulamin"];
+
+// Karta lokalu i profil publiczny - to strony, na ktore trafia sie z Google i z
+// udostepnionych linkow, wiec padniecie ich dla goscia boli najbardziej.
+// Adresy dobierane na biezaco z bazy, a nie wpisane na sztywno.
+let przykladowyLokal = null;
+if (SUPABASE && KLUCZ) {
+  try {
+    const [lokal] = await fetch(
+      `${SUPABASE}/rest/v1/places?select=id,slug&is_published=eq.true&limit=1`,
+      { headers: { apikey: KLUCZ } },
+    ).then((r) => r.json());
+    if (lokal?.slug) {
+      TRASY.push(`/k/${lokal.slug}`);
+      przykladowyLokal = lokal;
+    }
+    const [profil] = await fetch(
+      `${SUPABASE}/rest/v1/profiles?select=username&username=not.is.null&limit=1`,
+      { headers: { apikey: KLUCZ } },
+    ).then((r) => r.json());
+    if (profil?.username) TRASY.push(`/u/${profil.username}`);
+  } catch {
+    // Brak dostepu do bazy nie moze zablokowac reszty testu.
+  }
+}
 for (const t of TRASY) {
   try {
     const r = await fetch(`${BAZOWY}${t}`, { redirect: "manual" });
@@ -90,6 +114,32 @@ if (SUPABASE && KLUCZ) {
       zapisz(`anon czyta ${nazwa}`, r.ok && !blad, blad ? tekst.slice(0, 140) : "");
     } catch (err) {
       zapisz(`anon czyta ${nazwa}`, false, err.message);
+    }
+  }
+
+  // 4. Funkcje wolane z PRZEGLADARKI goscia. SSR moze zwrocic 200, a strona i tak
+  //    rozsypie sie po stronie klienta, jesli ktoras straci prawo dla `anon` -
+  //    samo sprawdzanie tras by tego nie zlapalo.
+  const RPC = [
+    ["alpha_gate_enabled (bramka - kazdy gosc)", "alpha_gate_enabled", {}],
+    ["place_favorite_counts (liczniki na kartach)", "place_favorite_counts", {}],
+    ["place_follow_counts (liczniki na kartach)", "place_follow_counts", {}],
+    ["achievement_stats (rzadkosc odznak)", "achievement_stats", {}],
+  ];
+  if (przykladowyLokal) {
+    RPC.push(["place_rating_breakdown (karta lokalu)", "place_rating_breakdown", { _place_id: przykladowyLokal.id }]);
+  }
+  for (const [nazwa, fn, args] of RPC) {
+    try {
+      const r = await fetch(`${SUPABASE}/rest/v1/rpc/${fn}`, {
+        method: "POST",
+        headers: { apikey: KLUCZ, "Content-Type": "application/json" },
+        body: JSON.stringify(args),
+      });
+      const tekst = await r.text();
+      zapisz(`anon wola ${nazwa}`, r.ok, r.ok ? "" : tekst.slice(0, 140));
+    } catch (err) {
+      zapisz(`anon wola ${nazwa}`, false, err.message);
     }
   }
 } else {
