@@ -225,6 +225,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#221e50" },
+      // Instalacja na ekranie glownym (PWA). Na iOS manifest nie wystarcza -
+      // Safari czyta wlasne meta. "black-translucent" puszcza tresc pod pasek
+      // statusu; bezpieczne, bo naglowek mobilny ma pz-safe-top (odstep na
+      // notcha).
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: "poŻeramy" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { property: "og:title", content: "poŻeramy - Foodies App" },
       { name: "twitter:title", content: "poŻeramy - Foodies App" },
       {
@@ -258,6 +266,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "icon", href: "/favicon.ico", sizes: "any" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
