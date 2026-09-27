@@ -33,7 +33,7 @@ const STEPS: Step[] = [
   {
     icon: Trophy,
     title: "Zdobywaj odznaki i awansuj",
-    body: "70 achievementów do odblokowania - od pierwszej recenzji po tytuł Legendy poŻeramy.",
+    body: "Ponad 70 odznak do zdobycia - od pierwszej recenzji po tytuł Legendy poŻeramy.",
     accent: "bg-navy",
   },
   {
@@ -120,6 +120,12 @@ export function OnboardingTour() {
         <h2 className="mt-5 text-center font-display text-xl font-extrabold">{s.title}</h2>
         <p className="mt-2 text-center text-sm text-muted-foreground leading-relaxed">{s.body}</p>
 
+        {/* Nick nadaje baza automatycznie przy zakladaniu konta (z imienia
+            albo "pozeracz"+cyfry). Tu - raz, na starcie - zacheta do wlasnego.
+            Edycja na miejscu, a nie odeslanie do Ustawien: przejscie tam
+            zamknelo by powitanie i reszta krokow by przepadla. */}
+        {step === 0 && profile?.username && <NickNudge obecny={profile.username} />}
+
         <div className="mt-6 flex items-center justify-center gap-1.5">
           {STEPS.map((_, i) => (
             <span
@@ -159,5 +165,88 @@ export function OnboardingTour() {
         </div>
       </div>
     </div>
+  );
+}
+
+const WZOR_NICKU = /^[a-z0-9_]{3,20}$/;
+
+function NickNudge({ obecny }: { obecny: string }) {
+  const update = useUpdateProfile();
+  const [edycja, setEdycja] = useState(false);
+  const [wartosc, setWartosc] = useState(obecny);
+  const [blad, setBlad] = useState<string | null>(null);
+
+  async function zapisz(e: React.FormEvent) {
+    e.preventDefault();
+    const nick = wartosc.trim().toLowerCase();
+    if (nick === obecny) {
+      setEdycja(false);
+      return;
+    }
+    // Te same reguly i te same komunikaty co w Ustawieniach - inaczej jedno
+    // miejsce przepuszczaloby nick, ktory drugie odrzuca.
+    if (!WZOR_NICKU.test(nick)) {
+      setBlad("3-20 znaków: małe litery a-z, cyfry 0-9 i podkreślnik _.");
+      return;
+    }
+    try {
+      await update.mutateAsync({ username: nick });
+      setBlad(null);
+      setEdycja(false);
+    } catch (err) {
+      const msg = (err as { message?: string })?.message ?? "";
+      setBlad(
+        msg.includes("unique") || msg.includes("duplicate")
+          ? `@${nick} jest już zajęty - wybierz inny.`
+          : "Nie udało się zapisać nicku.",
+      );
+    }
+  }
+
+  if (!edycja) {
+    return (
+      <div className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-muted/60 px-3 py-2.5 text-sm">
+        <span className="text-muted-foreground">Twój nick:</span>
+        <span className="font-bold">@{obecny}</span>
+        <button
+          type="button"
+          onClick={() => {
+            setWartosc(obecny);
+            setEdycja(true);
+          }}
+          className="ml-1 text-xs font-bold text-tomato hover:underline"
+        >
+          Zmień
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={zapisz} className="mt-4 space-y-1.5">
+      <div className="flex items-center gap-2 rounded-2xl border border-border bg-background px-3 py-1.5 focus-within:border-tomato">
+        <span className="text-sm font-bold text-muted-foreground">@</span>
+        <input
+          autoFocus
+          value={wartosc}
+          onChange={(e) => {
+            setWartosc(e.target.value.toLowerCase());
+            setBlad(null);
+          }}
+          maxLength={20}
+          aria-label="Nowy nick"
+          aria-invalid={!!blad}
+          className="min-w-0 flex-1 bg-transparent py-1 text-sm font-bold outline-none"
+        />
+        <button
+          type="submit"
+          disabled={update.isPending}
+          className="rounded-full bg-tomato px-3 py-1.5 text-xs font-bold text-cream disabled:opacity-50"
+        >
+          {update.isPending ? "…" : "Zapisz"}
+        </button>
+      </div>
+      {blad && <p className="text-center text-xs font-semibold text-destructive">{blad}</p>}
+    </form>
   );
 }

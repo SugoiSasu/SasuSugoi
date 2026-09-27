@@ -2583,6 +2583,7 @@ export type Database = {
           friend_id: string
         }[]
       }
+      generate_username: { Args: { _name: string }; Returns: string }
       get_friends_count: { Args: { _user_id: string }; Returns: number }
       get_invite_preview: {
         Args: { _token: string }
