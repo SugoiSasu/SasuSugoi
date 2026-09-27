@@ -38,3 +38,6 @@ graphify-out/
 *.njsproj
 *.sln
 *.sw?
+
+# Skrypty jednorazowe uzywane przy weryfikacji na zywo - nigdy do repo.
+_tmp-*
