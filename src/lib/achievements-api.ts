@@ -162,8 +162,12 @@ export function useSetActiveTitle() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (achievementId: string | null) => {
+      // null zdejmuje tytul - funkcja SQL ma na to wlasna galaz
+      // (IF _achievement_id IS NULL THEN ... czysci oba pola i wychodzi).
+      // Generator typow Supabase opisuje argument uuid jako `string`, bo nie
+      // czyta ciala implementacji, wiec nullowalnosc trzeba mu tu powiedziec.
       const { error } = await supabase.rpc("set_active_title", {
-        _achievement_id: achievementId,
+        _achievement_id: achievementId as unknown as string,
       });
       if (error) throw error;
     },

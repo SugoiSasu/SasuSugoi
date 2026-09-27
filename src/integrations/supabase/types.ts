@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.5"
   }
   graphql_public: {
     Tables: {
@@ -49,6 +49,7 @@ export type Database = {
           icon_url: string | null
           id: string
           name: string
+          self_unlockable: boolean
           slug: string
           sort_order: number
           title: string | null
@@ -63,6 +64,7 @@ export type Database = {
           icon_url?: string | null
           id?: string
           name: string
+          self_unlockable?: boolean
           slug: string
           sort_order?: number
           title?: string | null
@@ -77,6 +79,7 @@ export type Database = {
           icon_url?: string | null
           id?: string
           name?: string
+          self_unlockable?: boolean
           slug?: string
           sort_order?: number
           title?: string | null
@@ -553,6 +556,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      collab_send_log: {
+        Row: {
+          created_at: string
+          email_hash: string
+          id: number
+        }
+        Insert: {
+          created_at?: string
+          email_hash: string
+          id?: number
+        }
+        Update: {
+          created_at?: string
+          email_hash?: string
+          id?: number
+        }
+        Relationships: []
       }
       collab_submissions: {
         Row: {
@@ -1730,7 +1751,7 @@ export type Database = {
           onboarding_seen_at: string | null
           points_total: number
           returned_after_break_at: string | null
-          share_swipes: boolean | null
+          share_swipes: boolean
           tiktok_url: string | null
           updated_at: string
           username: string | null
@@ -1761,7 +1782,7 @@ export type Database = {
           onboarding_seen_at?: string | null
           points_total?: number
           returned_after_break_at?: string | null
-          share_swipes?: boolean | null
+          share_swipes?: boolean
           tiktok_url?: string | null
           updated_at?: string
           username?: string | null
@@ -1792,7 +1813,7 @@ export type Database = {
           onboarding_seen_at?: string | null
           points_total?: number
           returned_after_break_at?: string | null
-          share_swipes?: boolean | null
+          share_swipes?: boolean
           tiktok_url?: string | null
           updated_at?: string
           username?: string | null
@@ -1801,7 +1822,15 @@ export type Database = {
           x_url?: string | null
           youtube_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_active_title_achievement_id_fkey"
+            columns: ["active_title_achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ranks: {
         Row: {
@@ -1873,6 +1902,35 @@ export type Database = {
             columns: ["review_id"]
             isOneToOne: false
             referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_points_claims: {
+        Row: {
+          created_at: string
+          event_key: string
+          place_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_key: string
+          place_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_key?: string
+          place_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_points_claims_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
             referencedColumns: ["id"]
           },
         ]
@@ -2439,9 +2497,19 @@ export type Database = {
         }
         Returns: undefined
       }
+      award_review_points_once: {
+        Args: {
+          _event_key: string
+          _place_id: string
+          _review_id: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       check_achievements: { Args: { _user_id: string }; Returns: undefined }
       check_challenges: { Args: { _user_id: string }; Returns: undefined }
       close_awards_event: { Args: { _event_id: string }; Returns: undefined }
+      collab_send_allowed: { Args: { _email: string }; Returns: boolean }
       debug_achievement_metrics: {
         Args: { _user_id: string }
         Returns: {
@@ -2511,6 +2579,29 @@ export type Database = {
           status: string
         }[]
       }
+      get_shared_list: {
+        Args: { _id: string }
+        Returns: {
+          cover_image_url: string
+          created_at: string
+          description: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
+      get_shared_list_items: {
+        Args: { _id: string }
+        Returns: {
+          added_at: string
+          id: string
+          list_id: string
+          note: string
+          place_id: string
+          sort_order: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2546,12 +2637,34 @@ export type Database = {
         }
         Returns: undefined
       }
+      owns_place_photo_path: {
+        Args: { _name: string; _uid: string }
+        Returns: boolean
+      }
+      place_favorite_counts: {
+        Args: never
+        Returns: {
+          count: number
+          place_id: string
+        }[]
+      }
+      place_follow_counts: {
+        Args: never
+        Returns: {
+          count: number
+          place_id: string
+        }[]
+      }
       place_rating_breakdown: {
         Args: { _place_id: string }
         Returns: {
           count: number
           rating: number
         }[]
+      }
+      points_daily_cap_reached: {
+        Args: { _cap_key: string; _event_key: string; _user_id: string }
+        Returns: boolean
       }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
@@ -2560,6 +2673,15 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      reverse_points_for_ref: {
+        Args: {
+          _ref_id: string
+          _ref_type: string
+          _reversal_key: string
+          _user_id: string
+        }
+        Returns: undefined
       }
       run_achievement_tests: {
         Args: never
@@ -2579,12 +2701,24 @@ export type Database = {
           username: string
         }[]
       }
+      set_active_title: {
+        Args: { _achievement_id: string }
+        Returns: undefined
+      }
+      shared_friend_wants: {
+        Args: { _since: string; _user_ids: string[] }
+        Returns: {
+          created_at: string
+          id: string
+          place_id: string
+          user_id: string
+        }[]
+      }
       slugify: { Args: { _input: string }; Returns: string }
       submit_award_ballot: {
         Args: { _event_id: string; _picks: Json }
         Returns: undefined
       }
-      set_active_title: { Args: { _achievement_id: string | null }; Returns: undefined }
       unlock_manual_achievement: { Args: { _slug: string }; Returns: boolean }
       wall_item_owner: {
         Args: { _kind: string; _ref_id: string }
@@ -2613,12 +2747,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2642,11 +2776,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2667,11 +2801,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2692,11 +2826,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -2709,11 +2843,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

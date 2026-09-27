@@ -72,11 +72,12 @@ export const submitCollab = createServerFn({ method: "POST" })
           { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
         );
         const { data: allowed, error: gateErr } = await gate.rpc(
-          "collab_send_allowed" as never,
-          { _email: data.email } as never,
+          "collab_send_allowed",
+          { _email: data.email },
         );
-        // Brak funkcji (migracja jeszcze niezaaplikowana) nie moze wywrocic
-        // wysylki - wtedy zachowujemy dotychczasowe zachowanie.
+        // Migracja z ta funkcja jest na produkcji od 2026-09-27. Gdyby jej
+        // jednak nie bylo, brak funkcji nie moze wywrocic wysylki - wtedy
+        // zachowujemy dotychczasowe zachowanie.
         if (!gateErr && allowed === false) {
           console.warn("collab confirmation email throttled");
           return { ok: true as const };

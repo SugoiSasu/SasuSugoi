@@ -32,7 +32,7 @@ export function useFollowCounts() {
     queryKey: ["place-follow-counts"],
     queryFn: async (): Promise<Record<string, number>> => {
       const counts: Record<string, number> = {};
-      const { data, error } = await supabase.rpc("place_follow_counts" as never);
+      const { data, error } = await supabase.rpc("place_follow_counts");
       if (!error && Array.isArray(data)) {
         for (const row of data as { place_id: string; count: number }[]) {
           counts[row.place_id] = row.count;

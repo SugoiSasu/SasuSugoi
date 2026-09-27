@@ -59,14 +59,14 @@ export function useList(id: string | undefined) {
       // obietnicy w Ustawieniach. Te dwie funkcje przyjmuja konkretne id, wiec
       // UUID listy dziala jak klucz: kto ma link, ten widzi liste, ale nikt
       // nie wylistuje tabeli.
-      const { data: listRows, error } = await supabase.rpc("get_shared_list" as never, {
+      const { data: listRows, error } = await supabase.rpc("get_shared_list", {
         _id: id!,
-      } as never);
+      });
 
-      // Dopoki migracja 20260925140000 nie jest zaaplikowana, funkcji nie ma
-      // (PGRST202) - wtedy czytamy po staremu wprost z tabel, ktore w tym
-      // stanie i tak maja jeszcze stara, otwarta polityke. Bez tego strona
-      // listy przestalaby dzialac miedzy deployem a wklejeniem migracji.
+      // Migracja 20260925140000 jest na produkcji od 2026-09-27, wiec ta
+      // galaz juz nie powinna sie odpalac. Zostaje jako siatka bezpieczenstwa
+      // na wypadek srodowiska bez tej migracji (np. swiezy projekt z czesciowo
+      // wgrana kolejka) - brak funkcji nie moze wywrocic strony listy.
       if (error) {
         if (error.code !== "PGRST202") throw error;
         const { data: legacyList, error: legacyErr } = await supabase
