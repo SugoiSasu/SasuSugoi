@@ -7,8 +7,7 @@ import { useMyProfile } from "@/lib/profile-api";
 import {
   useAchievements,
   useUserAchievements,
-  computeProgress,
-  type CriteriaType,
+  useMyAchievementProgress,
 } from "@/lib/achievements-api";
 import {
   RARITY_ORDER,
@@ -18,8 +17,7 @@ import {
   type Rarity,
 } from "@/lib/achievement-rarity";
 import { BEZ_KATEGORII, kategoriaKolor, kategoriaLabel, posortujKategorie } from "@/lib/achievement-categories";
-import { useFriendLeaderboard, useFriendsCount, useInviteStats } from "@/lib/friends-api";
-import { useUserReviewStats } from "@/lib/reviews-api";
+import { useFriendLeaderboard } from "@/lib/friends-api";
 import { UserAvatar } from "@/components/UserAvatar";
 import { LevelProgressCard } from "@/components/LevelProgress";
 import { AuthGate } from "@/components/AuthGate";
@@ -58,11 +56,9 @@ function AchievementsPage() {
   const { data: profile } = useMyProfile();
   const { data: all, isLoading: loadingAll } = useAchievements();
   const { data: mine } = useUserAchievements(user?.id);
+  const { data: postepy, isLoading: loadingPostepy } = useMyAchievementProgress(user?.id);
   const { data: stats } = useAchievementStats();
   const { data: leaders, isLoading: loadingLeaders } = useFriendLeaderboard();
-  const { data: reviewStats, isLoading: loadingReviewStats } = useUserReviewStats(user?.id);
-  const { data: friendsCount, isLoading: loadingFriends } = useFriendsCount(user?.id);
-  const { data: inviteStats, isLoading: loadingInvites } = useInviteStats();
 
   const [status, setStatus] = useState<Status>("all");
   const [kategoria, setKategoria] = useState<string>("all");
@@ -77,17 +73,10 @@ function AchievementsPage() {
     [mine],
   );
 
-  // Zapytania o statystyki ustawiaja sie pozniej niz sama lista odznak. Zanim
-  // to zrobia, kazde kryterium czyta 0, computeProgress zwraca 0% i kazda
-  // niezdobyta odznaka maluje sie jako calkiem zamknieta, po czym doskakuje.
-  const statsLoading = loadingReviewStats || loadingFriends || loadingInvites;
-  const userStats: Record<CriteriaType, number> = {
-    reviews_count: reviewStats?.reviewsCount ?? 0,
-    unique_places: reviewStats?.uniquePlaces ?? 0,
-    points_total: points,
-    friends_count: friendsCount ?? 0,
-    referrals_count: inviteStats?.accepted ?? 0,
-  };
+  // Postep dociera osobnym zapytaniem i ustawia sie pozniej niz sama lista
+  // odznak. Zanim dotrze, kazda niezdobyta odznaka wygladalaby na calkiem
+  // zamknieta, po czym doskakiwalaby do swojego paska.
+  const statsLoading = loadingPostepy;
 
   const enabled = useMemo(() => (all ?? []).filter((a) => a.enabled !== false), [all]);
   const pokazRzadkosc = rarityDostepna(stats);
@@ -96,9 +85,18 @@ function AchievementsPage() {
   const wzbogacone = useMemo(() => {
     return enabled.map((a) => {
       const zdobyta = zdobyteMapa.has(a.id);
-      const p = zdobyta ? null : computeProgress(a, userStats);
+      const m = postepy?.get(a.id);
+      // Pasek rysujemy tylko dla kryteriow mierzalnych i rosnacych.
+      // "ranking_position" jest odwrotne (im mniej tym lepiej), wiec pasek
+      // "12/10" mowilby, ze jestesmy po celu - lepiej nie pokazac nic.
       const postep: TileProgress | null =
-        p && p.threshold > 0 ? { current: p.current, threshold: p.threshold, pct: p.pct } : null;
+        !zdobyta && m && m.measurable && !m.lower_better && m.value !== null && m.target > 0
+          ? {
+              current: m.value,
+              threshold: m.target,
+              pct: Math.min(100, Math.round((m.value / m.target) * 100)),
+            }
+          : null;
       return {
         a,
         zdobyta,
@@ -109,19 +107,7 @@ function AchievementsPage() {
         kat: a.category ?? BEZ_KATEGORII,
       };
     });
-    // userStats to swiezy obiekt przy kazdym renderze - zaleznosci rozpisane
-    // na pola, zeby memo nie liczylo sie bez potrzeby.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    enabled,
-    zdobyteMapa,
-    stats,
-    userStats.reviews_count,
-    userStats.unique_places,
-    userStats.points_total,
-    userStats.friends_count,
-    userStats.referrals_count,
-  ]);
+  }, [enabled, zdobyteMapa, stats, postepy]);
 
   const kategorie = useMemo(
     () => posortujKategorie([...new Set(wzbogacone.map((w) => w.kat))]),

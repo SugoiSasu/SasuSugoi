@@ -1,0 +1,22 @@
+import fs from "node:fs";
+import { createClient } from "@supabase/supabase-js";
+const env=Object.fromEntries(fs.readFileSync(".env","utf8").split(/\r?\n/).filter(l=>/^[A-Z_]+=/.test(l)).map(l=>{const i=l.indexOf("=");return [l.slice(0,i),l.slice(i+1).replace(/^["']|["']$/g,"").trim()];}));
+const URL_=env.SUPABASE_URL||env.VITE_SUPABASE_URL,S=env.SUPABASE_SERVICE_ROLE_KEY,A=env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const admin=createClient(URL_,S,{auth:{autoRefreshToken:false,persistSession:false}});
+const email="audit_postep@example.com";
+const {error:ce}=await admin.auth.admin.createUser({email,email_confirm:true});
+if(ce&&!/already/i.test(ce.message))throw ce;
+const {data:link}=await admin.auth.admin.generateLink({type:"magiclink",email});
+const k=createClient(URL_,A,{auth:{autoRefreshToken:false,persistSession:false}});
+const {data:sess,error:ve}=await k.auth.verifyOtp({email,token:link.properties.email_otp,type:"email"});
+if(ve)throw ve;
+const uid=sess.user.id;
+await admin.from("profiles").update({username:"audyt_postep",display_name:"Audyt Postepu",avatar_url:"https://example.com/a.png",bio:"Konto testowe.",points_total:640}).eq("id",uid);
+const {data:mm}=await admin.from("places").select("id").eq("is_published",true).limit(4);
+await admin.from("reviews").insert(mm.map((p,i)=>({user_id:uid,place_id:p.id,rating:4,body:i%2?"x".repeat(320):"Krotka recenzja audytowa."})));
+await admin.rpc("check_achievements",{_user_id:uid});
+const ref=URL_.match(/https:\/\/([a-z0-9]+)\.supabase\.co/)[1];
+fs.mkdirSync(".vercel/output/static/_audyt",{recursive:true});
+fs.writeFileSync(".vercel/output/static/_audyt/sess.js",
+  `localStorage.setItem(${JSON.stringify(`sb-${ref}-auth-token`)}, ${JSON.stringify(JSON.stringify(sess.session))}); localStorage.setItem("pozeramy:alpha-passed","1"); localStorage.setItem("pz_onboarding_seen_v1:${uid}","1"); localStorage.setItem("pz_cookie_consent_v1","1");`);
+console.log("konto gotowe, uid:",uid);

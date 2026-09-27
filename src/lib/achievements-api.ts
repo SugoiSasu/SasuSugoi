@@ -210,3 +210,47 @@ export function useDeleteAchievement() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["achievements"] }),
   });
 }
+
+export interface AchievementProgressRow {
+  /** Zmierzona wartosc. null = tego kryterium nie da sie zmierzyc. */
+  value: number | null;
+  /** Do ilu trzeba dojsc. NIE zawsze rowna progowi z criteria - patrz migracja
+   *  20260927130000 (review_length, early_reviewer_rank, all_achievements). */
+  target: number;
+  meets: boolean;
+  /** true dla "ranking_position": im MNIEJ tym lepiej, wiec pasek postepu
+   *  wprowadzalby w blad i interfejs go nie rysuje. */
+  lower_better: boolean;
+  measurable: boolean;
+}
+
+/**
+ * Postep WSZYSTKICH odznak zalogowanego uzytkownika, liczony w bazie tym samym
+ * kodem, ktory decyduje o przyznaniu (achievement_metric).
+ *
+ * Zastepuje computeProgress() wszedzie tam, gdzie chodzi o wlasne odznaki:
+ * ta funkcja zna wszystkie 44 typy kryteriow, a computeProgress tylko 5, przez
+ * co 52 z 71 odznak pokazywaly zawsze 0%.
+ */
+export function useMyAchievementProgress(userId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["my-achievement-progress", userId ?? null],
+    enabled: !!userId,
+    staleTime: 60_000,
+    queryFn: async (): Promise<Map<string, AchievementProgressRow>> => {
+      const { data, error } = await supabase.rpc("my_achievement_progress");
+      if (error) throw error;
+      const m = new Map<string, AchievementProgressRow>();
+      for (const r of data ?? []) {
+        m.set(r.achievement_id, {
+          value: r.value === null ? null : Number(r.value),
+          target: Number(r.target),
+          meets: !!r.meets,
+          lower_better: !!r.lower_better,
+          measurable: !!r.measurable,
+        });
+      }
+      return m;
+    },
+  });
+}

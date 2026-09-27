@@ -2446,6 +2446,10 @@ export type Database = {
     }
     Functions: {
       accept_friend_invite: { Args: { _token: string }; Returns: string }
+      achievement_metric: {
+        Args: { _criteria: Json; _user_id: string }
+        Returns: Json
+      }
       achievement_stats: {
         Args: never
         Returns: {
@@ -2637,6 +2641,17 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      my_achievement_progress: {
+        Args: never
+        Returns: {
+          achievement_id: string
+          lower_better: boolean
+          measurable: boolean
+          meets: boolean
+          target: number
+          value: number
+        }[]
       }
       notify: {
         Args: {
