@@ -758,9 +758,14 @@ function OpeningHoursEditor({
       <div className="space-y-1.5">
         {DAYS.map(({ key, label }) => {
           const h = hours[key];
+          // Otwarcie = zamkniecie apka liczy jako "czynne cala dobe" (zamkniecie
+          // <= otwarcie przechodzi przez polnoc). Czasem to prawda - dlatego
+          // ostrzezenie, a nie blokada - ale zwykle to literowka: The Round mial
+          // wtorek 18:00-18:00 i pokazywalby sie jako otwarty do srody 18:00.
+          const calaDoba = !!h?.open && h.open === h.close;
           return (
+            <div key={key}>
             <div
-              key={key}
               className="grid grid-cols-[3rem_1fr_1fr_auto] items-center gap-2 text-sm"
             >
               <span className="font-semibold">{label}</span>
@@ -787,6 +792,14 @@ function OpeningHoursEditor({
               ) : (
                 <span className="text-xs text-muted-foreground"> - </span>
               )}
+            </div>
+            {calaDoba && (
+              <p className="mt-1 ml-14 flex items-start gap-1 text-[11px] font-semibold text-tomato">
+                <AlertCircle size={12} className="mt-px shrink-0" />
+                Otwarcie i zamknięcie o tej samej godzinie - apka pokaże lokal jako czynny całą dobę. Jeśli
+                tego dnia jest zamknięty, kliknij „Zamknięte”.
+              </p>
+            )}
             </div>
           );
         })}
