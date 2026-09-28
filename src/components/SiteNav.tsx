@@ -102,7 +102,11 @@ export function SiteNav() {
             className="h-9 w-9 shrink-0 rounded-xl object-cover ring-1 ring-border shadow-sm"
           />
         </Link>
-        <nav className="hidden md:flex items-center gap-5 lg:gap-6 text-sm font-medium">
+        {/* SiteNav jest widoczny tylko ponizej lg (wyzej jest AppSidebar), wiec
+            pelny rzad linkow od md wlaczal sie na tabletach 768-1023 px - osiem
+            linkow + dzwonek + menu nie miescilo sie i strona wystawala w bok
+            o ~180 px. Rzad linkow od lg = nigdy tu; tablet dostaje hamburger. */}
+        <nav className="hidden lg:flex items-center gap-5 lg:gap-6 text-sm font-medium">
           {hashLink("mapa", "Mapa")}
           {hashLink("miejscowki", "Miejscówki")}
           <Link
@@ -169,14 +173,14 @@ export function SiteNav() {
             onClick={() => setMobileOpen((v) => !v)}
             aria-label={mobileOpen ? "Zamknij menu" : "Otwórz menu"}
             aria-expanded={mobileOpen}
-            className="md:hidden inline-flex items-center justify-center w-11 h-11 rounded-full hover:bg-muted text-foreground active:scale-95 transition"
+            className="lg:hidden inline-flex items-center justify-center w-11 h-11 rounded-full hover:bg-muted text-foreground active:scale-95 transition"
           >
             {mobileOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
       {mobileOpen && (
-        <nav className="md:hidden max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-t border-border/70 bg-background/95 backdrop-blur-md">
+        <nav className="lg:hidden max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-t border-border/70 bg-background/95 backdrop-blur-md">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 py-4 space-y-4">
             {user && profile && (
               <Link

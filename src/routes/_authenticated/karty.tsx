@@ -204,7 +204,9 @@ function KartyPage() {
       <div className="flex w-full items-start justify-center gap-10">
       <div className="w-full max-w-md text-center lg:max-w-lg">
         <h1 className="font-display text-2xl font-extrabold sm:text-4xl">Karty 🎴</h1>
-        <p className="mt-1 text-xs text-muted-foreground sm:mt-1.5 sm:text-sm">
+        {/* Na niskich ekranach (iPhone SE: ~550 px w Safari) instrukcja ustepuje
+            miejsca karcie - i tak mowi to samo co przyciski pod nia. */}
+        <p className="mt-1 text-xs text-muted-foreground sm:mt-1.5 sm:text-sm [@media(max-height:620px)]:hidden">
           Przesuń w prawo - trafi do „Chcę odwiedzić”. W lewo - pomiń, wróci za 5 dni.
         </p>
         {!isLoading && visible.length > 0 && (
@@ -214,7 +216,13 @@ function KartyPage() {
           </p>
         )}
 
-        <div className="relative mx-auto mt-4 aspect-[3/4] h-[clamp(19rem,calc(100dvh-20rem),28.5rem)] max-w-full sm:mt-6 lg:h-auto lg:w-full lg:max-w-[440px]">
+        {/* Wysokosc karty z wysokosci okna na KAZDYM rozmiarze, szerokosc z
+            proporcji 3:4. Zmierzone 2026-09-28: iPhone SE (320x548, 375x553)
+            mial przyciski ~60 px pod dolnym menu, laptop 1280x800 - 29 px pod
+            krawedzia okna (stale 440x587). Budzety: telefon = naglowek strony,
+            tytul, przyciski i dolne menu; niski ekran bez instrukcji; desktop
+            bez dolnego menu, ale z paddingiem strony. */}
+        <div className="relative mx-auto mt-4 aspect-[3/4] h-[clamp(15rem,calc(100dvh-20rem),28.5rem)] max-w-full sm:mt-6 lg:h-[clamp(22rem,calc(100dvh-18rem),36.5rem)] [@media(max-height:620px)]:h-[clamp(15rem,calc(100dvh-17.5rem),28.5rem)]">
           {isLoading ? (
             <div className="grid h-full place-items-center rounded-3xl border border-dashed border-border">
               <Loader2 className="animate-spin text-tomato" size={28} />

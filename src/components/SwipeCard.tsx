@@ -247,8 +247,11 @@ export function SwipeCard({
         <div className="shrink-0 bg-gradient-to-t from-black/85 via-black/55 to-transparent p-4 pt-8 text-cream sm:p-5 sm:pt-10">
           <div className="mb-2">{signalBadges}</div>
           {place.description && (
-            <>
-              <p className="line-clamp-2 text-sm leading-snug text-cream/90">{place.description}</p>
+            // Niski ekran (iPhone SE): znika sam tekst opisu, zostaje "Zobacz
+            // pelny opis" - inaczej logo i nazwa nie mieszcza sie w karcie
+            // ~250 px wysokosci.
+            <div>
+              <p className="line-clamp-2 text-sm leading-snug text-cream/90 [@media(max-height:620px)]:hidden">{place.description}</p>
               <button
                 type="button"
                 onPointerDownCapture={(e) => e.stopPropagation()}
@@ -260,7 +263,7 @@ export function SwipeCard({
               >
                 Zobacz pełny opis
               </button>
-            </>
+            </div>
           )}
           <p className="mt-2 flex items-center gap-1.5 text-xs text-cream/70">
             <span className="inline-flex min-w-0 items-center gap-1 truncate">
