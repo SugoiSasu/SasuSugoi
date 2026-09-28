@@ -24,6 +24,7 @@ import {
   Upload,
   Sparkles,
   MapPin,
+  FileText,
 } from "lucide-react";
 import { DOMYSLNY_PUNKT, czyDomyslnyPunkt, geokodujAdres } from "@/lib/geocode";
 import { MigratePlaceImagesButton } from "@/components/PlaceImageMigration";
@@ -64,6 +65,16 @@ function emptyPlace(defaultCuisine: string): PlaceInput {
     menu_items: null,
     extra_locations: [],
   };
+}
+
+/** Podpisany URL ma token w query - rozszerzenie sprawdzamy na samej sciezce. */
+function czyPdf(url: string | null | undefined): boolean {
+  if (!url) return false;
+  try {
+    return new URL(url).pathname.toLowerCase().endsWith(".pdf");
+  } catch {
+    return false;
+  }
 }
 
 function isValidHttpUrl(s: string): boolean {
@@ -561,10 +572,11 @@ function EditPlace() {
             </span>
           </div>
           <ImageUploader
-            title="Zdjęcie menu (opcjonalnie)"
-            hint="JPG/PNG/WEBP, do 8 MB. Zdjęcie fizycznego menu - wystarczy telefonem."
+            title="Zdjęcie lub PDF menu (opcjonalnie)"
+            hint="JPG/PNG/WEBP albo PDF, do 10 MB. Zdjęcie karty telefonem albo menu w PDF od lokalu."
             subfolder="menu"
-            maxMb={8}
+            maxMb={10}
+            allowPdf
             previewClass="w-32 h-20 rounded-xl"
             value={form.menu_image_url ?? ""}
             onChange={(url) => setForm({ ...form, menu_image_url: url })}
@@ -577,8 +589,8 @@ function EditPlace() {
               className="inline-flex items-center gap-2 rounded-full bg-navy text-cream px-4 py-2 text-sm font-semibold hover:bg-navy/90 disabled:opacity-50"
               title={
                 form.menu_image_url
-                  ? "Odczytaj pozycje menu ze zdjęcia (zastąpi obecne menu powyżej)"
-                  : "Najpierw dodaj zdjęcie menu"
+                  ? "Odczytaj pozycje menu ze zdjęcia lub PDF (zastąpi obecne menu powyżej)"
+                  : "Najpierw dodaj zdjęcie lub PDF menu"
               }
             >
               {extractingMenu ? (
@@ -589,7 +601,7 @@ function EditPlace() {
               Wyodrębnij menu z AI
             </button>
             <span className="text-xs text-muted-foreground">
-              Odczyta pozycje ze zdjęcia i wypełni menu powyżej (nadpisze obecne pozycje).
+              Odczyta pozycje ze zdjęcia lub PDF i wypełni menu powyżej (nadpisze obecne pozycje).
             </span>
           </div>
           <div className="rounded-xl border border-border p-3 space-y-2 bg-muted/30">
@@ -1208,6 +1220,7 @@ function ImageUploader({
   minH,
   targetAspect,
   aspectTolerance = 0.2,
+  allowPdf = false,
 }: {
   value: string;
   onChange: (url: string) => void;
@@ -1221,6 +1234,7 @@ function ImageUploader({
   minH?: number;
   targetAspect?: number;
   aspectTolerance?: number;
+  allowPdf?: boolean;
 }) {
   const [lastDims, setLastDims] = useState<{ width: number; height: number } | null>(null);
   const dimsRef = useRef<{ width: number; height: number } | null>(null);
@@ -1232,6 +1246,7 @@ function ImageUploader({
       return `${subfolder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     },
     maxMb,
+    allowPdf,
     validate: async (file) => {
       let dims: { width: number; height: number };
       try {
@@ -1248,10 +1263,12 @@ function ImageUploader({
   });
 
   async function handleFile(file: File) {
-    if (!IMAGE_TYPES.includes(file.type)) {
-      toast.error("Dozwolone: JPG, PNG, WEBP");
+    const pdf = allowPdf && file.type === "application/pdf";
+    if (!IMAGE_TYPES.includes(file.type) && !pdf) {
+      toast.error(allowPdf ? "Dozwolone: JPG, PNG, WEBP, PDF" : "Dozwolone: JPG, PNG, WEBP");
       return;
     }
+    if (pdf) dimsRef.current = null;
     const url = await upload(file);
     if (url) {
       onChange(url);
@@ -1259,6 +1276,7 @@ function ImageUploader({
       toast.success(`Wgrano ✓${d ? ` (${d.width}×${d.height})` : ""}`);
     }
   }
+  const toPdf = czyPdf(value);
 
   return (
     <div className="bg-card rounded-2xl border border-border p-5 space-y-2">
@@ -1274,7 +1292,11 @@ function ImageUploader({
         <div
           className={`${previewClass} overflow-hidden border border-border bg-muted grid place-items-center flex-shrink-0`}
         >
-          {value ? (
+          {value && toPdf ? (
+            <a href={value} target="_blank" rel="noreferrer" className="grid h-full w-full place-items-center text-xs font-bold text-tomato">
+              <FileText size={22} /> PDF
+            </a>
+          ) : value ? (
             <img src={value} alt="Podgląd" className="w-full h-full object-cover" />
           ) : (
             <ImageIcon size={20} className="text-muted-foreground" />
@@ -1308,7 +1330,7 @@ function ImageUploader({
           <input
             ref={inputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept={allowPdf ? "image/jpeg,image/png,image/webp,application/pdf" : "image/jpeg,image/png,image/webp"}
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
@@ -1316,7 +1338,7 @@ function ImageUploader({
             }}
           />
           <div className="flex flex-wrap items-center gap-2">
-            {value && <UrlStatusBadge status={urlStatus} />}
+            {value && !toPdf && <UrlStatusBadge status={urlStatus} />}
             {lastDims && (
               <span className="text-[11px] text-muted-foreground">
                 Wgrany rozmiar: {lastDims.width}×{lastDims.height} px

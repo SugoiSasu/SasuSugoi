@@ -16,6 +16,8 @@ export interface StorageImageUploadOptions {
    * file is confirmed to be a readable image, before upload starts. Return
    * an error string to reject, or a warning string to allow-but-warn. */
   validate?: (file: File) => Promise<{ error?: string; warning?: string } | void>;
+  /** Przepuszcza tez PDF (menu lokalu). */
+  allowPdf?: boolean;
 }
 
 /** Shared "pick a file → validate → upload to Supabase Storage → sign the
@@ -27,20 +29,22 @@ export function useStorageImageUpload({
   maxMb = 1,
   signedUrlSeconds = 60 * 60 * 24 * 365 * 10,
   validate,
+  allowPdf = false,
 }: StorageImageUploadOptions) {
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function upload(file: File): Promise<string | null> {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Wybierz plik graficzny (JPG, PNG, WebP).");
+    const pdf = allowPdf && file.type === "application/pdf";
+    if (!file.type.startsWith("image/") && !pdf) {
+      toast.error(allowPdf ? "Wybierz zdjęcie (JPG, PNG, WebP) albo PDF." : "Wybierz plik graficzny (JPG, PNG, WebP).");
       return null;
     }
     if (file.size > maxMb * 1024 * 1024) {
       toast.error(`Plik za duży (max ${maxMb} MB).`);
       return null;
     }
-    if (validate) {
+    if (validate && !pdf) {
       const result = await validate(file);
       if (result?.error) {
         toast.error(result.error);

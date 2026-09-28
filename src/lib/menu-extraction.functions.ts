@@ -72,11 +72,14 @@ export const extractMenuFromImage = createServerFn({ method: "POST" })
           {
             role: "user",
             content: [
-              { type: "image", source: { type: "url", url: data.imageUrl } },
+              // PDF (karta menu od lokalu) idzie jako dokument, zdjecie jako obraz.
+              new URL(data.imageUrl).pathname.toLowerCase().endsWith(".pdf")
+                ? { type: "document", source: { type: "url", url: data.imageUrl } }
+                : { type: "image", source: { type: "url", url: data.imageUrl } },
               {
                 type: "text",
                 text:
-                  "Wyodrębnij pełne menu z tego zdjęcia. Pogrupuj pozycje w logiczne kategorie " +
+                  "Wyodrębnij pełne menu z tego zdjęcia lub dokumentu. Pogrupuj pozycje w logiczne kategorie " +
                   "zgodnie z tym co widać na zdjęciu (np. Przystawki, Dania główne, Desery, Napoje - " +
                   "użyj nazw kategorii z samego zdjęcia, jeśli są). Dla każdej pozycji podaj nazwę i " +
                   "cenę jeśli jest widoczna (jako tekst, np. '28 zł'). Pole opisu (description) " +

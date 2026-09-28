@@ -65,8 +65,10 @@ export const szukajDanychLokalu = createServerFn({ method: "POST" })
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) throw new Error("Wyszukiwanie nie jest skonfigurowane (brak klucza API).");
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: place, error } = await supabaseAdmin
+    // Sesja admina, nie klucz serwisowy - na produkcji go nie ma, a RLS
+    // i tak wpuszcza admina do szkicow, propozycji i storage.
+    const db = context.supabase;
+    const { data: place, error } = await db
       .from("places")
       .select(
         "id, name, address, website, district, phone, description, price_range, opening_hours, menu_url, menu_items, has_takeaway, wheelchair_accessible",
@@ -75,10 +77,10 @@ export const szukajDanychLokalu = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) throw new Error(error.message);
     if (!place) throw new Error("Lokal nie istnieje");
-    const { data: kuchnie } = await supabaseAdmin.from("cuisines").select("name").eq("enabled", true);
+    const { data: kuchnie } = await db.from("cuisines").select("name").eq("enabled", true);
     // Dzielnice: lista z profilu + te, ktore juz stoja w lokalach (zeby nie
     // mnozyc pisowni tej samej dzielnicy).
-    const { data: wLokalach } = await supabaseAdmin.from("places").select("district");
+    const { data: wLokalach } = await db.from("places").select("district");
     const dzielnice = [
       ...new Set([
         ...POZNAN_DISTRICTS.filter((d) => d !== "Inna"),
@@ -87,7 +89,7 @@ export const szukajDanychLokalu = createServerFn({ method: "POST" })
     ];
 
     const zapisz = async (wiersz: { status: "szukam" | "gotowe" | "blad"; blad: string | null; propozycja?: PropozycjaLokalu }) => {
-      const { error: zErr } = await supabaseAdmin.from("place_enrichment").upsert({
+      const { error: zErr } = await db.from("place_enrichment").upsert({
         place_id: place.id,
         created_by: context.userId,
         updated_at: new Date().toISOString(),
@@ -158,15 +160,15 @@ export const pobierzObrazLokalu = createServerFn({ method: "POST" })
     if (bytes.byteLength === 0) throw new Error("Pobrany plik jest pusty");
     if (bytes.byteLength > 5 * 1024 * 1024) throw new Error("Obraz większy niż 5 MB");
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = context.supabase;
     const BUCKET = "place-photos";
     const path = `${data.placeId}/${data.rodzaj === "logo" ? "avatar_url" : "cover_image_url"}-web-${Date.now()}.${ext}`;
-    const { error: upErr } = await supabaseAdmin.storage
+    const { error: upErr } = await db.storage
       .from(BUCKET)
       .upload(path, bytes, { contentType: typ, upsert: false });
     if (upErr) throw new Error(`Upload do Storage: ${upErr.message}`);
     // Tak samo jak migracja zdjec lokali: podpisany URL na 10 lat.
-    const { data: signed, error: sErr } = await supabaseAdmin.storage
+    const { data: signed, error: sErr } = await db.storage
       .from(BUCKET)
       .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
     if (sErr || !signed) throw new Error(`Nie udało się utworzyć URL-a: ${sErr?.message ?? "brak"}`);

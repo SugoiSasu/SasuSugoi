@@ -390,8 +390,6 @@ export const TYPY_OBRAZOW: Record<string, string> = {
   "image/jpg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
-  "image/gif": "gif",
-  "image/avif": "avif",
 };
 
 /** Sprawdza, ze URL naprawde zwraca obraz - martwe linki od AI odpadaja. */

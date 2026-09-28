@@ -37,7 +37,8 @@ export const migratePlaceImage = createServerFn({ method: "POST" })
       throw new Error("Forbidden");
     }
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Sesja admina zamiast klucza serwisowego (brak go na produkcji).
+    const supabaseAdmin = supabase;
 
     const { data: place, error: pErr } = await supabaseAdmin
       .from("places")
