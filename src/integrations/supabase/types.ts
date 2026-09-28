@@ -2521,7 +2521,10 @@ export type Database = {
         }
         Returns: undefined
       }
-      check_achievements: { Args: { _user_id: string }; Returns: undefined }
+      check_achievements: {
+        Args: { _typy?: string[]; _user_id: string }
+        Returns: undefined
+      }
       check_challenges: { Args: { _user_id: string }; Returns: undefined }
       close_awards_event: { Args: { _event_id: string }; Returns: undefined }
       collab_send_allowed: { Args: { _email: string }; Returns: boolean }
