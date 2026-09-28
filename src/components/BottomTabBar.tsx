@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Compass, Map, Layers, Bookmark, Users, User as UserIcon, Plus, Star, Store, Camera, X } from "lucide-react";
 import { useMyProfile } from "@/lib/profile-api";
@@ -18,6 +18,23 @@ const leftTabs = [
 /** Mobile bottom tab bar with a central coral FAB. */
 export function BottomTabBar() {
   const [sheetOpen, setSheetOpen] = useState(false);
+  // Prawdziwa wysokosc paska (z paskiem gestow iPhone'a) jako zmienna CSS -
+  // elementy przypiete nad nim (karta pinezki na mapie, "Pokaz liste")
+  // zgadywaly ja w rem i na iPhonie chowaly sie pod paskiem (zrzut 2026-09-28).
+  const navRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const ustaw = () =>
+      document.documentElement.style.setProperty("--pz-tabbar-h", `${el.getBoundingClientRect().height}px`);
+    ustaw();
+    const ro = new ResizeObserver(ustaw);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      document.documentElement.style.removeProperty("--pz-tabbar-h");
+    };
+  }, []);
   const { data: profile } = useMyProfile();
   const { user } = useUser();
   const { data: friendships } = useMyFriendships();
@@ -121,6 +138,7 @@ export function BottomTabBar() {
       )}
 
       <nav
+        ref={navRef}
         aria-label="Nawigacja główna"
         className="pz-safe-bottom fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 backdrop-blur-md lg:hidden"
       >

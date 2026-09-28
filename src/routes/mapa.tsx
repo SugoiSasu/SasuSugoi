@@ -501,7 +501,9 @@ function MapaPage() {
             <button
               type="button"
               onClick={() => setMobileView("list")}
-              className="absolute bottom-4 left-1/2 z-10 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-navy px-4 py-2.5 text-xs font-semibold text-cream shadow-xl lg:hidden"
+              // fixed nad zmierzonym dolnym paskiem (--pz-tabbar-h z BottomTabBar),
+              // nie absolute w mapie - wysokosc mapy na iPhonie nie trafiala.
+              className="fixed bottom-[calc(var(--pz-tabbar-h,4.5rem)+0.75rem)] left-1/2 z-30 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-navy px-4 py-2.5 text-xs font-semibold text-cream shadow-xl lg:hidden"
             >
               <List size={14} /> Pokaż listę · {listResults.length}
             </button>
@@ -509,8 +511,10 @@ function MapaPage() {
 
           {selected && (
             <>
-              {/* Mobile: card sliding in from the bottom (unchanged) */}
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 p-4 lg:hidden">
+              {/* Mobile: karta przypieta nad zmierzonym dolnym paskiem
+                  (--pz-tabbar-h) - liczona z wysokosci mapy chowala sie pod
+                  paskiem na iPhonie (zrzuty 2026-09-28, dwa razy). */}
+              <div className="pointer-events-none fixed inset-x-0 bottom-[var(--pz-tabbar-h,4.5rem)] z-30 px-4 pb-3 lg:hidden">
                 <div className="pointer-events-auto mx-auto max-w-md">
                   <SelectedCard place={selected} stat={selRating} dist={distanceFor(selected)} />
                 </div>

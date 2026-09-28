@@ -5,7 +5,7 @@ import { cuisineMeta } from "@/data/places";
 import { YummyFace, NopeFace } from "@/components/SwipeFaces";
 import { placeOpenState } from "@/lib/places-api";
 import type { Place } from "@/lib/places-api";
-import { useCutoutLogo } from "@/lib/chroma-cutout";
+import { useCutoutLogoReady } from "@/lib/chroma-cutout";
 import { InstagramReelPoster } from "@/components/InstagramReelEmbed";
 
 const SWIPE_THRESHOLD = 120;
@@ -56,8 +56,11 @@ export function SwipeCard({
   // can opt out via avatar_cutout_enabled, e.g. a logo whose "background" is
   // actually part of the mark). Falls back to the raw file while the cutout
   // is still processing or unavailable, so the card never shows nothing.
-  const cutoutLogo = useCutoutLogo(place.avatar_cutout_enabled !== false ? place.avatar_url : null);
-  const logoSrc = cutoutLogo ?? place.avatar_url ?? undefined;
+  const cutout = useCutoutLogoReady(place.avatar_cutout_enabled !== false ? place.avatar_url : null);
+  const logoSrc = cutout.src ?? place.avatar_url ?? undefined;
+  // Logo pokazujemy dopiero, gdy wycinanie sie skonczylo - wczesniej oryginal
+  // z tlem podmienial sie po chwili na wyciety i logo "mrugalo".
+  const logoWidoczne = cutout.gotowe;
 
   // Time-dependent state must not be computed during SSR or the first client
   // render: the server runs in UTC and the visitor does not, so the two would
@@ -182,7 +185,7 @@ export function SwipeCard({
             src={logoSrc}
             alt=""
             aria-hidden="true"
-            className="absolute left-1/2 top-1/2 h-full w-full object-cover"
+            className={`absolute left-1/2 top-1/2 h-full w-full object-cover transition-opacity duration-300 ${logoWidoczne ? "opacity-100" : "opacity-0"}`}
             style={{ filter: "blur(44px) saturate(2)", transform: "translate(-50%, -50%) scale(1.6)" }}
           />
           {/* A monochrome logo blurs to grey or near-black - Gemüse Spot and
@@ -213,7 +216,7 @@ export function SwipeCard({
               uploaded logo) is cut out client-side so it doesn't show as a
               coloured box; a place can turn that off (avatar_cutout_enabled)
               if its "background" is actually part of the mark. */}
-          <div className="relative grid aspect-square min-h-0 max-h-48 flex-1 place-items-center">
+          <div className="relative grid aspect-square min-h-24 max-h-48 flex-1 place-items-center">
             <span
               aria-hidden="true"
               className="absolute inset-[-18%] rounded-full blur-xl"
@@ -223,10 +226,10 @@ export function SwipeCard({
               src={logoSrc}
               alt=""
               aria-hidden="true"
-              className="relative h-full w-full object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)]"
+              className={`relative h-full w-full object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)] transition-opacity duration-300 ${logoWidoczne ? "opacity-100" : "opacity-0"}`}
             />
           </div>
-          <h2 className="line-clamp-2 shrink-0 font-display text-2xl font-extrabold leading-tight text-cream drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)]">
+          <h2 className="line-clamp-2 shrink-0 font-display text-xl font-extrabold leading-tight text-cream drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)] sm:text-2xl">
             {place.name}
           </h2>
         </div>

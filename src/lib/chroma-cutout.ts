@@ -54,21 +54,66 @@ function cutoutBackground(url: string): Promise<string> {
         bg /= 4;
         bb /= 4;
 
-        const threshold = 28;
-        const feather = 22;
-        const alphas = new Float32Array(data.length / 4);
+        // Logo, ktore juz ma przezroczyste tlo (PNG), zostawiamy w spokoju -
+        // "wycinanie" tylko by je poszarpalo.
+        const przezroczysteRogi = corners.filter(([x, y]) => data[(y * width + x) * 4 + 3] < 250).length;
+        if (przezroczysteRogi >= 2) {
+          resolve(url);
+          return;
+        }
+
+        const threshold = 34;
+        const feather = 26;
+        const n = width * height;
+        const distOf = (p: number) => {
+          const i = p * 4;
+          return Math.sqrt((data[i] - br) ** 2 + (data[i + 1] - bg) ** 2 + (data[i + 2] - bb) ** 2);
+        };
+        // Tlo = tylko obszar POLACZONY z brzegiem obrazka (flood fill od
+        // krawedzi). Dawniej znikal kazdy piksel w kolorze tla, takze w srodku
+        // logo - biale elementy (np. wydra Lontry) robily sie dziurami, przez
+        // ktore przeswitywalo tlo karty (zrzut Mateusza 2026-09-28).
+        // Rozlewamy sie tylko przez piksele wyraznie tla (< threshold); pas
+        // przejsciowy (feather) dostaje czesciowa przezroczystosc, ale dalej
+        // nie przepuszcza - inaczej fill wyciekalby przez antyaliasing.
+        const alphas = new Float32Array(n).fill(255);
+        const odwiedzone = new Uint8Array(n);
+        const stos: number[] = [];
+        const dodaj = (p: number) => {
+          if (odwiedzone[p]) return;
+          odwiedzone[p] = 1;
+          const d = distOf(p);
+          if (d < threshold) {
+            alphas[p] = 0;
+            stos.push(p);
+          } else if (d < threshold + feather) {
+            alphas[p] = ((d - threshold) / feather) * 255;
+          }
+        };
+        for (let x = 0; x < width; x++) {
+          dodaj(x);
+          dodaj((height - 1) * width + x);
+        }
+        for (let y = 0; y < height; y++) {
+          dodaj(y * width);
+          dodaj(y * width + width - 1);
+        }
+        while (stos.length) {
+          const p = stos.pop()!;
+          const x = p % width;
+          if (x > 0) dodaj(p - 1);
+          if (x < width - 1) dodaj(p + 1);
+          if (p >= width) dodaj(p - width);
+          if (p < n - width) dodaj(p + width);
+        }
+
         let lumSum = 0;
         let lumCount = 0;
         for (let p = 0, i = 0; i < data.length; i += 4, p++) {
           const r = data[i];
           const g = data[i + 1];
           const b = data[i + 2];
-          const dist = Math.sqrt((r - br) ** 2 + (g - bg) ** 2 + (b - bb) ** 2);
-          let alpha: number;
-          if (dist < threshold) alpha = 0;
-          else if (dist < threshold + feather) alpha = ((dist - threshold) / feather) * 255;
-          else alpha = 255;
-          alphas[p] = alpha;
+          const alpha = alphas[p];
           if (alpha > 128) {
             lumSum += 0.2126 * r + 0.7152 * g + 0.0722 * b;
             lumCount++;
@@ -106,6 +151,31 @@ function cutoutBackground(url: string): Promise<string> {
 
   cache.set(url, promise);
   return promise;
+}
+
+/**
+ * Jak useCutoutLogo, ale mowi tez, czy wynik jest juz ostateczny. Karty
+ * pokazuja logo dopiero wtedy - inaczej najpierw widac oryginal z tlem, a po
+ * chwili podmienia sie wyciety (logo "mrugalo").
+ */
+export function useCutoutLogoReady(url: string | null | undefined): { src: string | null; gotowe: boolean } {
+  const [stan, setStan] = useState<{ src: string | null; gotowe: boolean }>({ src: null, gotowe: !url });
+  useEffect(() => {
+    if (!url) {
+      setStan({ src: null, gotowe: true });
+      return;
+    }
+    let cancelled = false;
+    setStan({ src: null, gotowe: false });
+    cutoutBackground(url)
+      .then((blobUrl) => !cancelled && setStan({ src: blobUrl, gotowe: true }))
+      // Wycinanie nie wyszlo (CORS, zly plik) - pokazujemy oryginal.
+      .catch(() => !cancelled && setStan({ src: url, gotowe: true }));
+    return () => {
+      cancelled = true;
+    };
+  }, [url]);
+  return stan;
 }
 
 /** Returns a background-cut-out blob URL once ready, or null while loading/unavailable. */

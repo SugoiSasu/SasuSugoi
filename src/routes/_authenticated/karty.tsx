@@ -214,7 +214,7 @@ function KartyPage() {
           </p>
         )}
 
-        <div className="relative mx-auto mt-4 aspect-[3/4] h-[clamp(18rem,calc(100dvh-22rem),28.5rem)] max-w-full sm:mt-6 lg:h-auto lg:w-full lg:max-w-[440px]">
+        <div className="relative mx-auto mt-4 aspect-[3/4] h-[clamp(19rem,calc(100dvh-20rem),28.5rem)] max-w-full sm:mt-6 lg:h-auto lg:w-full lg:max-w-[440px]">
           {isLoading ? (
             <div className="grid h-full place-items-center rounded-3xl border border-dashed border-border">
               <Loader2 className="animate-spin text-tomato" size={28} />
