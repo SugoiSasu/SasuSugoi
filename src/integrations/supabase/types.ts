@@ -1088,6 +1088,41 @@ export type Database = {
           },
         ]
       }
+      place_enrichment: {
+        Row: {
+          blad: string | null
+          created_by: string | null
+          place_id: string
+          propozycja: Json | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          blad?: string | null
+          created_by?: string | null
+          place_id: string
+          propozycja?: Json | null
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          blad?: string | null
+          created_by?: string | null
+          place_id?: string
+          propozycja?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "place_enrichment_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: true
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       place_favorites: {
         Row: {
           created_at: string

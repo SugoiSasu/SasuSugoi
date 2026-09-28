@@ -30,6 +30,7 @@ import { MigratePlaceImagesButton } from "@/components/PlaceImageMigration";
 import { MenuItemsEditor } from "@/components/MenuItemsEditor";
 import { initialsFromName, colorFromKey } from "@/lib/avatar-utils";
 import { useStorageImageUpload } from "@/components/admin/useStorageImageUpload";
+import { PlaceEnrichmentPanel } from "@/components/admin/PlaceEnrichmentPanel";
 
 export const Route = createFileRoute("/_authenticated/admin/places/$id")({
   component: EditPlace,
@@ -95,14 +96,14 @@ function EditPlace() {
     { rodzaj: "szukam" } | { rodzaj: "ok"; opis: string; dokladny: boolean } | { rodzaj: "brak" } | null
   >(null);
 
-  async function ustawZAdresu() {
-    if (!form.address.trim()) {
+  async function ustawZAdresu(adres: string = form.address) {
+    if (!adres.trim()) {
       toast.error("Najpierw wpisz adres");
       return;
     }
     setGeoStan({ rodzaj: "szukam" });
     try {
-      const w = await geokodujAdres(form.address);
+      const w = await geokodujAdres(adres);
       if (!w) {
         setGeoStan({ rodzaj: "brak" });
         return;
@@ -259,6 +260,20 @@ function EditPlace() {
           </div>
         )}
 
+        {!isNew && hydrated && (
+          <PlaceEnrichmentPanel
+            placeId={id}
+            form={form}
+            onApply={(patch) => {
+              setForm((f) => ({ ...f, ...patch }));
+              // Nowy adres albo pinezka wciaz w domyslnym punkcie -> od razu
+              // wspolrzedne z adresu, zeby lokal nie stanal w zlym miejscu.
+              const adres = patch.address ?? form.address;
+              if (patch.address || czyDomyslnyPunkt(form.lat, form.lng)) void ustawZAdresu(adres);
+            }}
+          />
+        )}
+
         <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
           <FormField label="Nazwa">
             <input
@@ -377,7 +392,7 @@ function EditPlace() {
           <div className="-mt-1 space-y-2">
             <button
               type="button"
-              onClick={ustawZAdresu}
+              onClick={() => ustawZAdresu()}
               disabled={geoStan?.rodzaj === "szukam"}
               className="inline-flex items-center gap-1.5 rounded-full bg-navy px-3.5 py-2 text-xs font-semibold text-cream transition hover:bg-navy/90 disabled:opacity-60"
             >

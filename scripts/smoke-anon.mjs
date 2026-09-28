@@ -117,6 +117,20 @@ if (SUPABASE && KLUCZ) {
     }
   }
 
+  // 3b. Tabele tylko dla admina - gosc ma NIE dostac danych (propozycje z AI
+  //     zawieraja nieprzejrzane dane lokali, w tym szkicow).
+  const TYLKO_ADMIN = [["place_enrichment (propozycje AI)", "place_enrichment?select=place_id&limit=1"]];
+  for (const [nazwa, sciezka] of TYLKO_ADMIN) {
+    try {
+      const r = await fetch(`${SUPABASE}/rest/v1/${sciezka}`, { headers: { apikey: KLUCZ } });
+      const tekst = await r.text();
+      const puste = r.ok && tekst.trim() === "[]";
+      zapisz(`anon NIE czyta ${nazwa}`, !r.ok || puste, !r.ok || puste ? "" : tekst.slice(0, 140));
+    } catch (err) {
+      zapisz(`anon NIE czyta ${nazwa}`, false, err.message);
+    }
+  }
+
   // 4. Funkcje wolane z PRZEGLADARKI goscia. SSR moze zwrocic 200, a strona i tak
   //    rozsypie sie po stronie klienta, jesli ktoras straci prawo dla `anon` -
   //    samo sprawdzanie tras by tego nie zlapalo.

@@ -31,6 +31,7 @@ import {
   UtensilsCrossed,
   Newspaper,
   MapIcon,
+  Sparkles,
 } from "lucide-react";
 import { Map as MapPinIcon } from "lucide-react";
 import { initialsFromName, colorFromKey } from "@/lib/avatar-utils";
@@ -43,6 +44,7 @@ import {
   type AdminStat,
 } from "@/components/admin/AdminPageShell";
 import { AdminSearchInput, AdminEmptyState } from "@/components/admin/AdminControls";
+import { PlaceEnrichmentBatch } from "@/components/admin/PlaceEnrichmentBatch";
 
 export const Route = createFileRoute("/_authenticated/admin/places/")({
   component: AdminPlaces,
@@ -83,6 +85,7 @@ const TABS = [
   { key: "lokale", label: "Lokale", icon: <MapIcon size={13} /> },
   { key: "kuchnie", label: "Kuchnie", icon: <UtensilsCrossed size={13} /> },
   { key: "wpisy", label: "Wpisy lokali", icon: <Newspaper size={13} /> },
+  { key: "uzupelnianie", label: "Uzupełnianie szkiców", icon: <Sparkles size={13} /> },
 ] as const;
 
 function AdminPlaces() {
@@ -114,7 +117,15 @@ function AdminPlaces() {
           </button>
         ))}
       </div>
-      {tab === "lokale" ? <PlacesTab /> : tab === "kuchnie" ? <CuisinesTab /> : <PlacePostsTab />}
+      {tab === "lokale" ? (
+        <PlacesTab />
+      ) : tab === "kuchnie" ? (
+        <CuisinesTab />
+      ) : tab === "wpisy" ? (
+        <PlacePostsTab />
+      ) : (
+        <PlaceEnrichmentBatch />
+      )}
     </div>
   );
 }
