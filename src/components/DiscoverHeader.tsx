@@ -129,7 +129,10 @@ export function DiscoverHeader({
               )}
             </div>
 
-            <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-none [mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] sm:mx-0 sm:grid sm:grid-cols-5 sm:gap-3 sm:overflow-visible sm:px-0 sm:[mask-image:none] lg:grid-cols-10 xl:grid-cols-12">
+            {/* pt-2 + -mt-2: overflow-x-auto przycina tez w pionie, a obwodka
+                zaznaczenia (ring-offset) i uniesienie przy hoverze wystaja nad
+                kafelek - bez zapasu byly ucinane od gory (zrzut 2026-09-28). */}
+            <div className="-mx-4 -mt-2 flex gap-3 overflow-x-auto px-4 pb-2 pt-2 scrollbar-none [mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] sm:mx-0 sm:grid sm:grid-cols-5 sm:gap-3 sm:overflow-visible sm:px-0 sm:[mask-image:none] lg:grid-cols-10 xl:grid-cols-12">
               <button
                 type="button"
                 onClick={() => onCuisineChange(null)}
