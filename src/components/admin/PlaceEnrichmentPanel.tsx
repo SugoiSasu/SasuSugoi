@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { AlertCircle, Check, ExternalLink, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
 import type { OpeningHours, PlaceInput } from "@/lib/places-api";
-import type { KandydatObrazu, PropozycjaLokalu } from "@/lib/place-enrichment.core";
+import { MODEL_DOKLADNY, type KandydatObrazu, type PropozycjaLokalu } from "@/lib/place-enrichment.core";
 import { pobierzObrazLokalu } from "@/lib/place-enrichment.functions";
 import { czyTrwa, useOdrzucPropozycje, usePropozycjaLokalu, useSzukajDanych } from "@/lib/place-enrichment-api";
 
@@ -228,9 +228,9 @@ export function PlaceEnrichmentPanel({
 
   const trwa = szukaj.isPending || czyTrwa(wiersz);
 
-  async function start() {
+  async function start(dokladnie = false) {
     try {
-      await szukaj.mutateAsync(placeId);
+      await szukaj.mutateAsync({ placeId, dokladnie });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Wyszukiwanie nie powiodło się");
     }
@@ -270,7 +270,7 @@ export function PlaceEnrichmentPanel({
             <Sparkles size={15} className="text-tomato" /> Uzupełnij z internetu
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            AI szuka lokalu (strona, Facebook, platformy zamówień) i proponuje dane ze źródłem przy każdym polu. Ok. 1 minuty i ok. 0,50 $ za lokal.
+            AI szuka tylko tego, czego lokal jeszcze nie ma (strona, Facebook, platformy zamówień), i przy każdym polu podaje źródło. Ok. 20 s i ok. 0,07 $ za lokal.
           </p>
         </div>
         <div className="flex gap-2">
@@ -281,7 +281,7 @@ export function PlaceEnrichmentPanel({
           )}
           <button
             type="button"
-            onClick={start}
+            onClick={() => start()}
             disabled={trwa}
             className="inline-flex items-center gap-1.5 rounded-full bg-navy px-3.5 py-2 text-xs font-semibold text-cream transition hover:bg-navy/90 disabled:opacity-60"
           >
@@ -302,9 +302,22 @@ export function PlaceEnrichmentPanel({
           {(!p.znaleziono || p.pewnosc !== "wysoka") && (
             <p className="flex items-start gap-1.5 rounded-xl bg-tomato/10 px-3 py-2 text-xs font-semibold text-tomato">
               <AlertCircle size={14} className="mt-px shrink-0" />
-              {!p.znaleziono
-                ? "AI nie jest pewne, czy znalazło ten lokal. Sprawdź źródła, zanim cokolwiek przyjmiesz."
-                : `Pewność, że to ten lokal: ${p.pewnosc}. Sprawdź źródła.`}
+              <span className="flex-1">
+                {!p.znaleziono
+                  ? "AI nie jest pewne, czy znalazło ten lokal. Sprawdź źródła, zanim cokolwiek przyjmiesz."
+                  : `Pewność: ${p.pewnosc}. Sprawdź źródła, zwłaszcza godziny.`}
+              </span>
+              {p.koszt.model !== MODEL_DOKLADNY && (
+                <button
+                  type="button"
+                  onClick={() => start(true)}
+                  disabled={trwa}
+                  className="shrink-0 rounded-full bg-tomato px-3 py-1 text-[11px] font-semibold text-cream hover:bg-tomato/90 disabled:opacity-60"
+                  title="Mocniejszy model - lepiej rozstrzyga sprzeczne źródła. Ok. 0,25 $."
+                >
+                  Szukaj dokładniej
+                </button>
+              )}
             </p>
           )}
           {p.uwagi && <p className="text-xs leading-relaxed text-muted-foreground">{p.uwagi}</p>}
@@ -380,8 +393,9 @@ export function PlaceEnrichmentPanel({
             </button>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Szukano {new Date(wiersz!.updated_at).toLocaleString("pl-PL")} · {p.koszt.wyszukiwania} wyszukiwań ·{" "}
-            {Math.round(p.koszt.ms / 1000)} s
+            Szukano {new Date(wiersz!.updated_at).toLocaleString("pl-PL")} ·{" "}
+            {p.koszt.model === MODEL_DOKLADNY ? "dokładnie" : p.koszt.model ? "tanio" : "bez AI"} ·{" "}
+            {(p.koszt.usd ?? 0).toFixed(2).replace(".", ",")} $ · {Math.round(p.koszt.ms / 1000)} s
           </p>
         </div>
       )}

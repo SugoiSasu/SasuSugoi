@@ -6,6 +6,8 @@ import {
   bezpiecznyUrl,
   znajdzDaneLokalu,
   TYPY_OBRAZOW,
+  MODEL_DOKLADNY,
+  type PoleAI,
   type PropozycjaLokalu,
 } from "@/lib/place-enrichment.core";
 
@@ -22,13 +24,42 @@ async function tylkoAdmin({ supabase, userId }: Kontekst) {
   }
 }
 
+const pusty = (v: unknown) =>
+  v == null || (typeof v === "string" && !v.trim()) || (Array.isArray(v) && !v.length) ||
+  (typeof v === "object" && !Array.isArray(v) && !Object.keys(v as object).length);
+
+/**
+ * Tylko to, czego lokal nie ma - AI nie placi za czytanie stron po dane, ktore
+ * juz stoja w bazie. Kuchnia jest zawsze ustawiona recznie, wiec jej nie
+ * szukamy. Wynos i dostepnosc (domyslnie false = "nie wiadomo") dopinamy
+ * tylko wtedy, gdy i tak cos szukamy - nie sa warte osobnego wywolania.
+ */
+function brakujacePola(p: Record<string, unknown>): PoleAI[] {
+  const b: PoleAI[] = [];
+  if (pusty(p.address)) b.push("adres");
+  if (pusty(p.district)) b.push("dzielnica");
+  if (pusty(p.phone)) b.push("telefon");
+  if (pusty(p.website)) b.push("strona_www");
+  if (pusty(p.description)) b.push("opis");
+  if (!/^\${1,5}$/.test(String(p.price_range ?? ""))) b.push("poziom_cen");
+  if (pusty(p.opening_hours)) b.push("godziny");
+  if (pusty(p.menu_items)) b.push("menu", ...(pusty(p.menu_url) ? (["menu_url"] as PoleAI[]) : []));
+  if (b.length) {
+    if (!p.has_takeaway) b.push("na_wynos");
+    if (!p.wheelchair_accessible) b.push("bez_barier");
+  }
+  return b;
+}
+
 /**
  * Szuka danych lokalu w internecie i zapisuje PROPOZYCJE w place_enrichment.
  * Lokalu nie rusza - admin przyjmuje pola w edytorze. Trwa ok. minuty.
  */
 export const szukajDanychLokalu = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ placeId: z.string().uuid() }).parse(d))
+  .inputValidator((d) =>
+    z.object({ placeId: z.string().uuid(), dokladnie: z.boolean().optional() }).parse(d),
+  )
   .handler(async ({ data, context }): Promise<PropozycjaLokalu> => {
     await tylkoAdmin(context);
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -37,7 +68,9 @@ export const szukajDanychLokalu = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: place, error } = await supabaseAdmin
       .from("places")
-      .select("id, name, address, website")
+      .select(
+        "id, name, address, website, district, phone, description, price_range, opening_hours, menu_url, menu_items, has_takeaway, wheelchair_accessible",
+      )
       .eq("id", data.placeId)
       .maybeSingle();
     if (error) throw new Error(error.message);
@@ -74,6 +107,8 @@ export const szukajDanychLokalu = createServerFn({ method: "POST" })
           strona: place.website,
           kuchnie: (kuchnie ?? []).map((k) => k.name),
           dzielnice,
+          szukaj: brakujacePola(place),
+          model: data.dokladnie ? MODEL_DOKLADNY : undefined,
         },
         apiKey,
       );

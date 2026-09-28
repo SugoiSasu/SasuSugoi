@@ -46,8 +46,25 @@ export interface PropozycjaLokalu {
   logo: KandydatObrazu[];
   okladka: KandydatObrazu[];
   /** Diagnostyka: czas i zuzycie, do oceny kosztu. */
-  koszt: { ms: number; wyszukiwania: number; tokeny_we: number; tokeny_wy: number };
+  koszt: { ms: number; wyszukiwania: number; tokeny_we: number; tokeny_wy: number; usd: number; model: string | null };
 }
+
+/** Pola, o ktore pytamy AI. Obrazy (logo/okladka) ida osobno, bez AI. */
+export const POLA_AI = [
+  "adres",
+  "dzielnica",
+  "telefon",
+  "strona_www",
+  "opis",
+  "kuchnia",
+  "poziom_cen",
+  "na_wynos",
+  "bez_barier",
+  "godziny",
+  "menu_url",
+  "menu",
+] as const;
+export type PoleAI = (typeof POLA_AI)[number];
 
 export interface WejscieLokalu {
   nazwa: string;
@@ -55,7 +72,29 @@ export interface WejscieLokalu {
   strona?: string | null;
   kuchnie: string[];
   dzielnice: string[];
+  /**
+   * Pola do znalezienia. Wypelnione juz w bazie nie sa szukane - AI nie
+   * czyta stron po cos, co mamy, a schemat wyniku jest krotszy. Pusta lista =
+   * AI w ogole nie jest wolane (np. brakuje tylko logo).
+   */
+  szukaj?: PoleAI[];
+  /** Tylko do testow porownawczych modeli. */
+  model?: string;
 }
+
+/** Ceny USD za 1M tokenow (wejscie, wyjscie) - do pokazania realnego kosztu. */
+const CENNIK: Record<string, [number, number]> = {
+  "claude-sonnet-5": [3, 15],
+  "claude-haiku-4-5-20251001": [1, 5],
+};
+/**
+ * Haiku domyslnie: 7x taniej (ok. 0,06-0,10 USD na lokal), dobrze przepisuje
+ * menu i dane z oficjalnych stron. Slabszy przy sprzecznych zrodlach (DRAM:
+ * wykryl sprzecznosc, ale wpisal zle godziny) - od tego jest "dokladniej"
+ * na Sonnecie, uzywane tylko tam, gdzie wynik jest niepewny.
+ */
+export const MODEL_DOMYSLNY = "claude-haiku-4-5-20251001";
+export const MODEL_DOKLADNY = "claude-sonnet-5";
 
 const pole = (typ: Record<string, unknown>, opis: string) => ({
   type: "object",
@@ -81,7 +120,17 @@ const godzinaDnia = {
   ],
 };
 
-function narzedzieWyniku(w: WejscieLokalu) {
+function narzedzieWyniku(w: WejscieLokalu, szukane: PoleAI[]) {
+  const wszystkie = narzedzieWszystkichPol(w);
+  const props = wszystkie.input_schema.properties as Record<string, unknown>;
+  const zostaw = new Set<string>(["znaleziono", "pewnosc", "uwagi", ...szukane]);
+  // Logo z AI tylko wtedy, gdy nie znamy strony - inaczej bierzemy je ze strony bez AI.
+  if (!w.strona) zostaw.add("logo_urls");
+  for (const k of Object.keys(props)) if (!zostaw.has(k)) delete props[k];
+  return wszystkie;
+}
+
+function narzedzieWszystkichPol(w: WejscieLokalu) {
   return {
     name: "zapisz_dane_lokalu",
     description: "Zapisz wszystko, co udalo sie ustalic o lokalu. Wywolaj dokladnie raz, na koncu.",
@@ -96,7 +145,7 @@ function narzedzieWyniku(w: WejscieLokalu) {
         },
         uwagi: {
           type: "string",
-          description: "Krotko po polsku: co bylo niejasne, sprzeczne albo nieaktualne (np. 'lokal chyba zamkniety').",
+          description: "Telegraficznie, max 20 slow: tylko sprzecznosci/ryzyka (np. 'godziny rozne na 2 stronach'). Pusty, jesli brak.",
         },
         adres: pole({ type: "string" }, "Pelny adres: 'ul. X 12, 60-000 Poznan'."),
         dzielnica: pole({ type: "string", enum: w.dzielnice }, "Dzielnica Poznania z listy."),
@@ -104,7 +153,7 @@ function narzedzieWyniku(w: WejscieLokalu) {
         strona_www: pole({ type: "string" }, "Oficjalna strona lokalu (nie katalog, nie Facebook)."),
         opis: pole(
           { type: "string" },
-          "1-2 zdania po polsku, wlasnymi slowami, rzeczowo: co serwuja i czym sie wyrozniaja. Bez reklamowych superlatywow, bez kopiowania.",
+          "Max 160 znakow, po polsku, wlasnymi slowami: co serwuja i czym sie wyrozniaja. Bez superlatywow, bez kopiowania.",
         ),
         kuchnia: pole({ type: "string", enum: w.kuchnie }, "Najlepiej pasujaca kategoria z listy."),
         poziom_cen: pole(
@@ -178,17 +227,18 @@ function narzedzieWyniku(w: WejscieLokalu) {
   };
 }
 
-function polecenie(w: WejscieLokalu): string {
+function polecenie(w: WejscieLokalu, szukane: PoleAI[]): string {
   return [
-    `Znajdz w internecie informacje o lokalu gastronomicznym "${w.nazwa}" w Poznaniu.`,
-    w.adres ? `Znany adres: ${w.adres}.` : "",
-    w.strona ? `Znana strona: ${w.strona}.` : "",
-    "",
-    "Kolejnosc zrodel: oficjalna strona lokalu > jego profil na Facebooku/Instagramie > platformy zamowien (Pyszne.pl, Glovo, Wolt, Uber Eats) > katalogi.",
-    "Sprawdz, ze to ten lokal w Poznaniu - nie lokal o podobnej nazwie w innym miescie ani inny lokal sieci.",
-    "Otworz (web_fetch) oficjalna strone i strone z menu, jesli istnieja - godziny i menu przepisuj ze zrodla, nie z pamieci.",
-    "Jesli czegos nie znalazles w zrodle, pomin to pole. Brak pola jest duzo lepszy niz zgadywanie.",
-    "Na koniec wywolaj zapisz_dane_lokalu dokladnie raz.",
+    `Lokal: "${w.nazwa}", Poznan.`,
+    w.adres ? `Adres: ${w.adres}.` : "",
+    w.strona ? `Strona: ${w.strona} - zacznij od niej (web_fetch), bez wyszukiwania, jesli wystarczy.` : "",
+    `Znajdz TYLKO: ${szukane.join(", ")}. Reszte juz mamy - nie szukaj.`,
+    "Zrodla: oficjalna strona > FB/IG > Pyszne/Glovo/Wolt/Uber Eats > katalogi. Upewnij sie, ze to ten lokal w Poznaniu.",
+    "Tylko to, co przeczytales w zrodle. Brak pola lepszy niz zgadywanie.",
+    szukane.includes("godziny")
+      ? "Godziny: sprawdz na 2 zrodlach (np. strona PL + Google/FB). Rozne -> wez nowsze/polska wersje, roznice wpisz w uwagi, pewnosc 'srednia'."
+      : "",
+    "Nie pisz zadnego tekstu miedzy narzedziami. Konczysz jednym wywolaniem zapisz_dane_lokalu.",
   ]
     .filter(Boolean)
     .join("\n");
@@ -222,27 +272,30 @@ async function wywolaj(apiKey: string, body: Record<string, unknown>) {
   };
 }
 
-export async function szukajDanychAI(w: WejscieLokalu, apiKey: string) {
+export async function szukajDanychAI(w: WejscieLokalu, szukane: PoleAI[], apiKey: string) {
   const start = Date.now();
-  const narzedzie = narzedzieWyniku(w);
+  const model = w.model ?? MODEL_DOMYSLNY;
+  const narzedzie = narzedzieWyniku(w, szukane);
+  // Koszt to w ~80% tekst stron i wynikow, ktory model czyta - stad limity
+  // liczby wyszukiwan, otwieranych stron i dlugosci kazdej strony.
   const tools = [
     {
       type: "web_search_20250305",
       name: "web_search",
-      max_uses: 6,
+      max_uses: 3,
       user_location: { type: "approximate", city: "Poznań", country: "PL", timezone: "Europe/Warsaw" },
     },
-    { type: "web_fetch_20250910", name: "web_fetch", max_uses: 5, max_content_tokens: 12000 },
+    { type: "web_fetch_20250910", name: "web_fetch", max_uses: 3, max_content_tokens: 6000 },
     narzedzie,
   ];
-  const messages: { role: string; content: unknown }[] = [{ role: "user", content: polecenie(w) }];
+  const messages: { role: string; content: unknown }[] = [{ role: "user", content: polecenie(w, szukane) }];
   const koszt = { wyszukiwania: 0, tokeny_we: 0, tokeny_wy: 0 };
 
   for (let tura = 0; tura < 4; tura++) {
     const wymus = tura === 3 || (tura > 0 && messages[messages.length - 1].role === "user" && typeof messages[messages.length - 1].content === "string");
     const odp = await wywolaj(apiKey, {
-      model: "claude-sonnet-5",
-      max_tokens: 16000,
+      model,
+      max_tokens: szukane.includes("menu") ? 12000 : 3000,
       tools,
       tool_choice: wymus ? { type: "tool", name: narzedzie.name } : { type: "auto" },
       messages,
@@ -252,7 +305,11 @@ export async function szukajDanychAI(w: WejscieLokalu, apiKey: string) {
     koszt.wyszukiwania += odp.usage?.server_tool_use?.web_search_requests ?? 0;
 
     const wynik = odp.content.find((b) => b.type === "tool_use" && b.name === narzedzie.name);
-    if (wynik?.input) return { dane: wynik.input, koszt: { ...koszt, ms: Date.now() - start } };
+    if (wynik?.input) {
+      const [cWe, cWy] = CENNIK[model] ?? [3, 15];
+      const usd = (koszt.tokeny_we * cWe + koszt.tokeny_wy * cWy) / 1e6 + koszt.wyszukiwania * 0.01;
+      return { dane: wynik.input, koszt: { ...koszt, usd, model, ms: Date.now() - start } };
+    }
 
     messages.push({ role: "assistant", content: odp.content });
     // pause_turn = serwerowe narzedzia jeszcze pracuja, kontynuujemy ta sama rozmowe.
@@ -387,7 +444,18 @@ const jestBool = (v: unknown): v is boolean => typeof v === "boolean";
 const jestLiczba = (v: unknown): v is number => typeof v === "number" && v >= 1 && v <= 5;
 
 export async function znajdzDaneLokalu(w: WejscieLokalu, apiKey: string): Promise<PropozycjaLokalu> {
-  const { dane, koszt } = await szukajDanychAI(w, apiKey);
+  let szukane = [...(w.szukaj ?? POLA_AI)];
+  // Bez strony nie ma skad wziac logo bez AI - wtedy AI musi ja przynajmniej znalezc.
+  if (!szukane.length && !w.strona) szukane = ["strona_www"];
+  const start = Date.now();
+  // Pusta lista = wszystko poza obrazami juz jest: AI nie jest wolane (0 USD),
+  // logo i okladka biora sie tylko ze znacznikow oficjalnej strony.
+  const { dane, koszt } = szukane.length
+    ? await szukajDanychAI(w, szukane, apiKey)
+    : {
+        dane: { znaleziono: true, pewnosc: "wysoka", uwagi: "" } as Record<string, unknown>,
+        koszt: { wyszukiwania: 0, tokeny_we: 0, tokeny_wy: 0, usd: 0, model: null, ms: 0 },
+      };
   const d = dane as Record<string, unknown>;
 
   const p: PropozycjaLokalu = {
@@ -429,6 +497,7 @@ export async function znajdzDaneLokalu(w: WejscieLokalu, apiKey: string): Promis
   };
   const ogImage = zeStrony.filter((k) => !/logo|icon/i.test(k.url));
   p.logo = await sprawdz([...zeStrony.filter((k) => /logo|icon/i.test(k.url)), ...odAI("logo_urls"), ...ogImage]);
-  p.okladka = await sprawdz([...odAI("okladka_urls"), ...ogImage]);
+  p.okladka = await sprawdz(ogImage);
+  p.koszt.ms = Date.now() - start;
   return p;
 }

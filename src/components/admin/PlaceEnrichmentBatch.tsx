@@ -17,7 +17,8 @@ import { czyTrwa, usePropozycjeLokali, type WierszPropozycji } from "@/lib/place
  */
 
 const ROWNOLEGLE = 2;
-const KOSZT_USD = 0.5;
+/** Zmierzone na szkicach Haiku z pomijaniem wypelnionych pol: 0,06-0,10 USD. */
+const KOSZT_USD = 0.08;
 
 function braki(p: Place): string[] {
   const b: string[] = [];
@@ -139,7 +140,7 @@ export function PlaceEnrichmentBatch() {
             <AlertCircle size={15} className="text-tomato" />
             <span>
               {doSzukania.length} lokali × ok. {KOSZT_USD.toFixed(2).replace(".", ",")} $ ≈{" "}
-              <b>{Math.ceil(doSzukania.length * KOSZT_USD)} $</b>, ok. {Math.ceil(doSzukania.length / ROWNOLEGLE)} min.
+              <b>{(doSzukania.length * KOSZT_USD).toFixed(2).replace(".", ",")} $</b>, ok. {Math.max(1, Math.ceil((doSzukania.length / ROWNOLEGLE) * 0.4))} min.
             </span>
             <button
               type="button"

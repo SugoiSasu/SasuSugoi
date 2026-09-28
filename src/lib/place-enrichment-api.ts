@@ -46,7 +46,8 @@ export function useSzukajDanych() {
   const qc = useQueryClient();
   const szukaj = useServerFn(szukajDanychLokalu);
   return useMutation({
-    mutationFn: (placeId: string) => szukaj({ data: { placeId } }),
+    mutationFn: ({ placeId, dokladnie }: { placeId: string; dokladnie?: boolean }) =>
+      szukaj({ data: { placeId, dokladnie } }),
     // Zawsze odswiezamy - takze po bledzie, bo serwer zapisal status "blad".
     onSettled: () => qc.invalidateQueries({ queryKey: KLUCZ }),
   });
