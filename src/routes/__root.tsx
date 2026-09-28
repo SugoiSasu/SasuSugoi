@@ -76,6 +76,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteNav } from "@/components/SiteNav";
 import { AppSidebar } from "@/components/AppSidebar";
 import { BottomTabBar } from "@/components/BottomTabBar";
+import { useNowaWersja } from "@/lib/nowa-wersja";
 
 import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/CookieConsent";
@@ -374,6 +375,8 @@ function RootComponent() {
   useEffect(() => {
     installPolishStripper();
   }, []);
+  // Aplikacja z ekranu glownego iPhone'a trzymala stara wersje do zamkniecia.
+  useNowaWersja();
 
   return (
     <QueryClientProvider client={queryClient}>

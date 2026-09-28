@@ -95,6 +95,15 @@ try {
   zapisz("strona glowna ma lokale w HTML z serwera", false, err.message);
 }
 
+// 2b. Wersja deployu - z niej aplikacja na telefonie wie, ze ma sie odswiezyc.
+try {
+  const r = await fetch(`${BAZOWY}/api/public/wersja`);
+  const j = await r.json().catch(() => ({}));
+  zapisz("GET /api/public/wersja (auto-odswiezanie aplikacji)", r.ok && typeof j.wersja === "string" && !!j.wersja, r.ok ? String(j.wersja) : `HTTP ${r.status}`);
+} catch (err) {
+  zapisz("GET /api/public/wersja (auto-odswiezanie aplikacji)", false, err.message);
+}
+
 // 3. Tabele czytane przez goscia - wprost przez PostgREST, kluczem publicznym.
 if (SUPABASE && KLUCZ) {
   const TABELE = [
