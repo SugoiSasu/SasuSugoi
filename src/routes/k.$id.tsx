@@ -518,7 +518,7 @@ function PlaceProfile() {
               )}
             </div>
 
-            <div className="min-w-[200px] flex-1">
+            <div className="min-w-[200px] flex-1 pr-10 sm:pr-0">
               <SmartText as="h1" className="font-persona mb-2 text-[clamp(1.6rem,2.6vw,2.15rem)] leading-[1.05] text-balance">
                 {place.name}
               </SmartText>
@@ -545,7 +545,10 @@ function PlaceProfile() {
               </div>
             </div>
 
-            <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">
+            {/* Telefon: mala okragla ikonka w rogu karty, nie pasek na cala
+                szerokosc (Mateusz 2026-09-28: "ma to byc mala ikonka do
+                klikania"). Od sm - przycisk z napisem obok nazwy. */}
+            <div className="absolute right-3 top-3 shrink-0 sm:static">
               <FollowButton placeId={place.id} />
             </div>
           </div>
@@ -601,12 +604,12 @@ function PlaceProfile() {
               <a
                 href={`tel:${place.phone.replace(/\s/g, "")}`}
                 aria-label="Zadzwoń do lokalu"
-                className="inline-flex min-w-0 items-center justify-center gap-2 rounded-[14px] border border-border bg-card px-2 py-2.5 text-[12.5px] font-bold transition hover:bg-tomato/10"
+                className="inline-flex min-w-0 flex-col items-center justify-center gap-1 rounded-[14px] lg:flex-row lg:gap-2 border border-border bg-card px-2 py-2.5 text-[12.5px] font-bold transition hover:bg-tomato/10"
               >
                 <Phone size={15} /> <span className="truncate">Zadzwoń</span>
               </a>
             ) : (
-              <span title="Brak numeru telefonu" className="inline-flex min-w-0 cursor-not-allowed items-center justify-center gap-2 rounded-[14px] border border-border px-2 py-2.5 text-[12.5px] font-bold text-muted-foreground">
+              <span title="Brak numeru telefonu" className="inline-flex min-w-0 cursor-not-allowed flex-col items-center justify-center gap-1 rounded-[14px] lg:flex-row lg:gap-2 border border-border px-2 py-2.5 text-[12.5px] font-bold text-muted-foreground">
                 <Phone size={15} /> <span className="truncate">Zadzwoń</span>
               </span>
             )}
@@ -616,12 +619,12 @@ function PlaceProfile() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Strona www lokalu"
-                className="inline-flex min-w-0 items-center justify-center gap-2 rounded-[14px] border border-border bg-card px-2 py-2.5 text-[12.5px] font-bold transition hover:bg-tomato/10"
+                className="inline-flex min-w-0 flex-col items-center justify-center gap-1 rounded-[14px] lg:flex-row lg:gap-2 border border-border bg-card px-2 py-2.5 text-[12.5px] font-bold transition hover:bg-tomato/10"
               >
                 <Globe size={15} /> <span className="truncate">Strona www</span>
               </a>
             ) : (
-              <span title="Brak strony www" className="inline-flex min-w-0 cursor-not-allowed items-center justify-center gap-2 rounded-[14px] border border-border px-2 py-2.5 text-[12.5px] font-bold text-muted-foreground">
+              <span title="Brak strony www" className="inline-flex min-w-0 cursor-not-allowed flex-col items-center justify-center gap-1 rounded-[14px] lg:flex-row lg:gap-2 border border-border px-2 py-2.5 text-[12.5px] font-bold text-muted-foreground">
                 <Globe size={15} /> <span className="truncate">Strona www</span>
               </span>
             )}
@@ -629,7 +632,7 @@ function PlaceProfile() {
               type="button"
               onClick={share}
               aria-label="Udostępnij"
-              className="inline-flex min-w-0 items-center justify-center gap-2 rounded-[14px] border border-border bg-card px-2 py-2.5 text-[12.5px] font-bold transition hover:bg-tomato/10"
+              className="inline-flex min-w-0 flex-col items-center justify-center gap-1 rounded-[14px] lg:flex-row lg:gap-2 border border-border bg-card px-2 py-2.5 text-[12.5px] font-bold transition hover:bg-tomato/10"
             >
               <Share2 size={15} /> <span className="truncate">Udostępnij</span>
             </button>
@@ -803,9 +806,10 @@ function FollowButton({ placeId }: { placeId: string }) {
       <Link
         to="/auth"
         aria-label="Zaloguj się aby obserwować"
-        className="h-11 px-4 inline-flex items-center gap-2 rounded-full border-2 border-foreground/25 text-foreground hover:bg-foreground hover:text-background text-sm font-semibold transition"
+        title="Obserwuj - powiadomienia o nowościach i promocjach"
+        className="h-11 w-11 justify-center sm:w-auto sm:px-4 inline-flex items-center gap-2 rounded-full border-2 border-foreground/25 text-foreground hover:bg-foreground hover:text-background text-sm font-semibold transition"
       >
-        <Bell size={16} /> <span>Obserwuj</span>
+        <Bell size={16} /> <span className="hidden sm:inline">Obserwuj</span>
       </Link>
     );
   }
@@ -859,7 +863,8 @@ function FollowButton({ placeId }: { placeId: string }) {
       aria-pressed={isFollowing}
       aria-label={isFollowing ? "Przestań obserwować" : "Obserwuj knajpę"}
       onClick={handleClick}
-      className={`h-11 px-4 inline-flex items-center gap-2 rounded-full text-sm font-semibold transition disabled:opacity-60 ${
+      title={isFollowing ? "Obserwujesz - kliknij, żeby przestać" : "Obserwuj - powiadomienia o nowościach i promocjach"}
+      className={`h-11 w-11 justify-center sm:w-auto sm:px-4 inline-flex items-center gap-2 rounded-full text-sm font-semibold transition disabled:opacity-60 ${
         isFollowing
           ? "bg-navy text-cream hover:bg-tomato"
           : "border-2 border-foreground/25 text-foreground hover:bg-foreground hover:text-background"
@@ -867,14 +872,12 @@ function FollowButton({ placeId }: { placeId: string }) {
     >
       {busy ? (
         <Loader2 size={16} className="animate-spin" />
-      ) : isFollowing ? (
-        <BellOff size={16} />
       ) : (
-        <Bell size={16} />
+        // Obserwujesz = pelny dzwonek na granatowym tle, nie przekreslony -
+        // przekreslony dzwonek przy wlaczonym obserwowaniu czytal sie odwrotnie.
+        <Bell size={16} className={isFollowing ? "fill-current" : ""} />
       )}
-      {/* Etykieta zawsze: na telefonie przycisk jest na cala szerokosc i bez
-          niej byl pusta pigulka z samym dzwonkiem (zrzut 2026-09-28). */}
-      <span>{isFollowing ? "Obserwujesz" : "Obserwuj"}</span>
+      <span className="hidden sm:inline">{isFollowing ? "Obserwujesz" : "Obserwuj"}</span>
     </button>
   );
 }

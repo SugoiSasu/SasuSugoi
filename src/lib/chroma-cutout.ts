@@ -109,21 +109,34 @@ function cutoutBackground(url: string): Promise<string> {
 
         let lumSum = 0;
         let lumCount = 0;
+        let ciemne = 0;
         for (let p = 0, i = 0; i < data.length; i += 4, p++) {
           const r = data[i];
           const g = data[i + 1];
           const b = data[i + 2];
           const alpha = alphas[p];
           if (alpha > 128) {
-            lumSum += 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            lumSum += lum;
             lumCount++;
+            if (lum < 110) ciemne++;
           }
         }
 
         // A pale/white logo mark (background just cut) would be near-invisible
         // on the white card behind it - force it to a dark, readable silhouette.
+        // Tylko logo naprawde biale BEZ ciemnych elementow (np. kremowy napis,
+        // ktoremu wycielismy ciemna plakietke). Stary prog (srednia > 190)
+        // przy wycinaniu od krawedzi lapal jasne logo z ciemnymi konturami -
+        // GEMUSE SPOT wychodzilo jako czarna sylwetka (zrzut 2026-09-28).
+        // Przyciemniamy tylko przypadek, dla ktorego to istnieje: jasny znak
+        // na CIEMNEJ plakietce (Parabar), ktorej tlo wlasnie wycielismy - na
+        // bialej karcie zostalby niewidoczny. Logo z jasnym tlem (GEMUSE SPOT)
+        // nie jest ruszane - prog "srednia jasnosc > 190" robil z niego czarna
+        // sylwetke (zrzut 2026-09-28).
         const avgLum = lumCount ? lumSum / lumCount : 0;
-        const tooLightForWhiteCard = avgLum > 190;
+        const bgLum = 0.2126 * br + 0.7152 * bg + 0.0722 * bb;
+        const tooLightForWhiteCard = bgLum < 90 && avgLum > 170 && ciemne / Math.max(1, lumCount) < 0.1;
         for (let p = 0, i = 0; i < data.length; i += 4, p++) {
           data[i + 3] = Math.min(data[i + 3], alphas[p]);
           if (tooLightForWhiteCard) {
