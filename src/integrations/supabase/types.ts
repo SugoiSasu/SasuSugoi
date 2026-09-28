@@ -2737,6 +2737,38 @@ export type Database = {
         Args: { _cap_key: string; _event_key: string; _user_id: string }
         Returns: boolean
       }
+      porownanie_graczy: {
+        Args: { _inny: string }
+        Returns: {
+          kto: string
+          lokale: number
+          odznaki: number
+          points_total: number
+          recenzje: number
+          srednia_ocena: number
+        }[]
+      }
+      ranking_tablica: {
+        Args: { _metryka: string; _okres: string }
+        Returns: {
+          active_title: string
+          avatar_source: string
+          avatar_url: string
+          created_at: string
+          display_name: string
+          gender: string
+          is_friend: boolean
+          is_me: boolean
+          is_vip: boolean
+          points_total: number
+          user_id: string
+          username: string
+          vip_nick_color: string
+          vip_until: string
+          wartosc: number
+          wartosc_tydzien_temu: number
+        }[]
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {

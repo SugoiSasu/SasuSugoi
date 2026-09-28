@@ -149,7 +149,7 @@ function FriendsPage() {
             <div className="flex flex-wrap items-start gap-2">
               <Link
                 to="/u"
-                search={{ scope: "friends", q: "", page: 1 }}
+                search={{ scope: "friends" }}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-tomato/40 bg-tomato/10 px-3 py-1.5 text-sm font-medium text-tomato hover:bg-tomato/15 transition-colors"
               >
                 <Trophy size={16} /> Ranking znajomych
