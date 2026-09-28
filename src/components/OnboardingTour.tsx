@@ -14,6 +14,7 @@ interface Step {
 const STEPS: Step[] = [
   {
     icon: Sparkles,
+    // Podmieniane na forme zenska w komponencie, gdy znamy plec.
     title: "Cześć, poŻeraczu! 👋",
     body: "Krótko pokażemy Ci, co można robić w poŻeramy - zajmie to góra 30 sekund.",
     accent: "bg-tomato",
@@ -86,7 +87,8 @@ export function OnboardingTour() {
   if (!open) return null;
 
   const isLast = step === STEPS.length - 1;
-  const s = STEPS[step];
+  const s =
+    step === 0 && profile?.gender === "K" ? { ...STEPS[0], title: "Cześć, poŻeraczko! 👋" } : STEPS[step];
   const Icon = s.icon;
 
   return (
@@ -124,7 +126,7 @@ export function OnboardingTour() {
             albo "pozeracz"+cyfry). Tu - raz, na starcie - zacheta do wlasnego.
             Edycja na miejscu, a nie odeslanie do Ustawien: przejscie tam
             zamknelo by powitanie i reszta krokow by przepadla. */}
-        {step === 0 && profile?.username && <NickNudge obecny={profile.username} />}
+        {step === 0 && profile?.username && <NickNudge obecny={profile.username} plec={profile.gender} />}
 
         <div className="mt-6 flex items-center justify-center gap-1.5">
           {STEPS.map((_, i) => (
@@ -170,7 +172,10 @@ export function OnboardingTour() {
 
 const WZOR_NICKU = /^[a-z0-9_]{3,20}$/;
 
-function NickNudge({ obecny }: { obecny: string }) {
+/** Nick zastepczy nadany przez baze - tylko jego forme zmienia wybor plci. */
+const NICK_ZASTEPCZY = /^pozeracz(ka)?\d{4}$/;
+
+function NickNudge({ obecny, plec }: { obecny: string; plec: "M" | "K" | null }) {
   const update = useUpdateProfile();
   const [edycja, setEdycja] = useState(false);
   const [wartosc, setWartosc] = useState(obecny);
@@ -205,7 +210,32 @@ function NickNudge({ obecny }: { obecny: string }) {
 
   if (!edycja) {
     return (
-      <div className="mt-4 flex items-center justify-center gap-2 rounded-2xl bg-muted/60 px-3 py-2.5 text-sm">
+      <div className="mt-4 space-y-2">
+      {/* Google nie podaje plci, wiec konto z Google dostaje meska forme
+          "pozeracz####". Jeden klik ustawia plec, a baza sama zamienia nick
+          zastepczy na "pozeraczka####" (trigger profiles_gendered_auto_username). */}
+      {!plec && NICK_ZASTEPCZY.test(obecny) && (
+        <div className="flex items-center justify-center gap-2 text-xs">
+          <span className="text-muted-foreground">Jestem:</span>
+          {(
+            [
+              ["M", "poŻeracz"],
+              ["K", "poŻeraczka"],
+            ] as const
+          ).map(([v, etykieta]) => (
+            <button
+              key={v}
+              type="button"
+              disabled={update.isPending}
+              onClick={() => update.mutate({ gender: v })}
+              className="rounded-full border border-border px-3 py-1 font-semibold hover:border-tomato hover:text-tomato disabled:opacity-50"
+            >
+              {etykieta}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="flex items-center justify-center gap-2 rounded-2xl bg-muted/60 px-3 py-2.5 text-sm">
         <span className="text-muted-foreground">Twój nick:</span>
         <span className="font-bold">@{obecny}</span>
         <button
@@ -218,6 +248,7 @@ function NickNudge({ obecny }: { obecny: string }) {
         >
           Zmień
         </button>
+      </div>
       </div>
     );
   }

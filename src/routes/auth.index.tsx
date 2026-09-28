@@ -75,6 +75,10 @@ function AuthPage() {
           options: {
             emailRedirectTo: window.location.origin + redirectTo,
             captchaToken: captchaToken ?? undefined,
+            // Plec w metadanych konta: profil powstaje z niej od razu (kolor
+            // awatara, nick pozeracz/pozeraczka). Sam UPDATE profilu nizej
+            // przepadal, gdy potwierdzanie e-maila nie daje jeszcze sesji.
+            ...(gender ? { data: { gender } } : {}),
           },
         });
         // Supabase itself already stays silent about pre-existing *confirmed*
