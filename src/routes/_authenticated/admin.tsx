@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useIsAdmin, useIsSuperAdmin, useUser } from "@/lib/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminChangelog } from "@/lib/changelog-api";
@@ -73,6 +73,48 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   },
 ];
 
+/**
+ * Ile rzeczy czeka na admina, per zakladka (Mateusz 2026-09-29: "jak jest
+ * nowe zgloszenie to moze jakis ping ze jest 1"). Same count(head) - bez
+ * pobierania wierszy. Odswiezane co 30 s, po powrocie do karty i przy zmianie
+ * podstrony, wiec licznik znika zaraz po odczytaniu zgloszenia.
+ */
+function useAdminPendingCounts(isSuper: boolean, pathname: string) {
+  const qc = useQueryClient();
+  // Kazda udana operacja w panelu (odczytanie, zatwierdzenie, odrzucenie)
+  // od razu przelicza liczniki - bez czekania 30 s na kolejne odpytanie.
+  useEffect(
+    () =>
+      qc.getMutationCache().subscribe((e) => {
+        if (e.type === "updated" && e.mutation.state.status === "success") {
+          qc.invalidateQueries({ queryKey: ["admin", "pending-counts"] });
+        }
+      }),
+    [qc],
+  );
+  const q = useQuery({
+    queryKey: ["admin", "pending-counts", isSuper, pathname],
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
+    queryFn: async () => {
+      const policz = async (tabela: string, kolumna: string, wartosc: string) => {
+        const { count, error } = await supabase
+          .from(tabela as never)
+          .select("id", { count: "exact", head: true })
+          .eq(kolumna as never, wartosc as never);
+        return error ? 0 : (count ?? 0);
+      };
+      const [sug, own, collab] = await Promise.all([
+        policz("place_suggestions", "status", "pending"),
+        policz("owner_requests", "status", "pending"),
+        isSuper ? policz("collab_submissions", "status", "new") : Promise.resolve(0),
+      ]);
+      return { "/admin/moderacja": sug + own, "/admin/collab": collab } as Record<string, number>;
+    },
+  });
+  return q.data ?? {};
+}
+
 function AdminShell() {
   const { user } = useUser();
   const { data: isAdmin, isLoading } = useIsAdmin();
@@ -80,6 +122,13 @@ function AdminShell() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const oczekujace = useAdminPendingCounts(isSuper, pathname);
+  const lacznieOczekujace = Object.values(oczekujace).reduce((a, b) => a + b, 0);
+  // Licznik tez w tytule karty przegladarki - widac go z innej karty.
+  useEffect(() => {
+    const bazowy = document.title.replace(/^(d+) /, "");
+    document.title = lacznieOczekujace > 0 ? `(${lacznieOczekujace}) ${bazowy}` : bazowy;
+  }, [lacznieOczekujace, pathname]);
 
   useEffect(() => {
     if (pathname === "/admin") navigate({ to: "/admin/places", replace: true });
@@ -178,6 +227,7 @@ function AdminShell() {
           isSuper={isSuper}
           pathname={pathname}
           navigate={navigate}
+          liczniki={oczekujace}
         />
         {/* The nav used to sit flush at x=0 while the logo row above and the
             page content below both live in a centered max-w-6xl column - at
@@ -213,6 +263,7 @@ function AdminShell() {
                         icon={it.icon}
                         label={it.label}
                         pathname={pathname}
+                        licznik={oczekujace[it.to] ?? 0}
                       />
                     ))}
                   </div>
@@ -294,11 +345,13 @@ function AdminTab({
   icon,
   label,
   pathname,
+  licznik = 0,
 }: {
   to: string;
   icon: React.ReactNode;
   label: string;
   pathname: string;
+  licznik?: number;
 }) {
   const active = pathname.startsWith(to);
   return (
@@ -311,6 +364,16 @@ function AdminTab({
       }`}
     >
       {icon} {label}
+      {licznik > 0 && (
+        <span
+          className="relative grid h-5 min-w-5 place-items-center rounded-full bg-tomato px-1.5 text-[11px] font-bold text-cream"
+          aria-label={`${licznik} czeka na Ciebie`}
+        >
+          {/* Pulsujaca obwodka - "ping", ze cos nowego czeka. */}
+          <span className="absolute inset-0 animate-ping rounded-full bg-tomato/60 motion-reduce:hidden" aria-hidden="true" />
+          <span className="relative">{licznik > 99 ? "99+" : licznik}</span>
+        </span>
+      )}
     </Link>
   );
 }
@@ -320,11 +383,13 @@ function MobileAdminNav({
   isSuper,
   pathname,
   navigate,
+  liczniki,
 }: {
   groups: { title: string; items: NavItem[] }[];
   isSuper: boolean;
   pathname: string;
   navigate: ReturnType<typeof useNavigate>;
+  liczniki: Record<string, number>;
 }) {
   const current = groups.flatMap((g) => g.items).find((it) => pathname.startsWith(it.to));
   return (
@@ -343,6 +408,7 @@ function MobileAdminNav({
               {items.map((it) => (
                 <option key={it.to} value={it.to}>
                   {it.label}
+                  {(liczniki[it.to] ?? 0) > 0 ? ` (${liczniki[it.to]} nowe)` : ""}
                 </option>
               ))}
             </optgroup>
