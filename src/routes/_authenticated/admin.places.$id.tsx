@@ -11,7 +11,7 @@ import {
   type OpeningHours,
 } from "@/lib/places-api";
 import { useCuisines } from "@/lib/cuisines-api";
-import { extractMenuFromImage } from "@/lib/menu-extraction.functions";
+import { extractMenuFromImage, extractMenuFromUrl } from "@/lib/menu-extraction.functions";
 import { toast } from "sonner";
 import {
   Plus,
@@ -90,6 +90,27 @@ function EditPlace() {
   const defaultCuisine = cuisineNames[0] ?? "Mix";
   const save = useSavePlace();
   const callExtractMenu = useServerFn(extractMenuFromImage);
+  const callExtractMenuUrl = useServerFn(extractMenuFromUrl);
+  const [menuZLinku, setMenuZLinku] = useState(false);
+
+  async function wyodrebnijMenuZLinku() {
+    const url = form.menu_url?.trim() || form.website?.trim();
+    if (!url) {
+      toast.error("Wpisz link do menu albo stronę lokalu");
+      return;
+    }
+    setMenuZLinku(true);
+    try {
+      const { categories } = await callExtractMenuUrl({ data: { url } });
+      setForm((f) => ({ ...f, menu_items: categories }));
+      const n = categories.reduce((a, c) => a + c.items.length, 0);
+      toast.success(`Ze strony: ${n} pozycji w ${categories.length} kategoriach. Sprawdź i kliknij Zapisz.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nie udało się wyodrębnić menu");
+    } finally {
+      setMenuZLinku(false);
+    }
+  }
 
   const [form, setForm] = useState<PlaceInput>(() => emptyPlace(defaultCuisine));
   const [geoStan, setGeoStan] = useState<
@@ -260,6 +281,29 @@ function EditPlace() {
           </div>
         )}
 
+        {hydrated && (
+          <PublikacjaPanel
+            form={form}
+            isNew={isNew}
+            zapisuje={save.isPending}
+            onZmien={async (opublikowany) => {
+              if (isNew) {
+                setForm((f) => ({ ...f, is_published: opublikowany }));
+                return;
+              }
+              // Zapis od razu - razem z reszta formularza, zeby nie opublikowac
+              // starej wersji, gdy admin cos wlasnie poprawil.
+              try {
+                await save.mutateAsync({ id, values: { ...form, is_published: opublikowany } });
+                setForm((f) => ({ ...f, is_published: opublikowany }));
+                toast.success(opublikowany ? "Opublikowano - lokal jest widoczny na mapie ✓" : "Cofnięto do szkicu");
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : "Nie udało się zmienić statusu");
+              }
+            }}
+          />
+        )}
+
         {!isNew && hydrated && (
           <PlaceEnrichmentPanel
             placeId={id}
@@ -348,14 +392,6 @@ function EditPlace() {
                 onChange={(e) => setForm({ ...form, wheelchair_accessible: e.target.checked })}
               />
               ♿ Bez schodów
-            </label>
-            <label className="inline-flex items-center gap-2 cursor-pointer font-semibold">
-              <input
-                type="checkbox"
-                checked={form.is_published ?? false}
-                onChange={(e) => setForm({ ...form, is_published: e.target.checked })}
-              />
-              {form.is_published ? "✅ Opublikowane" : "📝 Szkic (niewidoczne publicznie)"}
             </label>
           </div>
         </div>
@@ -510,6 +546,20 @@ function EditPlace() {
               className={`input ${!menuUrlValid ? "border-destructive" : ""}`}
             />
           </FormField>
+          <div className="-mt-1 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={wyodrebnijMenuZLinku}
+              disabled={menuZLinku || !(form.menu_url || form.website) || !menuUrlValid}
+              className="inline-flex items-center gap-2 rounded-full bg-navy text-cream px-4 py-2 text-sm font-semibold hover:bg-navy/90 disabled:opacity-50"
+            >
+              {menuZLinku ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+              {menuZLinku ? "Czytam stronę…" : "Wyodrębnij menu z linku (AI)"}
+            </button>
+            <span className="text-xs text-muted-foreground">
+              Strona lub PDF z linku wyżej (albo strona lokalu). Nadpisze obecne pozycje menu.
+            </span>
+          </div>
           <ImageUploader
             title="Zdjęcie menu (opcjonalnie)"
             hint="JPG/PNG/WEBP, do 8 MB. Zdjęcie fizycznego menu - wystarczy telefonem."
@@ -654,6 +704,78 @@ function EditPlace() {
           />
         )}
       </form>
+    </div>
+  );
+}
+
+/**
+ * Status publikacji jako osobny panel (Mateusz 2026-09-28: "nie ma opcji
+ * popchniecia do publikacji" - checkbox ginal w wierszu z "Na wynos").
+ * Lista kontrolna to te same warunki, ktore spelnialy opublikowane lokale;
+ * braki ostrzegaja, ale nie blokuja - decyzja zostaje u admina.
+ */
+function PublikacjaPanel({
+  form,
+  isNew,
+  zapisuje,
+  onZmien,
+}: {
+  form: PlaceInput;
+  isNew: boolean;
+  zapisuje: boolean;
+  onZmien: (opublikowany: boolean) => void;
+}) {
+  const opublikowany = !!form.is_published;
+  const punkty: { ok: boolean; tekst: string; wazne: boolean }[] = [
+    { ok: !!form.avatar_url, tekst: "Logo", wazne: true },
+    { ok: !!form.description?.trim(), tekst: "Opis", wazne: true },
+    { ok: !!form.address?.trim(), tekst: "Adres", wazne: true },
+    { ok: !czyDomyslnyPunkt(form.lat, form.lng), tekst: "Pinezka w dobrym miejscu", wazne: true },
+    { ok: !!form.opening_hours && Object.keys(form.opening_hours).length > 0, tekst: "Godziny otwarcia", wazne: false },
+    { ok: !!form.menu_items?.length || !!form.menu_url, tekst: "Menu", wazne: false },
+  ];
+  const brakiWazne = punkty.filter((p) => p.wazne && !p.ok);
+  return (
+    <div
+      className={`rounded-2xl border-2 p-5 space-y-3 ${opublikowany ? "border-ok/40 bg-ok/[.06]" : "border-tomato/40 bg-tomato/[.05]"}`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</div>
+          <div className="font-display text-xl">
+            {opublikowany ? "✅ Opublikowany - widoczny dla wszystkich" : "📝 Szkic - widzą go tylko admini"}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => onZmien(!opublikowany)}
+          disabled={zapisuje}
+          className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition disabled:opacity-50 ${
+            opublikowany ? "border border-border bg-card hover:border-tomato hover:text-tomato" : "bg-ok text-white hover:bg-ok/90"
+          }`}
+        >
+          {zapisuje && <Loader2 size={14} className="animate-spin" />}
+          {opublikowany ? "Cofnij do szkicu" : isNew ? "Opublikuj po zapisaniu" : "Opublikuj teraz"}
+        </button>
+      </div>
+      <ul className="flex flex-wrap gap-1.5">
+        {punkty.map((p) => (
+          <li
+            key={p.tekst}
+            className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+              p.ok ? "bg-ok/12 text-ok" : p.wazne ? "bg-tomato/12 text-tomato" : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {p.ok ? "✓" : p.wazne ? "✗" : "–"} {p.tekst}
+          </li>
+        ))}
+      </ul>
+      {!opublikowany && brakiWazne.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          Brakuje: {brakiWazne.map((p) => p.tekst.toLowerCase()).join(", ")}. Możesz opublikować mimo to, ale lokal
+          będzie wyglądał na niedokończony.
+        </p>
+      )}
     </div>
   );
 }

@@ -169,8 +169,12 @@ export function useSavePlace() {
       const payload = placeFields as any;
       let placeId = id;
       if (id) {
-        const { error } = await supabase.from("places").update(payload).eq("id", id);
+        // .select(): bez niego Supabase zwraca "sukces" takze wtedy, gdy RLS
+        // odfiltrowal wiersz i nic sie nie zapisalo - admin widzial zielony
+        // toast przy zapisie, ktorego nie bylo.
+        const { data, error } = await supabase.from("places").update(payload).eq("id", id).select("id");
         if (error) throw error;
+        if (!data?.length) throw new Error("Zapis nie przeszedł - brak uprawnień do tego lokalu albo sesja wygasła. Odśwież stronę i zaloguj się ponownie.");
       } else {
         const { data, error } = await supabase.from("places").insert(payload).select("id").single();
         if (error) throw error;

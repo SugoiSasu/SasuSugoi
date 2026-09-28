@@ -110,3 +110,84 @@ export const extractMenuFromImage = createServerFn({ method: "POST" })
 
     return { categories };
   });
+
+/**
+ * Menu ze strony lub PDF-a (Mateusz 2026-09-28: "wydzielanie menu ze strony
+ * tez powinno dzialac przez AI, a nie tylko z pliku"). Claude sam otwiera link
+ * (web_fetch czyta HTML i PDF) i moze przejsc na podstrone z menu. Haiku -
+ * przy przepisywaniu menu z oficjalnych stron wypadal dobrze (106 pozycji
+ * Time Grill), a kosztuje ulamek Sonneta.
+ *
+ * Nie odczyta menu wrzuconego na strone jako obrazek - wtedy zostaje
+ * zdjecie + "Wyodrebnij menu z AI".
+ */
+export const extractMenuFromUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ url: z.string().url() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: roles, error: rErr } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+    if (rErr) throw new Error(rErr.message);
+    if (!(roles ?? []).some((r) => r.role === "admin" || r.role === "super_admin")) {
+      throw new Error("Forbidden: admin only");
+    }
+    const { bezpiecznyUrl } = await import("@/lib/place-enrichment.core");
+    if (!bezpiecznyUrl(data.url)) throw new Error("Niedozwolony adres");
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error("AI-ekstrakcja menu nie jest skonfigurowana (brak klucza API).");
+
+    const tools = [
+      { type: "web_fetch_20250910", name: "web_fetch", max_uses: 3, max_content_tokens: 20000 },
+      MENU_TOOL,
+    ];
+    const messages: { role: string; content: unknown }[] = [
+      {
+        role: "user",
+        content:
+          `Otworz ${data.url} (web_fetch) i przepisz pelne menu tego lokalu. Jesli to strona glowna, ` +
+          "znajdz na niej link do menu (lub PDF) i otworz go. Nazwy, ceny i kategorie dokladnie jak w zrodle, " +
+          "po polsku jak w zrodle. Opis tylko, jesli jest w zrodle. Niczego nie zmyslaj. " +
+          "Nie pisz tekstu - skoncz jednym wywolaniem menu_extracted.",
+      },
+    ];
+    for (let tura = 0; tura < 4; tura++) {
+      const wymus = tura > 0 && typeof messages[messages.length - 1].content === "string";
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-beta": "web-fetch-2025-09-10",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 12000,
+          tools,
+          tool_choice: wymus ? { type: "tool", name: "menu_extracted" } : { type: "auto" },
+          messages,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        throw new Error(`Anthropic API error (${res.status}): ${body.slice(0, 300)}`);
+      }
+      const json = (await res.json()) as {
+        stop_reason: string;
+        content: Array<{ type: string; name?: string; input?: { categories?: MenuCategory[] } }>;
+      };
+      const wynik = json.content.find((b) => b.type === "tool_use" && b.name === "menu_extracted");
+      if (wynik) {
+        const categories = (wynik.input?.categories ?? []).filter((c) => c.items?.length);
+        if (!categories.length) {
+          throw new Error("Na tej stronie nie ma menu w formie tekstu (może jest obrazkiem) - użyj zdjęcia menu.");
+        }
+        return { categories };
+      }
+      messages.push({ role: "assistant", content: json.content });
+      if (json.stop_reason !== "pause_turn") {
+        messages.push({ role: "user", content: "Zapisz teraz menu narzedziem menu_extracted." });
+      }
+    }
+    throw new Error("Nie udało się odczytać menu z tej strony.");
+  });
