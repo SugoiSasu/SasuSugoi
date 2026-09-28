@@ -183,7 +183,9 @@ function MapaPage() {
     }`;
 
   return (
-    <div className="relative flex h-[calc(100dvh-8.5rem)] min-h-[520px] flex-col lg:h-dvh">
+    <div className="relative flex h-[calc(100dvh-8.5rem-env(safe-area-inset-bottom,0px))] min-h-[420px] flex-col lg:h-dvh">
+      {/* Odejmujemy tez pasek gestow iPhone'a (safe-area), a min-h jest nizsze:
+          mapa wchodzila pod dolne menu i chowala karte wybranej pinezki. */}
       <div
         className="relative overflow-hidden border-b border-border px-4 py-3 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.12)] backdrop-blur"
         style={{

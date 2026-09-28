@@ -400,7 +400,13 @@ function RootComponent() {
         {!isAdmin && <ScrollToTop />}
       </AlphaGate>
       <PointsCelebration />
-      <Toaster position="top-right" closeButton />
+      {/* mobileOffset: na iPhonie toast wchodzil na pasek statusu (godzina,
+          bateria) - odsuniecie o safe-area. */}
+      <Toaster
+        position="top-right"
+        closeButton
+        mobileOffset={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)", left: 12, right: 12 }}
+      />
       <CookieConsent />
       {showShell && <OnboardingTour />}
       {showShell && <PatchNotesModal />}

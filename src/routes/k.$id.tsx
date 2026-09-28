@@ -374,7 +374,7 @@ function PlaceProfile() {
 
   return (
     <div className="bg-background min-h-dvh">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 pb-40 lg:max-w-6xl lg:pb-24">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 pb-[calc(12rem+env(safe-area-inset-bottom,0px))] lg:max-w-6xl lg:pb-24">
         <div className="mb-4 flex items-center justify-between gap-2 flex-wrap">
           <div className="flex min-w-0 items-center gap-2.5 text-[12.5px]">
             <BackButton to="/" hash="mapa" label="Wróć do mapy" ariaLabel="Wróć do mapy lokali" />
@@ -571,23 +571,29 @@ function PlaceProfile() {
             </p>
           )}
 
-          {/* Status: Chce odwiedzic / Bylem tutaj / Ulubione */}
-          <div className="mb-2 grid grid-cols-3 gap-2">
-            <VisitStatusButton placeId={place.id} status="want" className="w-full min-w-0 justify-center rounded-[14px] px-1.5 py-3 text-[10px] font-extrabold whitespace-nowrap sm:px-2 sm:text-[13px]" />
-            <VisitStatusButton placeId={place.id} status="visited" className="w-full min-w-0 justify-center rounded-[14px] px-1.5 py-3 text-[10px] font-extrabold whitespace-nowrap sm:px-2 sm:text-[13px]" />
-            <FavoriteIconButton placeId={place.id} variant="text" className="w-full min-w-0 rounded-[14px] px-1.5 py-3 text-[10px] font-extrabold whitespace-nowrap sm:px-2 sm:text-[13px]" />
+          {/* Status: Chce odwiedzic / Bylem tutaj / Ulubione.
+              Ponizej lg "Chce odwiedzic" i serce sa w przypietym pasku na dole -
+              tu zostaje samo "Bylem tutaj" (decyzja Mateusza 2026-09-28: kazdy
+              przycisk byl na ekranie dwa razy). */}
+          <div className="mb-3 grid grid-cols-1 gap-2 lg:mb-2 lg:grid-cols-3">
+            <div className="hidden lg:contents">
+              <VisitStatusButton placeId={place.id} status="want" className="w-full min-w-0 justify-center rounded-[14px] px-2 py-3 text-[13px] font-extrabold whitespace-nowrap" />
+            </div>
+            <VisitStatusButton placeId={place.id} status="visited" className="w-full min-w-0 justify-center rounded-[14px] px-2 py-3 text-[13px] font-extrabold whitespace-nowrap" />
+            <div className="hidden lg:contents">
+              <FavoriteIconButton placeId={place.id} variant="text" className="w-full min-w-0 rounded-[14px] px-2 py-3 text-[13px] font-extrabold whitespace-nowrap" />
+            </div>
           </div>
 
-          {/* Akcje: Nawiguj / Zadzwon / Strona www / Udostepnij.
-              Handoff pokazuje Nawiguj takze na mobile, mimo ze przypiety pasek
-              u dolu ma ten sam przycisk - swiadome powtorzenie CTA. */}
-          <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {/* Akcje: Nawiguj / Zadzwon / Strona www / Udostepnij. Nawiguj tylko
+              od lg - nizej jest w przypietym pasku na dole. */}
+          <div className="mb-5 grid grid-cols-3 gap-2 lg:mb-4 lg:grid-cols-4">
             <a
               href={mapsHref}
               target="_blank"
               rel="noreferrer"
               aria-label="Nawiguj do lokalu"
-              className="inline-flex min-w-0 items-center justify-center gap-2 rounded-[14px] border border-border bg-tomato/10 px-2 py-2.5 text-[12.5px] font-bold text-tomato transition hover:bg-tomato/15"
+              className="hidden min-w-0 items-center justify-center gap-2 lg:inline-flex rounded-[14px] border border-border bg-tomato/10 px-2 py-2.5 text-[12.5px] font-bold text-tomato transition hover:bg-tomato/15"
             >
               <Navigation size={15} /> <span className="truncate">Nawiguj</span>
             </a>
@@ -645,7 +651,8 @@ function PlaceProfile() {
         </div>
       </div>
 
-      <div className="lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-6">
+      {/* mt-6: na telefonie pierwsza sekcja stykala sie z karta naglowka. */}
+      <div className="mt-6 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-6 lg:mt-0">
         {place.opening_hours && (
           <Collapsible
             title="Godziny otwarcia"
@@ -865,7 +872,9 @@ function FollowButton({ placeId }: { placeId: string }) {
       ) : (
         <Bell size={16} />
       )}
-      <span className="hidden sm:inline">{isFollowing ? "Przestań obserwować" : "Obserwuj"}</span>
+      {/* Etykieta zawsze: na telefonie przycisk jest na cala szerokosc i bez
+          niej byl pusta pigulka z samym dzwonkiem (zrzut 2026-09-28). */}
+      <span>{isFollowing ? "Obserwujesz" : "Obserwuj"}</span>
     </button>
   );
 }
