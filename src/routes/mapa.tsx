@@ -161,7 +161,7 @@ function MapaPage() {
   ];
 
   const trigger = (active: boolean) =>
-    `flex h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-all duration-200 ease-out hover:-translate-y-0.5 sm:flex-none sm:px-4 ${
+    `flex h-11 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 text-xs font-semibold transition-all duration-200 ease-out hover:-translate-y-0.5 sm:px-4 ${
       active
         ? "border-navy bg-gradient-to-br from-navy to-[oklch(0.3_0.13_268)] text-cream shadow-md shadow-navy/30"
         : "border-border bg-card text-foreground shadow-sm hover:border-tomato hover:shadow-md"
@@ -172,7 +172,10 @@ function MapaPage() {
   // its own version of this same idea at a different threshold (360px)
   // because it's tuned against a 6-icon tab bar, not a 3-chip filter row -
   // the two aren't meant to match.
-  const FILTER_LABEL_CLS = "hidden truncate min-[400px]:inline";
+  // Pelne nazwy zawsze - rzad przewija sie w bok. Piec chipow flex-1 w jednym
+  // rzedzie cielo etykiety do "K", "O...", "Ulu..." na telefonie (zrzut
+  // Mateusza 2026-09-28), a ukrywanie ich ponizej 400px zostawialo same ikony.
+  const FILTER_LABEL_CLS = "";
 
   const optionRow = (active: boolean) =>
     `flex min-h-11 w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition ${
@@ -201,7 +204,7 @@ function MapaPage() {
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden">
           <Popover>
             <PopoverTrigger className={trigger(!!cuisine)} aria-label="Filtruj po kuchni">
               <UtensilsCrossed size={13} className="shrink-0" />
@@ -294,7 +297,7 @@ function MapaPage() {
                   className={trigger(layer === l.key)}
                 >
                   {l.icon}
-                  <span className="truncate">{l.label}</span>
+                  <span>{l.label}</span>
                 </button>
               ))}
             </>

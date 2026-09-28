@@ -199,22 +199,22 @@ function KartyPage() {
   return (
     <main
       id="main-content"
-      className="flex min-h-dvh flex-col items-center justify-center bg-background px-4 py-10"
+      className="flex min-h-dvh flex-col items-center bg-background px-4 pb-6 pt-4 lg:justify-center lg:py-10"
     >
       <div className="flex w-full items-start justify-center gap-10">
       <div className="w-full max-w-md text-center lg:max-w-lg">
-        <h1 className="font-display text-3xl font-extrabold sm:text-4xl">Karty 🎴</h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
+        <h1 className="font-display text-2xl font-extrabold sm:text-4xl">Karty 🎴</h1>
+        <p className="mt-1 text-xs text-muted-foreground sm:mt-1.5 sm:text-sm">
           Przesuń w prawo - trafi do „Chcę odwiedzić”. W lewo - pomiń, wróci za 5 dni.
         </p>
         {!isLoading && visible.length > 0 && (
-          <p className="mt-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+          <p className="mt-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground sm:mt-2 sm:text-xs">
             {visible.length}{" "}
             {pluralPl(visible.length, "karta", "karty", "kart")} do przejrzenia
           </p>
         )}
 
-        <div className="relative mx-auto mt-6 aspect-[3/4] w-full max-w-[340px] lg:max-w-[440px]">
+        <div className="relative mx-auto mt-4 aspect-[3/4] h-[clamp(18rem,calc(100dvh-22rem),28.5rem)] max-w-full sm:mt-6 lg:h-auto lg:w-full lg:max-w-[440px]">
           {isLoading ? (
             <div className="grid h-full place-items-center rounded-3xl border border-dashed border-border">
               <Loader2 className="animate-spin text-tomato" size={28} />
@@ -284,12 +284,12 @@ function KartyPage() {
         </div>
 
         {top && (
-          <div className="mt-6 flex items-center justify-center gap-6">
+          <div className="mt-4 flex items-center justify-center gap-6 sm:mt-6">
             <button
               type="button"
               aria-label="Pomiń"
               onClick={() => decide("left", top)}
-              className="grid h-16 w-16 place-items-center rounded-full border-2 border-foreground/15 bg-card shadow-md transition hover:-translate-y-0.5 hover:border-foreground/40 hover:shadow-lg active:scale-95"
+              className="grid h-14 w-14 place-items-center rounded-full border-2 border-foreground/15 bg-card shadow-md transition hover:-translate-y-0.5 hover:border-foreground/40 hover:shadow-lg active:scale-95 sm:h-16 sm:w-16"
             >
               <NopeFace size={34} />
             </button>
@@ -306,7 +306,7 @@ function KartyPage() {
               type="button"
               aria-label="Chcę odwiedzić"
               onClick={() => decide("right", top)}
-              className="grid h-16 w-16 place-items-center rounded-full border-2 border-tomato/25 bg-card shadow-md transition hover:-translate-y-0.5 hover:border-tomato hover:shadow-lg active:scale-95"
+              className="grid h-14 w-14 place-items-center rounded-full border-2 border-tomato/25 bg-card shadow-md transition hover:-translate-y-0.5 hover:border-tomato hover:shadow-lg active:scale-95 sm:h-16 sm:w-16"
             >
               <YummyFace size={34} />
             </button>

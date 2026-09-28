@@ -271,8 +271,15 @@ function Index() {
           <>
             <RecentlyViewedStrip />
             <PlaceRail
-              title="Polecane dla Ciebie"
-              subtitle="Na podstawie Twoich wizyt"
+              // Lista jest sortowana po sredniej ocenie, nie po wizytach -
+              // stary podpis "Na podstawie Twoich wizyt" byl nieprawda dla
+              // kazdego (zrzut Mateusza 2026-09-28).
+              title="Najwyżej oceniane"
+              subtitle={
+                topPicks.some((p) => ratings?.get(p.id))
+                  ? "Według recenzji poŻeraczy"
+                  : "Jeszcze bez ocen - napisz pierwszą recenzję"
+              }
               icon={<Sparkles size={12} />}
               places={topPicks}
               loading={isLoading}
@@ -606,7 +613,10 @@ function FirstVisitPopup() {
           <div className="mx-auto mb-4 grid h-20 w-20 rotate-[-4deg] place-items-center rounded-2xl bg-tomato shadow-lg">
             <Instagram size={40} />
           </div>
-          <h3 className="mb-2 font-display text-3xl leading-tight">Cześć, poŻeraczu!</h3>
+          {/* Forma wg plci z profilu; gosc i plec nieznana - neutralnie. */}
+          <h3 className="mb-2 font-display text-3xl leading-tight">
+            {profile?.gender === "K" ? "Cześć, poŻeraczko!" : profile?.gender === "M" ? "Cześć, poŻeraczu!" : "Cześć! 👋"}
+          </h3>
           <p className="text-sm text-cream/80">
             Jesteśmy poŻeramy i testujemy najlepsze miejscówki w Poznaniu.
           </p>

@@ -65,7 +65,9 @@ export function DiscoverHeader({
               </p>
             )}
           </div>
-          <div className="shrink-0 pt-1">
+          {/* Tylko desktop: ponizej lg jest SiteNav z wlasnym dzwonkiem - na
+              telefonie byly dwa dzwonki jeden pod drugim (zrzut 2026-09-28). */}
+          <div className="hidden shrink-0 pt-1 lg:block">
             <NotificationBell />
           </div>
         </div>

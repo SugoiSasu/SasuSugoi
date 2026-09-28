@@ -212,8 +212,11 @@ function FriendsRankingCard() {
                 <Link
                   to="/u/$username"
                   params={{ username: p.username || p.user_id }}
-                  className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 transition ${
-                    isMe ? "border-2 border-tomato bg-cream" : "bg-cream/60 hover:bg-cream"
+                  // text-navy na stale: tlo wiersza jest zawsze kremowe, a kolor
+                  // tekstu dziedziczony z motywu w ciemnym dawal krem na kremie -
+                  // nazwa i punkty znikaly (zrzut Mateusza 2026-09-28).
+                  className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 text-navy transition ${
+                    isMe ? "border-2 border-tomato bg-cream" : "bg-cream/80 hover:bg-cream"
                   }`}
                 >
                   <span className="relative shrink-0">
@@ -234,7 +237,7 @@ function FriendsRankingCard() {
                   <span className="min-w-0 flex-1 truncate text-sm font-bold">
                     {isMe ? "Ty" : displayNameOf(p)}
                   </span>
-                  <span className="shrink-0 text-xs font-semibold text-secondary-foreground/70">
+                  <span className="shrink-0 text-xs font-semibold text-navy/70">
                     {p.points_total} pkt
                   </span>
                 </Link>

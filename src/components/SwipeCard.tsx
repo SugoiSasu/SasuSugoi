@@ -198,9 +198,13 @@ export function SwipeCard({
           <div className="absolute inset-0 bg-navy/45" />
         </div>
 
-        {/* Centre block: the logo at a size you can actually read, and the name
-            directly under it. */}
-        <div className="absolute inset-x-0 top-[24%] flex flex-col items-center gap-3 px-6 text-center">
+        {/* Kolumna zamiast pozycji absolutnych: logo bierze tyle miejsca, ile
+            zostaje, a nazwa i stopka leza pod nim w przeplywie. Wczesniej nazwa
+            wisiala na sztywno na 24% wysokosci pod logo 192 px - na mniejszej
+            karcie (telefon) wjezdzala w stopke: chipy ja zaslanialy, a gradient
+            stopki przyciemnial do szarosci (zrzuty Mateusza 2026-09-28). */}
+        <div className="relative flex h-full flex-col">
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-6 pt-6 text-center sm:gap-3">
           {/* No plate: the logo sits straight on the card, over a soft pool of the
               cuisine colour - the same colour the filters use, so a card reads as
               its category before you have read a word of it. A hard cream tile
@@ -209,7 +213,7 @@ export function SwipeCard({
               uploaded logo) is cut out client-side so it doesn't show as a
               coloured box; a place can turn that off (avatar_cutout_enabled)
               if its "background" is actually part of the mark. */}
-          <div className="relative grid h-48 w-48 place-items-center">
+          <div className="relative grid aspect-square min-h-0 max-h-48 flex-1 place-items-center">
             <span
               aria-hidden="true"
               className="absolute inset-[-18%] rounded-full blur-xl"
@@ -222,7 +226,7 @@ export function SwipeCard({
               className="relative h-full w-full object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)]"
             />
           </div>
-          <h2 className="font-display text-2xl font-extrabold leading-tight text-cream drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)]">
+          <h2 className="line-clamp-2 shrink-0 font-display text-2xl font-extrabold leading-tight text-cream drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)]">
             {place.name}
           </h2>
         </div>
@@ -237,7 +241,7 @@ export function SwipeCard({
             true and strongest - showing all three at once was tried and
             read as clutter. Rating and open-status still render only when
             they have something to say. */}
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent p-5 pt-20 text-cream">
+        <div className="shrink-0 bg-gradient-to-t from-black/85 via-black/55 to-transparent p-4 pt-8 text-cream sm:p-5 sm:pt-10">
           <div className="mb-2">{signalBadges}</div>
           {place.description && (
             <>
@@ -261,6 +265,7 @@ export function SwipeCard({
               <span className="truncate">{place.address}</span>
             </span>
           </p>
+        </div>
         </div>
 
         <motion.div
