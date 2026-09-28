@@ -188,6 +188,7 @@ function PlacesTab() {
   const [confirmDelete, setConfirmDelete] = useState<Place | null>(null);
   const [query, setQuery] = useState("");
   const [cuisineFilter, setCuisineFilter] = useState<string>("Wszystko");
+  const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft">("all");
   const [sort, setSort] = useState<"default" | "name" | "rating" | "newest">("default");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
@@ -202,6 +203,8 @@ function PlacesTab() {
     const q = query.trim().toLowerCase();
     const list = (places ?? []).filter((p) => {
       if (cuisineFilter !== "Wszystko" && p.cuisine !== cuisineFilter) return false;
+      if (statusFilter === "published" && !p.is_published) return false;
+      if (statusFilter === "draft" && p.is_published) return false;
       if (!q) return true;
       return (
         p.name.toLowerCase().includes(q) ||
@@ -216,7 +219,9 @@ function PlacesTab() {
       if (sort === "rating") return (ratings?.get(b.id)?.avg ?? 0) - (ratings?.get(a.id)?.avg ?? 0);
       return (b.created_at ?? "").localeCompare(a.created_at ?? "");
     });
-  }, [places, query, cuisineFilter, sort, ratings]);
+  }, [places, query, cuisineFilter, statusFilter, sort, ratings]);
+  const liczbaOpublikowanych = (places ?? []).filter((p) => p.is_published).length;
+  const liczbaSzkicow = (places ?? []).length - liczbaOpublikowanych;
 
   const allVisibleSelected = filtered.length > 0 && filtered.every((p) => selected.has(p.id));
 
@@ -262,8 +267,8 @@ function PlacesTab() {
         <div className="flex items-center gap-3 flex-wrap">
           <p className="text-sm text-muted-foreground">
             {filtered.length}
-            {places && filtered.length !== places.length ? ` z ${places.length}` : ""} miejscówek ·
-            widoczne publicznie
+            {places && filtered.length !== places.length ? ` z ${places.length}` : ""} miejscówek ·{" "}
+            {liczbaOpublikowanych} opublikowanych, {liczbaSzkicow} szkiców
           </p>
           {filtered.length > 0 && (
             <button
@@ -281,6 +286,27 @@ function PlacesTab() {
 
       <div className="mb-5">
         <MigrateAllPlacesButton places={places ?? []} />
+      </div>
+
+      {/* Status: szkic / opublikowany - Mateusz 2026-09-28: na liscie nie bylo tego widac */}
+      <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Status publikacji">
+        {(
+          [
+            ["all", `Wszystkie (${(places ?? []).length})`],
+            ["published", `✅ Opublikowane (${liczbaOpublikowanych})`],
+            ["draft", `📝 Szkice (${liczbaSzkicow})`],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setStatusFilter(id)}
+            aria-pressed={statusFilter === id}
+            className={`chip text-xs ${statusFilter === id ? "bg-navy text-cream" : "bg-card border border-border"}`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       {/* Search + filter */}
@@ -388,6 +414,13 @@ function PlacesTab() {
                       <MapPin size={12} className="flex-shrink-0" />
                       <span className="truncate">{p.address}</span>
                     </div>
+                    <span
+                      className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                        p.is_published ? "bg-ok/12 text-ok" : "bg-tomato/12 text-tomato"
+                      }`}
+                    >
+                      {p.is_published ? "✅ Opublikowany" : "📝 Szkic"}
+                    </span>
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground line-clamp-2">{p.description}</p>
