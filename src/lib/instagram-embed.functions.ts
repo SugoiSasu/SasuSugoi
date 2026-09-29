@@ -12,7 +12,11 @@ export const getInstagramEmbed = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) => schema.parse(data))
   .handler(async ({ data }) => {
     const u = new URL(data.url);
-    if (!u.hostname.endsWith("instagram.com")) {
+    // Dokladny host (albo poddomena po kropce): samo endsWith("instagram.com")
+    // przepuszczalo tez "evilinstagram.com". Do Meta i tak idzie stale
+    // graph.facebook.com, ale nie chcemy proxowac cudzych adresow.
+    const host = u.hostname.toLowerCase();
+    if (u.protocol !== "https:" || !(host === "instagram.com" || host.endsWith(".instagram.com"))) {
       throw new Error("To nie jest link do Instagrama.");
     }
     const oembedUrl = `https://graph.facebook.com/v19.0/instagram_oembed?omitscript=true&url=${encodeURIComponent(data.url)}`;
