@@ -478,16 +478,21 @@ const DiscoverCard = memo(function DiscoverCard({
 
       <Link to="/k/$id" params={{ id: place.slug ?? place.id }} className="block">
         <div
-          className="relative aspect-[5/4] overflow-hidden"
-          style={{ backgroundColor: place.avatar_url ? "#ffffff" : meta.color }}
+          className={`relative aspect-[5/4] overflow-hidden ${place.avatar_url ? "bg-white dark:bg-card" : ""}`}
+          style={place.avatar_url ? undefined : { backgroundColor: meta.color }}
         >
           {place.avatar_url ? (
-            <img
-              src={cutoutLogo ?? place.avatar_url}
-              alt={place.name}
-              loading="lazy"
-              className="absolute inset-0 h-full w-full object-contain p-6 transition duration-500 group-hover:scale-[1.04]"
-            />
+            // Jasny motyw: logo na bialym, cala plaszczyzna. Ciemny motyw: pelny
+            // bialy prostokat razil (loga bywaja czarne, wiec tlo musi byc jasne),
+            // dlatego jasna plytka jest wcieta w karte, zaokraglona i przygaszona.
+            <div className="absolute inset-0 dark:inset-3 dark:rounded-2xl dark:bg-[#e6e0d2]">
+              <img
+                src={cutoutLogo ?? place.avatar_url}
+                alt={place.name}
+                loading="lazy"
+                className="h-full w-full object-contain p-6 transition duration-500 group-hover:scale-[1.04] dark:p-4"
+              />
+            </div>
           ) : place.cover_image_url ? (
             <img
               src={place.cover_image_url}
