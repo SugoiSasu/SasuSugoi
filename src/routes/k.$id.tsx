@@ -430,15 +430,9 @@ function PlaceProfile() {
           ) : (
             <>
               {/* Wszystkie kuchnie maja ten sam hero (decyzja Mateusza 2026-09-29):
-                  gradient w kolorze kuchni, poswiata i nazwa jako "duch".
+                  gradient w kolorze kuchni, poswiata i emoji (bez napisu w tle).
                   Wczesniej kuchnie z wlasnym wzorem (pizza, burgery...) miały
                   ilustracje, a reszta gradient - strona wygladala niespojnie. */}
-              <span
-                aria-hidden="true"
-                className="font-persona pointer-events-none absolute -top-[6%] left-1/2 -translate-x-1/2 whitespace-nowrap leading-none tracking-[-0.04em] text-[clamp(6rem,26vw,18rem)] text-cream/[0.05]"
-              >
-                {place.name}
-              </span>
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute left-1/2 top-1/2 h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-80 blur-[50px]"
