@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { DOMYSLNY_PUNKT, czyDomyslnyPunkt, geokodujAdres } from "@/lib/geocode";
 import { punktyKompletnosci } from "@/lib/place-completeness";
+import { PlaceTrophiesPanel } from "@/components/admin/PlaceTrophiesPanel";
 import { SekcjaEdytora, NawigacjaSekcji, otworzSekcje, ustawWszystkie, type Znacznik } from "@/components/admin/EditorSekcje";
 import { MigratePlaceImagesButton } from "@/components/PlaceImageMigration";
 import { MenuItemsEditor } from "@/components/MenuItemsEditor";
@@ -349,6 +350,7 @@ function EditPlace() {
             { id: "godziny", etykieta: "Godziny", znacznik: znGodziny },
             { id: "menu", etykieta: "Menu", znacznik: znMenu },
             { id: "zdjecia", etykieta: "Zdjęcia", znacznik: znZdjecia },
+            ...(isNew ? [] : [{ id: "trofea", etykieta: "Trofea" }]),
             { id: "oddzialy", etykieta: "Oddziały" },
           ]}
         />
@@ -661,6 +663,12 @@ function EditPlace() {
             onChange={(url) => setForm({ ...form, cover_image_url: url })}
           />
         </SekcjaEdytora>
+
+        {!isNew && (
+          <SekcjaEdytora id="trofea" tytul="Trofea i wyróżnienia">
+            <PlaceTrophiesPanel placeId={id} />
+          </SekcjaEdytora>
+        )}
 
         <SekcjaEdytora id="oddzialy" tytul="Dodatkowe oddziały">
           <div className="bg-card border border-border rounded-2xl p-5">

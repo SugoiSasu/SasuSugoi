@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { brakiLokalu } from "@/lib/place-completeness";
+import { useWszystkieTrofea } from "@/lib/trophies-api";
+import { TrophyIcon } from "@/components/TrophyIcon";
+import { podpisTrofeum } from "@/lib/trophies";
 import { usePlaces, usePlaceRatingsMap, useDeletePlace, type Place } from "@/lib/places-api";
 import {
   useCuisines,
@@ -224,6 +227,7 @@ function PlacesTab() {
   }, [places, query, cuisineFilter, statusFilter, sort, ratings]);
   const liczbaOpublikowanych = (places ?? []).filter((p) => p.is_published).length;
   const liczbaSzkicow = (places ?? []).length - liczbaOpublikowanych;
+  const { mapa: trofeaMapa } = useWszystkieTrofea();
   const liczbaNiekompletnych = (places ?? []).filter((p) => brakiLokalu(p).wazne.length > 0).length;
 
   const allVisibleSelected = filtered.length > 0 && filtered.every((p) => selected.has(p.id));
@@ -425,6 +429,15 @@ function PlacesTab() {
                     >
                       {p.is_published ? "✅ Opublikowany" : "📝 Szkic"}
                     </span>
+                    {(trofeaMapa.get(p.id) ?? []).length > 0 && (
+                      <span className="mt-1.5 ml-1.5 inline-flex items-center gap-1.5 align-middle">
+                        {(trofeaMapa.get(p.id) ?? []).slice(0, 4).map((t, ti) => (
+                          <span key={ti} title={podpisTrofeum(t)} className="inline-flex">
+                            <TrophyIcon trofeum={t} size={18} />
+                          </span>
+                        ))}
+                      </span>
+                    )}
                     {(() => {
                       const b = brakiLokalu(p);
                       const komplet = b.wazne.length === 0;

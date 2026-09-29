@@ -134,6 +134,7 @@ if (SUPABASE && KLUCZ) {
     ["user_sanctions (ostrzezenia i bany)", "user_sanctions?select=id&limit=1"],
     ["moderation_log (proby)", "moderation_log?select=id&limit=1"],
     ["moderation_terms (lista slow)", "moderation_terms?select=id&limit=1"],
+    ["place_trophies (propozycje AI)", "place_trophies?select=id&status=eq.propozycja&limit=1"],
   ];
   for (const [nazwa, sciezka] of TYLKO_ADMIN) {
     try {

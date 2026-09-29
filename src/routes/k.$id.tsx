@@ -28,8 +28,9 @@ import { useIsFollowing, useToggleFollow, useFollowCount } from "@/lib/follows-a
 import { usePlaceOwner, useIsOwnerOf } from "@/lib/owners-api";
 import { OwnerRequestModal } from "@/components/OwnerRequestModal";
 import { EditableImageButton } from "@/components/EditableImageButton";
-import { Bell, BellOff, ShieldCheck, Trophy, Settings2 } from "lucide-react";
-import { usePlaceAwardWins } from "@/lib/awards-api";
+import { Bell, BellOff, ShieldCheck, Settings2 } from "lucide-react";
+import { TrophyPill } from "@/components/TrophyIcon";
+import { useTrofeaLokalu } from "@/lib/trophies-api";
 import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import { ShareModal } from "@/components/ShareModal";
 import { VisitStatusButton } from "@/components/VisitStatus";
@@ -323,7 +324,7 @@ function PlaceProfile() {
   const { id } = Route.useParams();
   const { data: place, isLoading } = usePlace(id);
   const { data: verifiedOwner } = usePlaceOwner((place as Place | undefined)?.id ?? "");
-  const { data: awardWins } = usePlaceAwardWins((place as Place | undefined)?.id);
+  const { data: trofea } = useTrofeaLokalu((place as Place | undefined)?.id);
   const reviewStats = usePlaceReviewStats((place as Place | undefined)?.id);
   const { data: isOwnerOfPlace } = useIsOwnerOf((place as Place | undefined)?.id ?? "");
   const { data: isAdmin } = useIsAdmin();
@@ -553,17 +554,17 @@ function PlaceProfile() {
             </div>
           </div>
 
-          {(verifiedOwner || (awardWins ?? []).length > 0) && (
+          {(verifiedOwner || (trofea ?? []).length > 0) && (
             <div className="mb-3.5 flex flex-wrap items-center gap-2">
               {verifiedOwner && (
                 <span className="chip bg-ok text-white text-xs inline-flex items-center gap-1" title="Profil zarządzany przez zweryfikowanego właściciela">
                   <ShieldCheck size={12} /> Zweryfikowany właściciel
                 </span>
               )}
-              {(awardWins ?? []).map((w) => (
-                <span key={w.id} className="chip bg-mustard text-navy text-xs inline-flex items-center gap-1" title={`${w.vote_count} głosów`}>
-                  <Trophy size={12} /> {w.event?.name ?? "Warte poŻarcia"} - {w.cuisine?.name}
-                </span>
+              {/* Trofea (Michelin, Warte poŻarcia): jedna gablota, tylko gdy lokal
+                  ma choć jedno. Wygrane z naszego głosowania dochodzą z bazy same. */}
+              {(trofea ?? []).map((t, i) => (
+                <TrophyPill key={`${t.kind}-${t.year}-${t.label ?? ""}-${i}`} trofeum={t} />
               ))}
             </div>
           )}
