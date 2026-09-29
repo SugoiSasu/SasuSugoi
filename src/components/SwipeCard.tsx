@@ -83,7 +83,7 @@ export function SwipeCard({
   // can opt out via avatar_cutout_enabled, e.g. a logo whose "background" is
   // actually part of the mark). Falls back to the raw file while the cutout
   // is still processing or unavailable, so the card never shows nothing.
-  const cutout = useCutoutLogoReady(place.avatar_cutout_enabled !== false ? place.avatar_url : null);
+  const cutout = useCutoutLogoReady(place.avatar_url, place.avatar_cutout_enabled !== false);
   const logoSrc = cutout.src ?? place.avatar_url ?? undefined;
   // Logo pokazujemy dopiero, gdy wycinanie sie skonczylo - wczesniej oryginal
   // z tlem podmienial sie po chwili na wyciety i logo "mrugalo".
@@ -210,6 +210,8 @@ export function SwipeCard({
                 alt=""
                 aria-hidden="true"
                 draggable={false}
+                // Prostokatne/kwadratowe logo w kole w kolorze wlasnego tla (spojnie z okraglymi).
+                style={cutout.kafel ? { backgroundColor: cutout.kolor, borderRadius: "9999px", padding: "12%" } : undefined}
                 className={`relative h-full w-full object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)] transition-opacity duration-300 ${logoWidoczne ? "opacity-100" : "opacity-0"}`}
               />
             </div>

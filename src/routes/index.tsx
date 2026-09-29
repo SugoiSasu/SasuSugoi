@@ -439,7 +439,7 @@ const DiscoverCard = memo(function DiscoverCard({
   const meta = cuisineMeta(place.cuisine);
   // Logo pokazujemy dopiero po wycieciu tla: wczesniej mignal oryginal z bialym
   // prostokatem (po ciemku razi najbardziej).
-  const cutout = useCutoutLogoReady(place.avatar_cutout_enabled !== false ? place.avatar_url : null);
+  const cutout = useCutoutLogoReady(place.avatar_url, place.avatar_cutout_enabled !== false);
   const cutoutLogo = cutout.src;
   const { user } = useUser();
   const isFav = useIsFavorite(place.id);
@@ -488,12 +488,30 @@ const DiscoverCard = memo(function DiscoverCard({
             // Jasny motyw: logo na bialym, cala plaszczyzna. Ciemny motyw: zadnego jasnego tla (razi po
             // ciemku) - ciemna plytka, a ciemne elementy loga dostaja jasna poswiate.
             <div className="absolute inset-0 dark:inset-3 dark:rounded-2xl dark:bg-white/[0.06]">
-              <img
-                src={cutoutLogo ?? place.avatar_url}
-                alt={place.name}
-                loading="lazy"
-                className={`h-full w-full object-contain p-6 transition duration-500 ${cutout.gotowe ? "opacity-100" : "opacity-0"} group-hover:scale-[1.04] dark:p-4 dark:drop-shadow-[0_0_1.5px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_0_4px_rgba(255,255,255,0.45)] dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.2)]`}
-              />
+              {cutout.kafel ? (
+                // Prostokatne/kwadratowe logo w kole w kolorze wlasnego tla -
+                // spojnie z okraglymi (bez poswiaty: kolo ma wlasne tlo).
+                <div className="grid h-full place-items-center p-5 dark:p-4">
+                  <div
+                    className="aspect-square h-full overflow-hidden rounded-full transition duration-500 group-hover:scale-[1.04]"
+                    style={{ backgroundColor: cutout.kolor }}
+                  >
+                    <img
+                      src={cutoutLogo ?? place.avatar_url}
+                      alt={place.name}
+                      loading="lazy"
+                      className="h-full w-full object-contain p-[13%]"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <img
+                  src={cutoutLogo ?? place.avatar_url}
+                  alt={place.name}
+                  loading="lazy"
+                  className={`h-full w-full object-contain p-6 transition duration-500 ${cutout.gotowe ? "opacity-100" : "opacity-0"} group-hover:scale-[1.04] dark:p-4 dark:drop-shadow-[0_0_1.5px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_0_4px_rgba(255,255,255,0.45)] dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.2)]`}
+                />
+              )}
             </div>
           ) : place.cover_image_url ? (
             <img

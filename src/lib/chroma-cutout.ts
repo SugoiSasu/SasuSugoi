@@ -167,27 +167,109 @@ function cutoutBackground(url: string): Promise<string> {
 }
 
 /**
+ * Logo, ktore po wycieciu tla nadal jest prostokatem lub kwadratem (bialy
+ * plakat Kuchni Piatkowskiej, czarny kwadrat Smasznego Teja, bordowy The Round).
+ * Takie logo rozni sie od okraglych i psuje spojnosc, wiec pokazujemy je w kole
+ * w kolorze wlasnego tla. Rozpoznanie: nieprzezroczysta czesc wypelnia prawie
+ * caly swoj prostokat (kolo wypelnia ~78%, sam napis duzo mniej), a kolor
+ * srodkow czterech krawedzi jest wspolny - inaczej (np. ikona z wzorem) nie
+ * dobierzemy koloru koła i zostawiamy logo jak jest.
+ */
+export type Kafel = { kafel: boolean; kolor: string };
+const BRAK_KAFLA: Kafel = { kafel: false, kolor: "transparent" };
+const kaflaCache = new Map<string, Promise<Kafel>>();
+
+function analizaKafla(src: string): Promise<Kafel> {
+  const cached = kaflaCache.get(src);
+  if (cached) return cached;
+  const p = new Promise<Kafel>((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const skala = Math.min(1, 128 / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.max(1, Math.round(img.naturalWidth * skala));
+        const h = Math.max(1, Math.round(img.naturalHeight * skala));
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        if (!ctx) return resolve(BRAK_KAFLA);
+        ctx.drawImage(img, 0, 0, w, h);
+        const d = ctx.getImageData(0, 0, w, h).data;
+        let x0 = w, y0 = h, x1 = -1, y1 = -1;
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            if (d[(y * w + x) * 4 + 3] > 200) {
+              if (x < x0) x0 = x;
+              if (x > x1) x1 = x;
+              if (y < y0) y0 = y;
+              if (y > y1) y1 = y;
+            }
+          }
+        }
+        if (x1 < 0) return resolve(BRAK_KAFLA);
+        const bw = x1 - x0 + 1;
+        const bh = y1 - y0 + 1;
+        let pelne = 0;
+        for (let y = y0; y <= y1; y++) {
+          for (let x = x0; x <= x1; x++) if (d[(y * w + x) * 4 + 3] > 200) pelne++;
+        }
+        const wypelnienie = pelne / (bw * bh);
+        const zajecie = (bw * bh) / (w * h);
+        if (wypelnienie < 0.93 || zajecie < 0.2) return resolve(BRAK_KAFLA);
+        const px = (x: number, y: number) => {
+          const i = (y * w + x) * 4;
+          return [d[i], d[i + 1], d[i + 2]];
+        };
+        const mx = Math.round((x0 + x1) / 2);
+        const my = Math.round((y0 + y1) / 2);
+        const probki = [px(mx, y0 + 1), px(mx, y1 - 1), px(x0 + 1, my), px(x1 - 1, my)];
+        const sr = [0, 1, 2].map((k) => probki.reduce((s, p) => s + p[k], 0) / 4);
+        const spojny = probki.every((p) => Math.hypot(p[0] - sr[0], p[1] - sr[1], p[2] - sr[2]) < 40);
+        if (!spojny) return resolve(BRAK_KAFLA);
+        resolve({ kafel: true, kolor: `rgb(${sr.map(Math.round).join(",")})` });
+      } catch {
+        resolve(BRAK_KAFLA);
+      }
+    };
+    img.onerror = () => resolve(BRAK_KAFLA);
+    img.src = src;
+  });
+  kaflaCache.set(src, p);
+  return p;
+}
+
+type StanLogo = { src: string | null; gotowe: boolean } & Kafel;
+
+/**
  * Jak useCutoutLogo, ale mowi tez, czy wynik jest juz ostateczny. Karty
  * pokazuja logo dopiero wtedy - inaczej najpierw widac oryginal z tlem, a po
- * chwili podmienia sie wyciety (logo "mrugalo").
+ * chwili podmienia sie wyciety (logo "mrugalo"). Dodatkowo: czy logo jest
+ * "kaflem" (prostokat/kwadrat) i jakiego koloru, zeby pokazac je w kole.
  */
-export function useCutoutLogoReady(url: string | null | undefined): { src: string | null; gotowe: boolean } {
-  const [stan, setStan] = useState<{ src: string | null; gotowe: boolean }>({ src: null, gotowe: !url });
+export function useCutoutLogoReady(url: string | null | undefined, wytnij = true): StanLogo {
+  const [stan, setStan] = useState<StanLogo>({ src: null, gotowe: !url, ...BRAK_KAFLA });
   useEffect(() => {
     if (!url) {
-      setStan({ src: null, gotowe: true });
+      setStan({ src: null, gotowe: true, ...BRAK_KAFLA });
       return;
     }
     let cancelled = false;
-    setStan({ src: null, gotowe: false });
-    cutoutBackground(url)
-      .then((blobUrl) => !cancelled && setStan({ src: blobUrl, gotowe: true }))
+    setStan({ src: null, gotowe: false, ...BRAK_KAFLA });
+    // Wycinanie moze byc wylaczone dla lokalu (tlo jest czescia znaku), ale
+    // ksztalt loga nadal sprawdzamy - stad osobny krok.
+    (wytnij ? cutoutBackground(url) : Promise.resolve(url))
+      .then(async (blobUrl) => {
+        const k = await analizaKafla(blobUrl);
+        if (!cancelled) setStan({ src: blobUrl, gotowe: true, ...k });
+      })
       // Wycinanie nie wyszlo (CORS, zly plik) - pokazujemy oryginal.
-      .catch(() => !cancelled && setStan({ src: url, gotowe: true }));
+      .catch(() => !cancelled && setStan({ src: url, gotowe: true, ...BRAK_KAFLA }));
     return () => {
       cancelled = true;
     };
-  }, [url]);
+  }, [url, wytnij]);
   return stan;
 }
 
