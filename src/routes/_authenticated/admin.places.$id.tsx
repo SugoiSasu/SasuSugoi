@@ -27,6 +27,7 @@ import {
   FileText,
 } from "lucide-react";
 import { DOMYSLNY_PUNKT, czyDomyslnyPunkt, geokodujAdres } from "@/lib/geocode";
+import { punktyKompletnosci } from "@/lib/place-completeness";
 import { MigratePlaceImagesButton } from "@/components/PlaceImageMigration";
 import { MenuItemsEditor } from "@/components/MenuItemsEditor";
 import { initialsFromName, colorFromKey } from "@/lib/avatar-utils";
@@ -738,14 +739,7 @@ function PublikacjaPanel({
   onZmien: (opublikowany: boolean) => void;
 }) {
   const opublikowany = !!form.is_published;
-  const punkty: { ok: boolean; tekst: string; wazne: boolean }[] = [
-    { ok: !!form.avatar_url, tekst: "Logo", wazne: true },
-    { ok: !!form.description?.trim(), tekst: "Opis", wazne: true },
-    { ok: !!form.address?.trim(), tekst: "Adres", wazne: true },
-    { ok: !czyDomyslnyPunkt(form.lat, form.lng), tekst: "Pinezka w dobrym miejscu", wazne: true },
-    { ok: !!form.opening_hours && Object.keys(form.opening_hours).length > 0, tekst: "Godziny otwarcia", wazne: false },
-    { ok: !!form.menu_items?.length || !!form.menu_url, tekst: "Menu", wazne: false },
-  ];
+  const punkty = punktyKompletnosci(form);
   const brakiWazne = punkty.filter((p) => p.wazne && !p.ok);
   return (
     <div

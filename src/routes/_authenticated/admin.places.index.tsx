@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { brakiLokalu } from "@/lib/place-completeness";
 import { usePlaces, usePlaceRatingsMap, useDeletePlace, type Place } from "@/lib/places-api";
 import {
   useCuisines,
@@ -188,7 +189,7 @@ function PlacesTab() {
   const [confirmDelete, setConfirmDelete] = useState<Place | null>(null);
   const [query, setQuery] = useState("");
   const [cuisineFilter, setCuisineFilter] = useState<string>("Wszystko");
-  const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft" | "incomplete">("all");
   const [sort, setSort] = useState<"default" | "name" | "rating" | "newest">("default");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
@@ -205,6 +206,7 @@ function PlacesTab() {
       if (cuisineFilter !== "Wszystko" && p.cuisine !== cuisineFilter) return false;
       if (statusFilter === "published" && !p.is_published) return false;
       if (statusFilter === "draft" && p.is_published) return false;
+      if (statusFilter === "incomplete" && brakiLokalu(p).wazne.length === 0) return false;
       if (!q) return true;
       return (
         p.name.toLowerCase().includes(q) ||
@@ -222,6 +224,7 @@ function PlacesTab() {
   }, [places, query, cuisineFilter, statusFilter, sort, ratings]);
   const liczbaOpublikowanych = (places ?? []).filter((p) => p.is_published).length;
   const liczbaSzkicow = (places ?? []).length - liczbaOpublikowanych;
+  const liczbaNiekompletnych = (places ?? []).filter((p) => brakiLokalu(p).wazne.length > 0).length;
 
   const allVisibleSelected = filtered.length > 0 && filtered.every((p) => selected.has(p.id));
 
@@ -295,6 +298,7 @@ function PlacesTab() {
             ["all", `Wszystkie (${(places ?? []).length})`],
             ["published", `✅ Opublikowane (${liczbaOpublikowanych})`],
             ["draft", `📝 Szkice (${liczbaSzkicow})`],
+            ["incomplete", `⚠️ Niekompletne (${liczbaNiekompletnych})`],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -421,6 +425,30 @@ function PlacesTab() {
                     >
                       {p.is_published ? "✅ Opublikowany" : "📝 Szkic"}
                     </span>
+                    {(() => {
+                      const b = brakiLokalu(p);
+                      const komplet = b.wazne.length === 0;
+                      const dodatkowe = b.dodatkowe.join(", ").toLowerCase();
+                      const tytul = komplet
+                        ? dodatkowe
+                          ? `Ma wszystko, co ważne. Brak też: ${dodatkowe}`
+                          : "Ma komplet informacji"
+                        : `Brakuje: ${[...b.wazne, ...b.dodatkowe].join(", ").toLowerCase()}`;
+                      return (
+                        <span
+                          title={tytul}
+                          className={`mt-1.5 ml-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                            komplet ? "bg-ok/12 text-ok" : "bg-mustard/25 text-foreground"
+                          }`}
+                        >
+                          {komplet
+                            ? dodatkowe
+                              ? `✓ Komplet (bez: ${dodatkowe})`
+                              : "✓ Komplet"
+                            : `⚠ Brakuje: ${b.wazne.join(", ").toLowerCase()}`}
+                        </span>
+                      );
+                    })()}
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground line-clamp-2">{p.description}</p>
