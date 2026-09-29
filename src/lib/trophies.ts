@@ -7,6 +7,7 @@ export const RODZAJE_TROFEUM = [
   "michelin_bib",
   "michelin_recommended",
   "warte_pozarcia",
+  "inna_nagroda",
 ] as const;
 export type RodzajTrofeum = (typeof RODZAJE_TROFEUM)[number];
 
@@ -35,9 +36,11 @@ export const OPIS_RODZAJU: Record<RodzajTrofeum, string> = {
   michelin_bib: "Bib Gourmand Michelin",
   michelin_recommended: "Wyróżnienie Michelin",
   warte_pozarcia: "Warte poŻarcia",
+  inna_nagroda: "Inna nagroda",
 };
 
-export function nazwaTrofeum(t: Pick<Trofeum, "kind" | "tier">): string {
+export function nazwaTrofeum(t: Pick<Trofeum, "kind" | "tier"> & { label?: string | null }): string {
+  if (t.kind === "inna_nagroda") return t.label?.trim() || OPIS_RODZAJU.inna_nagroda;
   if (t.kind === "michelin_star") {
     if (t.tier === 2) return "2 gwiazdki Michelin";
     if (t.tier === 3) return "3 gwiazdki Michelin";
@@ -50,6 +53,7 @@ export function nazwaTrofeum(t: Pick<Trofeum, "kind" | "tier">): string {
 export function podpisTrofeum(t: Pick<Trofeum, "kind" | "tier" | "year" | "label">): string {
   const nazwa = nazwaTrofeum(t);
   const rok = String(t.year);
+  // Inna nagroda: nazwa to sam opis wpisany przez admina.
   if (t.kind === "warte_pozarcia" && t.label) return `${nazwa} · ${t.label} ${rok}`;
   return `${nazwa} ${rok}`;
 }
@@ -60,7 +64,8 @@ function waga(t: Pick<Trofeum, "kind" | "tier" | "year">): number {
     t.kind === "michelin_star" ? 400 + (t.tier ?? 1) * 10
     : t.kind === "warte_pozarcia" ? 300
     : t.kind === "michelin_bib" ? 200
-    : 100;
+    : t.kind === "michelin_recommended" ? 100
+    : 50;
   return baza * 10000 + t.year;
 }
 

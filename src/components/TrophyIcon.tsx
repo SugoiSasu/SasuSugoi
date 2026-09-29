@@ -11,6 +11,7 @@ const KOLOR: Record<RodzajTrofeum, string> = {
   michelin_bib: "text-mustard",
   michelin_recommended: "text-foreground/75",
   warte_pozarcia: "text-tomato",
+  inna_nagroda: "text-mustard",
 };
 
 export function TrophyGlyph({ kind, size = 20, className = "" }: { kind: RodzajTrofeum; size?: number; className?: string }) {
@@ -47,6 +48,16 @@ export function TrophyGlyph({ kind, size = 20, className = "" }: { kind: RodzajT
         <circle cx="12" cy="12" r="2.4" />
         <path d="M3.3 4v5.2c0 1 .8 1.6 1.7 1.6M5 4v16M6.7 4v5.2c0 1-.8 1.6-1.7 1.6" />
         <path d="M20.7 4c-1.7 1.4-2.4 3.3-2.4 5.4v1.4h2.4M20.7 4v16" />
+      </svg>
+    );
+  }
+  if (kind === "inna_nagroda") {
+    // Medal na wstazce.
+    return (
+      <svg {...p} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 2.8l3 6M16 2.8l-3 6" />
+        <circle cx="12" cy="15" r="6" />
+        <path d="M12 12v6M9.5 13.5l5 3M14.5 13.5l-5 3" />
       </svg>
     );
   }

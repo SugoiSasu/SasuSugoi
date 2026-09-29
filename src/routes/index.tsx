@@ -24,6 +24,9 @@ import { useActiveAds, type Ad } from "@/lib/ads-api";
 import { SponsoredDiscoverCard } from "@/components/SponsoredDiscoverCard";
 import { pickSeeded } from "@/lib/seeded-pick";
 import { useCutoutLogoReady } from "@/lib/chroma-cutout";
+import { TrophyIcon } from "@/components/TrophyIcon";
+import { useWszystkieTrofea } from "@/lib/trophies-api";
+import { podpisTrofeum, type Trofeum } from "@/lib/trophies";
 import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import { OpenStatus, isNewPlace } from "@/components/OpenStatus";
 import { readableTextClass } from "@/lib/readable-text";
@@ -395,6 +398,7 @@ function PlaceRail({
   ad?: Ad;
   adPosition?: number;
 }) {
+  const { mapa: trofeaMapa } = useWszystkieTrofea();
   if (!loading && places.length === 0) return null;
   return (
     <section className="py-5">
@@ -429,7 +433,14 @@ function PlaceRail({
             ))
           : places
               .flatMap((p, i) => {
-                const card = <DiscoverCard key={p.id} place={p} stat={ratings?.get(p.id)} />;
+                const card = (
+                  <DiscoverCard
+                    key={p.id}
+                    place={p}
+                    stat={ratings?.get(p.id)}
+                    trofeum={trofeaMapa.get(p.id)?.[0] ?? null}
+                  />
+                );
                 return ad && i === adPosition
                   ? [<SponsoredDiscoverCard key={`ad-${ad.id}`} ad={ad} />, card]
                   : [card];
@@ -460,9 +471,12 @@ function PlaceRail({
 const DiscoverCard = memo(function DiscoverCard({
   place,
   stat,
+  trofeum,
 }: {
   place: Place;
   stat?: { avg: number; count: number };
+  /** Najwyzsze trofeum lokalu (jedna ikonka w rogu kafelka), jesli je ma. */
+  trofeum?: Trofeum | null;
 }) {
   const meta = cuisineMeta(place.cuisine);
   // Logo pokazujemy dopiero po wycieciu tla: wczesniej mignal oryginal z bialym
@@ -555,6 +569,15 @@ const DiscoverCard = memo(function DiscoverCard({
           )}
           {!place.avatar_url && (
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-navy/45 via-transparent to-transparent" />
+          )}
+          {trofeum && (
+            <span
+              title={podpisTrofeum(trofeum)}
+              className="absolute bottom-3 right-3 grid h-9 min-w-9 place-items-center rounded-full border border-border bg-card/95 px-1.5 shadow-sm backdrop-blur"
+            >
+              <TrophyIcon trofeum={trofeum} size={22} />
+              <span className="sr-only">{podpisTrofeum(trofeum)}</span>
+            </span>
           )}
           {isNewPlace(place.created_at) && (
             <span className="absolute left-3 top-3 rounded-full bg-tomato px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-cream shadow-sm">

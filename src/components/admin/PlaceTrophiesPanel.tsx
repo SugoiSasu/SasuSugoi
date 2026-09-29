@@ -14,7 +14,13 @@ import {
 import { OPIS_RODZAJU, podpisTrofeum, type RodzajTrofeum } from "@/lib/trophies";
 import { useQueryClient } from "@tanstack/react-query";
 
-const RODZAJE_RECZNE: RodzajTrofeum[] = ["michelin_star", "michelin_bib", "michelin_recommended", "warte_pozarcia"];
+const RODZAJE_RECZNE: RodzajTrofeum[] = [
+  "michelin_star",
+  "michelin_bib",
+  "michelin_recommended",
+  "warte_pozarcia",
+  "inna_nagroda",
+];
 
 /**
  * Trofea lokalu w edytorze admina: zatwierdzone (reczne), propozycje z AI do
@@ -56,6 +62,10 @@ export function PlaceTrophiesPanel({ placeId }: { placeId: string }) {
   }
 
   async function dodajRecznie() {
+    if (rodzaj === "inna_nagroda" && !opis.trim()) {
+      toast.error("Wpisz nazwę nagrody");
+      return;
+    }
     const url = zrodlo.trim();
     if (url && !/^https?:\/\/\S+$/i.test(url)) {
       toast.error("Źródło musi być adresem http(s)://");
@@ -223,7 +233,11 @@ export function PlaceTrophiesPanel({ placeId }: { placeId: string }) {
           </label>
         )}
         <label className="block text-xs font-semibold text-muted-foreground">
-          {rodzaj === "warte_pozarcia" ? "Kategoria (np. Kebaby)" : "Dopisek (opcjonalnie)"}
+          {rodzaj === "warte_pozarcia"
+            ? "Kategoria (np. Kebaby)"
+            : rodzaj === "inna_nagroda"
+              ? "Nazwa nagrody (wymagane, np. White Star)"
+              : "Dopisek (opcjonalnie)"}
           <input value={opis} maxLength={120} onChange={(e) => setOpis(e.target.value)} className="input mt-1" />
         </label>
         <label className="block text-xs font-semibold text-muted-foreground">

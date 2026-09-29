@@ -26,6 +26,17 @@ describe("nazwy i podpisy", () => {
   });
 });
 
+describe("inna nagroda", () => {
+  it("nazwa to opis admina", () => {
+    expect(podpisTrofeum({ kind: "inna_nagroda", tier: null, year: 2025, label: "White Star" })).toBe("White Star 2025");
+    expect(nazwaTrofeum({ kind: "inna_nagroda", tier: null, label: null })).toBe("Inna nagroda");
+  });
+  it("jest na końcu kolejności", () => {
+    const l = [T("inna_nagroda", 2026, null, "X"), T("michelin_recommended", 2020)];
+    expect(posortujTrofea(l)[0].kind).toBe("michelin_recommended");
+  });
+});
+
 describe("kolejność", () => {
   it("gwiazdki wyżej niż nasze, Bib, wyróżnienie; wyższa gwiazdka pierwsza", () => {
     const lista = [
