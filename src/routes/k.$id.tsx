@@ -427,38 +427,12 @@ function PlaceProfile() {
               loading="eager"
               className="absolute inset-0 h-full w-full object-cover"
             />
-          ) : meta.heroPattern ? (
-            <>
-              {/* Lokal bez wlasnego zdjecia dostaje firmowa ilustracje swojej
-                  kuchni (cuisineMeta.cover) zamiast pustego slotu - te grafiki
-                  leza w repo od dawna, ale hero ich nie uzywalo. Kadr i zrodlo
-                  poswiaty sa przesuwane deterministycznie po id, zeby dwie
-                  knajpy tej samej kuchni nie mialy identycznego hero. */}
-              <img
-                src={meta.heroPattern}
-                alt=""
-                aria-hidden="true"
-                loading="eager"
-                className="absolute inset-0 h-full w-full scale-[1.06] object-cover"
-                style={{ objectPosition: `${28 + heroSeed * 44}% ${38 + heroSeed * 24}%` }}
-              />
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 mix-blend-soft-light"
-                style={{
-                  background: `radial-gradient(80% 110% at ${22 + heroSeed * 56}% 22%, ${meta.color} 0%, transparent 62%)`,
-                }}
-              />
-              {/* Scrim: chip kuchni i plakietki musza byc czytelne niezaleznie
-                  od tego, jak jasna jest ilustracja w danym rogu. */}
-              <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-b from-navy/55 via-navy/10 to-navy/45" />
-            </>
           ) : (
             <>
-              {/* Kuchnie bez wlasnego wzoru (Sniadania, Meksykanska, Weganska,
-                  Mix) dostaja hero z handoffu: gradient w kolorze kuchni,
-                  poswiata i nazwa jako "duch". Lepsze to niz pozyczanie im
-                  cudzego jedzenia ze wzoru innej kuchni. */}
+              {/* Wszystkie kuchnie maja ten sam hero (decyzja Mateusza 2026-09-29):
+                  gradient w kolorze kuchni, poswiata i nazwa jako "duch".
+                  Wczesniej kuchnie z wlasnym wzorem (pizza, burgery...) miały
+                  ilustracje, a reszta gradient - strona wygladala niespojnie. */}
               <span
                 aria-hidden="true"
                 className="font-persona pointer-events-none absolute -top-[6%] left-1/2 -translate-x-1/2 whitespace-nowrap leading-none tracking-[-0.04em] text-[clamp(6rem,26vw,18rem)] text-cream/[0.05]"
