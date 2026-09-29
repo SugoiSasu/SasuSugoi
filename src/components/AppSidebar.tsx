@@ -220,7 +220,11 @@ export function AppSidebar() {
           </nav>
         </div>
 
-        <div className="space-y-2.5">
+        {/* Okienka pod menu rozkladaja sie rowno w wolnym miejscu (justify-evenly:
+            ten sam odstep nad, miedzy i pod nimi) zamiast lezec skupione pod menu
+            z pusta dziura na dole. Gdy miejsca brakuje, odstep spada do gap-2.5,
+            a reszte robia progi wysokosci ponizej (nadal bez przewijania). */}
+        <div className="flex min-h-0 flex-1 flex-col justify-evenly gap-2.5">
           {user && (
             <div className="pz-sidebar-stats pz-fade-in grid grid-cols-3 gap-1.5 rounded-2xl border border-cream/15 bg-cream/[0.06] p-2">
               <StatChip to="/moje-miejsca" search={{ tab: "visited" }} icon={MapPinCheck} value={visited?.length ?? 0} label="Odwiedzone" />
