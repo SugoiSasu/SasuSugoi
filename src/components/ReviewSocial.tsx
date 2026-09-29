@@ -1,4 +1,5 @@
 import { displayNameOf } from "@/lib/display-name";
+import { ContentMenu } from "@/components/ContentMenu";
 import { useEffect, useState } from "react";
 import { Heart, MessageCircle, Trash2, Send, Loader2, AlertCircle } from "lucide-react";
 import { Link } from "@tanstack/react-router";
@@ -165,6 +166,7 @@ function CommentsBlock({ reviewId }: { reviewId: string }) {
                     <Trash2 size={13} />
                   </button>
                 )}
+                <ContentMenu kind="review_comment" id={c.id} authorId={c.user_id} ownDelete={false} className="h-6 w-6" />
               </li>
             );
           })}

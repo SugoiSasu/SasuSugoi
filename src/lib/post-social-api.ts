@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { asError, zglosZablokowanaProbe } from "@/lib/moderation-api";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/use-auth";
 
@@ -158,7 +159,10 @@ export function useAddPostComment(postId: string) {
       const { error } = await supabase
         .from("place_post_comments")
         .insert({ post_id: postId, user_id: user.id, body });
-      if (error) throw error;
+      if (error) {
+        if (error.message?.startsWith("PZ_PROFANITY")) zglosZablokowanaProbe(body, "komentarz pod wpisem lokalu");
+        throw asError(error);
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["post-comments", postId] }),
   });

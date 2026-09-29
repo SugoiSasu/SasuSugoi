@@ -1,4 +1,7 @@
 import { displayNameOf, profileParamOf } from "@/lib/display-name";
+import { sprawdzZdjecie } from "@/lib/image-moderation.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { ContentMenu } from "@/components/ContentMenu";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -233,6 +236,7 @@ function ReviewForm({
   const [uploading, setUploading] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const { data: photoUrl } = useReviewPhotoUrl(photoPath);
+  const callSprawdzZdjecie = useServerFn(sprawdzZdjecie);
 
   // Re-hydrate only when the form switches to a different review, not on every
   // new object identity: the my-review query refetches on window focus, and
@@ -263,6 +267,17 @@ function ReviewForm({
     setUploading(true);
     try {
       const path = await uploadReviewPhoto(user.id, f);
+      // Kontrola tresci zdjecia (AI) - tak samo jak przy wpisie na Pozeralni.
+      try {
+        const wynik = await callSprawdzZdjecie({ data: { bucket: "review-photos", path } });
+        if (!wynik.ok) {
+          setPhotoError(wynik.powod);
+          toast.error(wynik.powod);
+          return;
+        }
+      } catch {
+        /* blad kontroli nie blokuje - patrz sprawdzZdjecie */
+      }
       setPhotoPath(path);
     } catch (err) {
       // Wczesniej lecial tylko toast, wiec po jego zniknieciu nic nie mowilo,
@@ -534,7 +549,10 @@ function ReviewCard({
   return (
     <li className="bg-card border border-border rounded-2xl p-4">
       <div className="flex flex-col gap-2">
-        <ReviewAuthorLine author={review.author} />
+        <div className="flex items-start justify-between gap-2">
+          <ReviewAuthorLine author={review.author} />
+          <ContentMenu kind="review" id={review.id} authorId={review.user_id} ownDelete={false} />
+        </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <RatingStars rating={review.rating} />

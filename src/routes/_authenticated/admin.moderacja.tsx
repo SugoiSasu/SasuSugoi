@@ -40,6 +40,8 @@ import { AdminFilterChips, AdminStatusTag } from "@/components/admin/AdminContro
 import { useIsSuperAdmin } from "@/lib/use-auth";
 import { useBulkAction } from "@/components/admin/useBulkAction";
 import { ConfirmDeleteModal } from "@/components/admin/ConfirmDeleteModal";
+import { KaryPanel, SlowaPanel, ZgloszeniaPanel } from "@/components/admin/ContentModeration";
+import { useZgloszenia } from "@/lib/moderation-api";
 import { formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
 
@@ -67,26 +69,60 @@ const QUEUE_FILTERS: { key: QueueFilter; label: string }[] = [
   { key: "archive", label: "Archiwum" },
 ];
 
+type ModTab = "tresci" | "kary" | "slowa" | "kolejka";
+
 function AdminModeracja() {
   const isSuper = useIsSuperAdmin();
   const [filter, setFilter] = useState<QueueFilter>("all");
+  const [tab, setTab] = useState<ModTab>("tresci");
+  const { data: otwarte } = useZgloszenia("open");
+  const doSprawdzenia = otwarte?.length ?? 0;
 
-  if (!isSuper) {
-    return <div className="text-center py-20 text-muted-foreground">Tylko head admin może zarządzać moderacją.</div>;
-  }
+  // Tresci, kary i slowa moderuja wszyscy admini; kolejka lokali i wlascicieli
+  // (zmiany w katalogu i prawa do profili) zostaje tylko dla super admina.
+  const tabs: { key: ModTab; label: string; count?: number }[] = [
+    { key: "tresci", label: "Zgłoszone treści", count: doSprawdzenia },
+    { key: "kary", label: "Kary" },
+    { key: "slowa", label: "Słowa i log" },
+    ...(isSuper ? [{ key: "kolejka" as const, label: "Lokale i właściciele" }] : []),
+  ];
 
   return (
     <div>
       <AdminPageHeader
         title="Moderacja"
         icon={<ShieldCheck size={26} />}
-        subtitle="Zgłoszenia nowych lokali i wnioski o przejęcie profilu - najstarsze na górze."
+        subtitle="Zgłoszenia treści od społeczności, ostrzeżenia i bany, lista zabronionych słów."
       />
-      <ModerationStatBar />
-      <div className="grid gap-4 items-start lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
-        <ModerationQueue filter={filter} onFilterChange={setFilter} />
-        <QueueSidebar />
+      <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Sekcje moderacji">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.key}
+            onClick={() => setTab(t.key)}
+            className={`chip ${tab === t.key ? "bg-tomato text-cream" : "bg-card border border-border"}`}
+          >
+            {t.label}
+            {!!t.count && (
+              <span className="ml-1 rounded-full bg-cream px-1.5 text-[11px] font-bold text-tomato">{t.count}</span>
+            )}
+          </button>
+        ))}
       </div>
+      {tab === "tresci" && <ZgloszeniaPanel />}
+      {tab === "kary" && <KaryPanel />}
+      {tab === "slowa" && <SlowaPanel />}
+      {tab === "kolejka" && isSuper && (
+        <>
+          <ModerationStatBar />
+          <div className="grid gap-4 items-start lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+            <ModerationQueue filter={filter} onFilterChange={setFilter} />
+            <QueueSidebar />
+          </div>
+        </>
+      )}
     </div>
   );
 }

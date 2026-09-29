@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { asError, zglosZablokowanaProbe } from "@/lib/moderation-api";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/use-auth";
 import { trackEvent } from "@/lib/analytics";
@@ -552,7 +553,10 @@ export function useCreateWallPost() {
         place_id: placeId || null,
         image_url: imageUrl || null,
       });
-      if (error) throw error;
+      if (error) {
+        if (error.message?.startsWith("PZ_PROFANITY")) zglosZablokowanaProbe(body, "wpis");
+        throw asError(error);
+      }
     },
     // Posting to the wall is the app's main social action and had no event at
     // all, so the funnel could not answer whether new users ever post.

@@ -620,6 +620,57 @@ export type Database = {
         }
         Relationships: []
       }
+      content_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          target_excerpt: string | null
+          target_id: string
+          target_image: string | null
+          target_kind: string
+          target_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          target_excerpt?: string | null
+          target_id: string
+          target_image?: string | null
+          target_kind: string
+          target_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          target_excerpt?: string | null
+          target_id?: string
+          target_image?: string | null
+          target_kind?: string
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       cookie_consent_log: {
         Row: {
           ad_personalization: boolean
@@ -990,6 +1041,60 @@ export type Database = {
           requester_id?: string
           responded_at?: string | null
           status?: Database["public"]["Enums"]["friendship_status"]
+        }
+        Relationships: []
+      }
+      moderation_log: {
+        Row: {
+          created_at: string
+          excerpt: string | null
+          id: number
+          kind: string
+          note: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          excerpt?: string | null
+          id?: never
+          kind: string
+          note?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          excerpt?: string | null
+          id?: never
+          kind?: string
+          note?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      moderation_terms: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: number
+          kind: string
+          note: string | null
+          pattern: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: never
+          kind: string
+          note?: string | null
+          pattern: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: never
+          kind?: string
+          note?: string | null
+          pattern?: string
         }
         Relationships: []
       }
@@ -2333,6 +2438,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sanctions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          kind: string
+          reason: string
+          revoked_at: string | null
+          revoked_by: string | null
+          source_excerpt: string | null
+          source_kind: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          kind: string
+          reason: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          source_excerpt?: string | null
+          source_kind?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          kind?: string
+          reason?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          source_excerpt?: string | null
+          source_kind?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       wall_comments: {
         Row: {
           body: string
@@ -2480,6 +2627,46 @@ export type Database = {
       }
     }
     Functions: {
+      _moderation_apply: {
+        Args: {
+          _action: string
+          _actor: string
+          _days: number
+          _id: string
+          _kind: string
+          _reason: string
+          _report?: string
+        }
+        Returns: undefined
+      }
+      _moderation_check_target_user: {
+        Args: { _actor: string; _days: number; _kind: string; _user: string }
+        Returns: undefined
+      }
+      _moderation_delete: {
+        Args: { _id: string; _kind: string }
+        Returns: undefined
+      }
+      _moderation_sanction: {
+        Args: {
+          _actor: string
+          _days: number
+          _kind: string
+          _reason: string
+          _src_excerpt: string
+          _src_kind: string
+          _user: string
+        }
+        Returns: string
+      }
+      _moderation_target: {
+        Args: { _id: string; _kind: string }
+        Returns: {
+          excerpt: string
+          image: string
+          user_id: string
+        }[]
+      }
       accept_friend_invite: { Args: { _token: string }; Returns: string }
       achievement_metric: {
         Args: { _criteria: Json; _user_id: string }
@@ -2668,6 +2855,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_banned: { Args: { _uid: string }; Returns: boolean }
       is_blocked: { Args: { _a: string; _b: string }; Returns: boolean }
       is_friend_with: { Args: { _user_id: string }; Returns: boolean }
       is_place_owner: {
@@ -2676,6 +2864,41 @@ export type Database = {
       }
       is_verified_owner: { Args: { _user_id: string }; Returns: boolean }
       list_is_visible_to_me: { Args: { _list_id: string }; Returns: boolean }
+      moderation_act: {
+        Args: {
+          _action: string
+          _days?: number
+          _id: string
+          _kind: string
+          _reason: string
+        }
+        Returns: undefined
+      }
+      moderation_image_check_allowed: { Args: never; Returns: boolean }
+      moderation_log_blocked: {
+        Args: { _text: string; _where?: string }
+        Returns: undefined
+      }
+      moderation_log_image: {
+        Args: { _kind: string; _note?: string }
+        Returns: undefined
+      }
+      moderation_match: { Args: { _t: string }; Returns: string }
+      moderation_resolve_report: {
+        Args: {
+          _action: string
+          _days?: number
+          _reason?: string
+          _report: string
+        }
+        Returns: undefined
+      }
+      moderation_revoke: { Args: { _sanction: string }; Returns: undefined }
+      moderation_sanction_user: {
+        Args: { _days?: number; _kind: string; _reason: string; _user: string }
+        Returns: undefined
+      }
+      moderation_variants: { Args: { _t: string }; Returns: string[] }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -2694,6 +2917,15 @@ export type Database = {
           meets: boolean
           target: number
           value: number
+        }[]
+      }
+      my_ban_status: {
+        Args: never
+        Returns: {
+          banned: boolean
+          expires_at: string
+          permanent: boolean
+          reason: string
         }[]
       }
       notify: {
@@ -2776,6 +3008,10 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      report_content: {
+        Args: { _details?: string; _id: string; _kind: string; _reason: string }
+        Returns: undefined
       }
       reverse_points_for_ref: {
         Args: {

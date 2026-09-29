@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { asError } from "@/lib/moderation-api";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "./use-auth";
 import { sanitizeIlikeTerm } from "./postgrest-filter";
@@ -132,7 +133,8 @@ export function useUpdateProfile() {
         .upsert({ id: user.id, ...patch }, { onConflict: "id" })
         .select()
         .single();
-      if (error) throw error;
+      // Wulgarny nick / opis odrzuca trigger w bazie - komunikat po polsku.
+      if (error) throw asError(error);
       return data as Profile;
     },
     onSuccess: () => {

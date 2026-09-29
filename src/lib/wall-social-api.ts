@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { asError, zglosZablokowanaProbe } from "@/lib/moderation-api";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/use-auth";
 
@@ -175,7 +176,10 @@ export function useAddWallComment(kind: WallSocialKind, refId: string) {
       const { error } = await supabase
         .from("wall_comments")
         .insert({ kind, ref_id: refId, user_id: user.id, body });
-      if (error) throw error;
+      if (error) {
+        if (error.message?.startsWith("PZ_PROFANITY")) zglosZablokowanaProbe(body, "komentarz");
+        throw asError(error);
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["wall-comments", kind, refId] }),
   });
@@ -192,7 +196,10 @@ export function useUpdateWallComment(kind: WallSocialKind, refId: string) {
         .update({ body })
         .eq("id", id)
         .eq("user_id", user.id);
-      if (error) throw error;
+      if (error) {
+        if (error.message?.startsWith("PZ_PROFANITY")) zglosZablokowanaProbe(body, "edycja komentarza");
+        throw asError(error);
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["wall-comments", kind, refId] }),
   });

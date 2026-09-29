@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { asError, zglosZablokowanaProbe } from "@/lib/moderation-api";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/lib/analytics";
 import { useUser } from "@/lib/use-auth";
@@ -113,10 +114,16 @@ export function useSaveReview() {
       if (!me.user) throw new Error("Nie zalogowano");
       if (id) {
         const { error } = await supabase.from("reviews").update(values).eq("id", id);
-        if (error) throw error;
+        if (error) {
+          if (error.message?.startsWith("PZ_PROFANITY")) zglosZablokowanaProbe(values.body ?? "", "recenzja");
+          throw asError(error);
+        }
       } else {
         const { error } = await supabase.from("reviews").insert({ ...values, user_id: me.user.id });
-        if (error) throw error;
+        if (error) {
+          if (error.message?.startsWith("PZ_PROFANITY")) zglosZablokowanaProbe(values.body ?? "", "recenzja");
+          throw asError(error);
+        }
       }
     },
     onSuccess: (_d, vars) => {

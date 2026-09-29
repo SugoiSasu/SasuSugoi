@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { asError, zglosZablokowanaProbe } from "@/lib/moderation-api";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/lib/analytics";
 
@@ -702,7 +703,10 @@ export function useAddComment() {
       const { error } = await supabase
         .from("review_comments")
         .insert({ review_id: reviewId, user_id: me.user.id, body });
-      if (error) throw error;
+      if (error) {
+        if (error.message?.startsWith("PZ_PROFANITY")) zglosZablokowanaProbe(body, "komentarz pod recenzja");
+        throw asError(error);
+      }
     },
     onMutate: async ({ reviewId, body }) => {
       const key = ["review-comments", reviewId];

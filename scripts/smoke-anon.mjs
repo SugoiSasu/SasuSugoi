@@ -128,7 +128,13 @@ if (SUPABASE && KLUCZ) {
 
   // 3b. Tabele tylko dla admina - gosc ma NIE dostac danych (propozycje z AI
   //     zawieraja nieprzejrzane dane lokali, w tym szkicow).
-  const TYLKO_ADMIN = [["place_enrichment (propozycje AI)", "place_enrichment?select=place_id&limit=1"]];
+  const TYLKO_ADMIN = [
+    ["place_enrichment (propozycje AI)", "place_enrichment?select=place_id&limit=1"],
+    ["content_reports (zgloszenia tresci)", "content_reports?select=id&limit=1"],
+    ["user_sanctions (ostrzezenia i bany)", "user_sanctions?select=id&limit=1"],
+    ["moderation_log (proby)", "moderation_log?select=id&limit=1"],
+    ["moderation_terms (lista slow)", "moderation_terms?select=id&limit=1"],
+  ];
   for (const [nazwa, sciezka] of TYLKO_ADMIN) {
     try {
       const r = await fetch(`${SUPABASE}/rest/v1/${sciezka}`, { headers: { apikey: KLUCZ } });

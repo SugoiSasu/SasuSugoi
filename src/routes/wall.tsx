@@ -1,4 +1,7 @@
 import { displayNameOf } from "@/lib/display-name";
+import { opisBlokady, useMyBan } from "@/lib/moderation-api";
+import { sprawdzZdjecie } from "@/lib/image-moderation.functions";
+import { useServerFn } from "@tanstack/react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
@@ -54,6 +57,7 @@ import {
 } from "@/components/ui/command";
 import { UserAvatar } from "@/components/UserAvatar";
 import { SmartText } from "@/components/SmartText";
+import { ContentMenu } from "@/components/ContentMenu";
 import { ReviewSocial } from "@/components/ReviewSocial";
 import { WallSocial } from "@/components/WallSocial";
 import { useUser } from "@/lib/use-auth";
@@ -289,6 +293,9 @@ function QuickPostBar() {
   const [body, setBody] = useState("");
   const [placeId, setPlaceId] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [sprawdzamZdjecie, setSprawdzamZdjecie] = useState(false);
+  const callSprawdzZdjecie = useServerFn(sprawdzZdjecie);
+  const { data: blokada } = useMyBan();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   // Esc zamyka arkusz, ale - tak jak klikniecie tla - nie kasuje szkicu.
   useEffect(() => {
@@ -314,7 +321,22 @@ function QuickPostBar() {
 
   async function handlePhoto(file: File) {
     const url = await upload(file);
-    if (url) setImageUrl(url);
+    if (!url) return;
+    // Kontrola tresci zdjecia zanim trafi do wpisu (AI, ok. 1 s).
+    setSprawdzamZdjecie(true);
+    try {
+      const wynik = await callSprawdzZdjecie({ data: { url } });
+      if (!wynik.ok) {
+        toast.error(wynik.powod);
+        return;
+      }
+      setImageUrl(url);
+    } catch {
+      // Blad samej kontroli nie blokuje publikacji - patrz sprawdzZdjecie.
+      setImageUrl(url);
+    } finally {
+      setSprawdzamZdjecie(false);
+    }
   }
 
   function resetForm() {
@@ -433,6 +455,11 @@ function QuickPostBar() {
         >
           <div className="mx-auto h-1 w-10 rounded-full bg-border lg:hidden" aria-hidden />
           <p className="font-display text-sm font-extrabold lg:hidden">Nowy wpis</p>
+          {blokada?.banned && (
+            <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">
+              {opisBlokady(blokada)} Powód: {blokada.reason}
+            </p>
+          )}
           <textarea
             ref={textareaRef}
             value={body}
@@ -462,7 +489,7 @@ function QuickPostBar() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
+              disabled={uploading || sprawdzamZdjecie}
               className="chip bg-card border border-border hover:border-tomato text-sm disabled:opacity-60"
             >
               {uploading ? <Loader2 size={13} className="animate-spin" /> : <Camera size={13} />}
@@ -484,7 +511,7 @@ function QuickPostBar() {
               </button>
               <button
                 type="submit"
-                disabled={!body.trim() || create.isPending}
+                disabled={!body.trim() || create.isPending || sprawdzamZdjecie || !!blokada?.banned}
                 className="inline-flex items-center gap-2 rounded-full bg-tomato text-cream px-4 py-1.5 text-sm font-semibold hover:bg-tomato/90 disabled:opacity-50"
               >
                 {create.isPending ? (
@@ -799,6 +826,13 @@ function FeedCard({ item }: { item: WallItem }) {
         ) : (
           <KindBadge kind={item.kind} />
         )}
+        {/* Usun / Zglos / moderator - wpisy uzytkownikow i recenzje */}
+        {item.kind === "post" && item.socialRefId && (
+          <ContentMenu kind="post" id={item.socialRefId} authorId={item.author?.id} />
+        )}
+        {item.kind === "review" && (
+          <ContentMenu kind="review" id={item.id.replace(/^review-/, "")} authorId={item.author?.id} />
+        )}
       </div>
       {item.kind === "review" && (
         <div className="text-sm">
@@ -1084,6 +1118,7 @@ function PostSocial({ postId }: { postId: string }) {
                 </div>
                 <SmartText>{c.body}</SmartText>
               </div>
+              <ContentMenu kind="place_post_comment" id={c.id} authorId={c.user_id} className="h-6 w-6" />
             </div>
           ))}
           {user ? (

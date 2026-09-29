@@ -1,4 +1,5 @@
 import { displayNameOf } from "@/lib/display-name";
+import { ContentMenu } from "@/components/ContentMenu";
 import { useState, type FormEvent } from "react";
 import { MessageCircle, Send, Pencil, Trash2, Check, X } from "lucide-react";
 import { toast } from "sonner";
@@ -257,6 +258,8 @@ function CommentItem({
           </button>
         </div>
       )}
+      {/* Cudzy komentarz: Zglos / moderator. Wlasny ma juz Edytuj i Usun powyzej. */}
+      <ContentMenu kind="wall_comment" id={comment.id} authorId={comment.user_id} ownDelete={false} className="h-6 w-6" />
     </div>
   );
 }

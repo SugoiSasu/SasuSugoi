@@ -104,12 +104,13 @@ function useAdminPendingCounts(isSuper: boolean, pathname: string) {
           .eq(kolumna as never, wartosc as never);
         return error ? 0 : (count ?? 0);
       };
-      const [sug, own, collab] = await Promise.all([
-        policz("place_suggestions", "status", "pending"),
-        policz("owner_requests", "status", "pending"),
+      const [sug, own, collab, tresci] = await Promise.all([
+        isSuper ? policz("place_suggestions", "status", "pending") : Promise.resolve(0),
+        isSuper ? policz("owner_requests", "status", "pending") : Promise.resolve(0),
         isSuper ? policz("collab_submissions", "status", "new") : Promise.resolve(0),
+        policz("content_reports", "status", "open"),
       ]);
-      return { "/admin/moderacja": sug + own, "/admin/collab": collab } as Record<string, number>;
+      return { "/admin/moderacja": sug + own + tresci, "/admin/collab": collab } as Record<string, number>;
     },
   });
   return q.data ?? {};
