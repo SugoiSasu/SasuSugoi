@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { DOMYSLNY_PUNKT, czyDomyslnyPunkt, geokodujAdres } from "@/lib/geocode";
 import { punktyKompletnosci } from "@/lib/place-completeness";
+import { SekcjaEdytora, NawigacjaSekcji, otworzSekcje, ustawWszystkie, type Znacznik } from "@/components/admin/EditorSekcje";
 import { MigratePlaceImagesButton } from "@/components/PlaceImageMigration";
 import { MenuItemsEditor } from "@/components/MenuItemsEditor";
 import { initialsFromName, colorFromKey } from "@/lib/avatar-utils";
@@ -260,13 +261,24 @@ function EditPlace() {
 
   const error = save.error instanceof Error ? save.error.message : null;
 
+  // Znaczniki przy sekcjach: to samo, co lista kontrolna w panelu publikacji.
+  const brakujace = new Set(punktyKompletnosci(form).filter((p) => !p.ok).map((p) => p.tekst));
+  const znacznik = (teksty: string[]): Znacznik => {
+    const b = teksty.filter((t) => brakujace.has(t));
+    return b.length ? { ok: false, tekst: `brakuje: ${b.join(", ").toLowerCase()}` } : { ok: true, tekst: "komplet" };
+  };
+  const znOpis = znacznik(["Opis", "Adres", "Pinezka w dobrym miejscu"]);
+  const znGodziny = znacznik(["Godziny otwarcia"]);
+  const znMenu = znacznik(["Menu"]);
+  const znZdjecia = znacznik(["Logo"]);
+
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-4">
         <BackButton to="/admin/places" label="Wszystkie lokale" />
       </div>
 
-      <form onSubmit={submit} className="space-y-4">
+      <form onSubmit={submit} onInvalidCapture={() => ustawWszystkie(true)} className="space-y-4">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <h1 className="font-display text-3xl">{isNew ? "Nowy lokal" : "Edytuj lokal"}</h1>
           <button
@@ -330,379 +342,404 @@ function EditPlace() {
           />
         )}
 
-        <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
-          <FormField label="Nazwa">
-            <input
-              required
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="input"
-            />
-          </FormField>
-          <FormField label="Kuchnia">
-            <select
-              value={form.cuisine}
-              onChange={(e) => setForm({ ...form, cuisine: e.target.value })}
-              className="input"
-            >
-              {cuisineNames.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </FormField>
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="Dzielnica">
+        <NawigacjaSekcji
+          pozycje={[
+            { id: "podstawy", etykieta: "Podstawowe" },
+            { id: "opis", etykieta: "Opis i adres", znacznik: znOpis },
+            { id: "godziny", etykieta: "Godziny", znacznik: znGodziny },
+            { id: "menu", etykieta: "Menu", znacznik: znMenu },
+            { id: "zdjecia", etykieta: "Zdjęcia", znacznik: znZdjecia },
+            { id: "oddzialy", etykieta: "Oddziały" },
+          ]}
+        />
+
+        <SekcjaEdytora id="podstawy" tytul="Podstawowe informacje" domyslnieOtwarta>
+          <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
+            <FormField label="Nazwa">
               <input
-                value={form.district ?? ""}
-                onChange={(e) => setForm({ ...form, district: e.target.value })}
-                placeholder="np. Jeżyce"
+                required
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
                 className="input"
               />
             </FormField>
-            <FormField label="Poziom cenowy">
-              <PriceLevelPicker
-                value={form.price_range ?? ""}
-                onChange={(v) => setForm({ ...form, price_range: v })}
-              />
+            <FormField label="Kuchnia">
+              <select
+                value={form.cuisine}
+                onChange={(e) => setForm({ ...form, cuisine: e.target.value })}
+                className="input"
+              >
+                {cuisineNames.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
             </FormField>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="Dzielnica">
+                <input
+                  value={form.district ?? ""}
+                  onChange={(e) => setForm({ ...form, district: e.target.value })}
+                  placeholder="np. Jeżyce"
+                  className="input"
+                />
+              </FormField>
+              <FormField label="Poziom cenowy">
+                <PriceLevelPicker
+                  value={form.price_range ?? ""}
+                  onChange={(v) => setForm({ ...form, price_range: v })}
+                />
+              </FormField>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="Telefon">
+                <input
+                  type="tel"
+                  value={form.phone ?? ""}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="+48 ..."
+                  className="input"
+                />
+              </FormField>
+              <FormField label="Strona www">
+                <input
+                  type="url"
+                  value={form.website ?? ""}
+                  onChange={(e) => setForm({ ...form, website: e.target.value })}
+                  placeholder="https://..."
+                  className={`input ${!websiteValid ? "border-destructive" : ""}`}
+                />
+              </FormField>
+            </div>
+            <div className="flex gap-4 flex-wrap text-sm">
+              <label className="inline-flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.has_takeaway}
+                  onChange={(e) => setForm({ ...form, has_takeaway: e.target.checked })}
+                />
+                🥡 Na wynos
+              </label>
+              <label className="inline-flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.wheelchair_accessible}
+                  onChange={(e) => setForm({ ...form, wheelchair_accessible: e.target.checked })}
+                />
+                ♿ Bez schodów
+              </label>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="Telefon">
-              <input
-                type="tel"
-                value={form.phone ?? ""}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                placeholder="+48 ..."
+        </SekcjaEdytora>
+
+        <SekcjaEdytora id="opis" tytul="Opis, adres i mapa" znacznik={znOpis} domyslnieOtwarta>
+          <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
+            <FormField label="Opis">
+              <textarea
+                required
+                rows={3}
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
                 className="input"
               />
             </FormField>
-            <FormField label="Strona www">
+            <FormField label="Adres">
+              <input
+                required
+                value={form.address}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
+                className="input"
+              />
+            </FormField>
+            {/* Przycisk zamiast recznego przepisywania liczb z Google Maps: tak
+                36 lokali zostalo na domyslnym punkcie, bo nikt tego nie robil. */}
+            <div className="-mt-1 space-y-2">
+              <button
+                type="button"
+                onClick={() => ustawZAdresu()}
+                disabled={geoStan?.rodzaj === "szukam"}
+                className="inline-flex items-center gap-1.5 rounded-full bg-navy px-3.5 py-2 text-xs font-semibold text-cream transition hover:bg-navy/90 disabled:opacity-60"
+              >
+                {geoStan?.rodzaj === "szukam" ? <Loader2 size={13} className="animate-spin" /> : <MapPin size={13} />}
+                Ustaw współrzędne z adresu
+              </button>
+              {geoStan?.rodzaj === "ok" && (
+                <p className={`text-xs ${geoStan.dokladny ? "text-ok" : "text-tomato"}`}>
+                  {geoStan.dokladny ? "✓ Znaleziono dokładnie: " : "Tylko ulica, bez numeru - sprawdź na mapie: "}
+                  <span className="text-muted-foreground">{geoStan.opis}</span>
+                </p>
+              )}
+              {geoStan?.rodzaj === "brak" && (
+                <p className="text-xs text-tomato">
+                  Nie znaleziono tego adresu w Poznaniu. Sprawdź pisownię albo wpisz współrzędne ręcznie.
+                </p>
+              )}
+            </div>
+            {czyDomyslnyPunkt(form.lat, form.lng) && (
+              <p className="flex items-start gap-1.5 rounded-xl bg-tomato/10 px-3 py-2 text-xs font-semibold text-tomato">
+                <AlertCircle size={14} className="mt-px shrink-0" />
+                Współrzędne to domyślny punkt w centrum Poznania - na mapie lokal stanie w złym miejscu. Użyj
+                przycisku wyżej.
+              </p>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <FormField label="Szerokość (lat)">
+                <input
+                  type="number"
+                  step="0.0001"
+                  required
+                  value={form.lat}
+                  onChange={(e) => setForm({ ...form, lat: parseFloat(e.target.value) })}
+                  className="input"
+                />
+              </FormField>
+              <FormField label="Długość (lng)">
+                <input
+                  type="number"
+                  step="0.0001"
+                  required
+                  value={form.lng}
+                  onChange={(e) => setForm({ ...form, lng: parseFloat(e.target.value) })}
+                  className="input"
+                />
+              </FormField>
+            </div>
+            <p className="text-xs text-muted-foreground -mt-1">
+              Ręcznie: znajdź miejsce na{" "}
+              <a
+                className="underline"
+                target="_blank"
+                rel="noreferrer"
+                href="https://www.google.com/maps"
+              >
+                Google Maps
+              </a>
+              , kliknij prawym i skopiuj współrzędne.
+            </p>
+            <FormField label="Link do rolki IG">
               <input
                 type="url"
-                value={form.website ?? ""}
-                onChange={(e) => setForm({ ...form, website: e.target.value })}
-                placeholder="https://..."
-                className={`input ${!websiteValid ? "border-destructive" : ""}`}
+                value={form.reel_url ?? ""}
+                onChange={(e) => setForm({ ...form, reel_url: e.target.value })}
+                placeholder="https://instagram.com/reel/..."
+                className={`input ${!reelValid ? "border-destructive" : ""}`}
               />
-            </FormField>
-          </div>
-          <div className="flex gap-4 flex-wrap text-sm">
-            <label className="inline-flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.has_takeaway}
-                onChange={(e) => setForm({ ...form, has_takeaway: e.target.checked })}
-              />
-              🥡 Na wynos
-            </label>
-            <label className="inline-flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.wheelchair_accessible}
-                onChange={(e) => setForm({ ...form, wheelchair_accessible: e.target.checked })}
-              />
-              ♿ Bez schodów
-            </label>
-          </div>
-        </div>
-
-        <OpeningHoursEditor
-          value={form.opening_hours}
-          onChange={(v) => setForm({ ...form, opening_hours: v })}
-        />
-        <MenuItemsEditor
-          value={form.menu_items}
-          onChange={(v) => setForm({ ...form, menu_items: v })}
-        />
-
-        <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
-          <FormField label="Opis">
-            <textarea
-              required
-              rows={3}
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="input"
-            />
-          </FormField>
-          <FormField label="Adres">
-            <input
-              required
-              value={form.address}
-              onChange={(e) => setForm({ ...form, address: e.target.value })}
-              className="input"
-            />
-          </FormField>
-          {/* Przycisk zamiast recznego przepisywania liczb z Google Maps: tak
-              36 lokali zostalo na domyslnym punkcie, bo nikt tego nie robil. */}
-          <div className="-mt-1 space-y-2">
-            <button
-              type="button"
-              onClick={() => ustawZAdresu()}
-              disabled={geoStan?.rodzaj === "szukam"}
-              className="inline-flex items-center gap-1.5 rounded-full bg-navy px-3.5 py-2 text-xs font-semibold text-cream transition hover:bg-navy/90 disabled:opacity-60"
-            >
-              {geoStan?.rodzaj === "szukam" ? <Loader2 size={13} className="animate-spin" /> : <MapPin size={13} />}
-              Ustaw współrzędne z adresu
-            </button>
-            {geoStan?.rodzaj === "ok" && (
-              <p className={`text-xs ${geoStan.dokladny ? "text-ok" : "text-tomato"}`}>
-                {geoStan.dokladny ? "✓ Znaleziono dokładnie: " : "Tylko ulica, bez numeru - sprawdź na mapie: "}
-                <span className="text-muted-foreground">{geoStan.opis}</span>
-              </p>
-            )}
-            {geoStan?.rodzaj === "brak" && (
-              <p className="text-xs text-tomato">
-                Nie znaleziono tego adresu w Poznaniu. Sprawdź pisownię albo wpisz współrzędne ręcznie.
-              </p>
-            )}
-          </div>
-          {czyDomyslnyPunkt(form.lat, form.lng) && (
-            <p className="flex items-start gap-1.5 rounded-xl bg-tomato/10 px-3 py-2 text-xs font-semibold text-tomato">
-              <AlertCircle size={14} className="mt-px shrink-0" />
-              Współrzędne to domyślny punkt w centrum Poznania - na mapie lokal stanie w złym miejscu. Użyj
-              przycisku wyżej.
-            </p>
-          )}
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="Szerokość (lat)">
-              <input
-                type="number"
-                step="0.0001"
-                required
-                value={form.lat}
-                onChange={(e) => setForm({ ...form, lat: parseFloat(e.target.value) })}
-                className="input"
-              />
-            </FormField>
-            <FormField label="Długość (lng)">
-              <input
-                type="number"
-                step="0.0001"
-                required
-                value={form.lng}
-                onChange={(e) => setForm({ ...form, lng: parseFloat(e.target.value) })}
-                className="input"
-              />
-            </FormField>
-          </div>
-          <p className="text-xs text-muted-foreground -mt-1">
-            Ręcznie: znajdź miejsce na{" "}
-            <a
-              className="underline"
-              target="_blank"
-              rel="noreferrer"
-              href="https://www.google.com/maps"
-            >
-              Google Maps
-            </a>
-            , kliknij prawym i skopiuj współrzędne.
-          </p>
-          <FormField label="Link do rolki IG">
-            <input
-              type="url"
-              value={form.reel_url ?? ""}
-              onChange={(e) => setForm({ ...form, reel_url: e.target.value })}
-              placeholder="https://instagram.com/reel/..."
-              className={`input ${!reelValid ? "border-destructive" : ""}`}
-            />
-            {!reelValid && (
-              <span className="text-xs text-destructive mt-1 block">
-                Podaj poprawny adres http(s)://
-              </span>
-            )}
-          </FormField>
-        </div>
-
-        {/* Avatar / miniaturka lokalu (file upload) */}
-        <AvatarUploader
-          value={form.avatar_url ?? ""}
-          fallbackName={form.name}
-          onChange={(url) => setForm({ ...form, avatar_url: url })}
-        />
-        <label className="inline-flex items-center gap-2 cursor-pointer text-sm -mt-2">
-          <input
-            type="checkbox"
-            checked={form.avatar_cutout_enabled ?? true}
-            onChange={(e) => setForm({ ...form, avatar_cutout_enabled: e.target.checked })}
-          />
-          ✂️ Automatycznie wytnij tło loga na kartach (działa dobrze przy jednolitym tle; wyłącz,
-          jeśli logo ma zdjęcie/gradient w tle)
-        </label>
-
-        {/* Cover (file upload) */}
-        <ImageUploader
-          title="Okładka lokalu (banner 3:1)"
-          hint="Min 900×300 px, JPG/PNG/WEBP, do 5 MB. Wyświetlana jako baner i miniaturka."
-          recommendedLabel="Zalecane 1200×400 px (3:1)"
-          subfolder="covers"
-          maxMb={5}
-          minW={900}
-          minH={300}
-          targetAspect={3}
-          aspectTolerance={0.25}
-          previewClass="w-32 h-20 rounded-xl"
-          value={form.cover_image_url ?? ""}
-          onChange={(url) => setForm({ ...form, cover_image_url: url })}
-        />
-
-        <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
-          <FormField label="Link do menu (PDF lub strona)">
-            <input
-              type="url"
-              value={form.menu_url ?? ""}
-              onChange={(e) => setForm({ ...form, menu_url: e.target.value })}
-              placeholder="https://..."
-              className={`input ${!menuUrlValid ? "border-destructive" : ""}`}
-            />
-          </FormField>
-          <div className="-mt-1 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={wyodrebnijMenuZLinku}
-              disabled={menuZLinku || !(form.menu_url || form.website) || !menuUrlValid}
-              className="inline-flex items-center gap-2 rounded-full bg-navy text-cream px-4 py-2 text-sm font-semibold hover:bg-navy/90 disabled:opacity-50"
-            >
-              {menuZLinku ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-              {menuZLinku ? "Czytam stronę…" : "Wyodrębnij menu z linku (AI)"}
-            </button>
-            <span className="text-xs text-muted-foreground">
-              Strona lub PDF z linku wyżej (albo strona lokalu). Nadpisze obecne pozycje menu.
-            </span>
-          </div>
-          <ImageUploader
-            title="Zdjęcie lub PDF menu (opcjonalnie)"
-            hint="JPG/PNG/WEBP albo PDF, do 10 MB. Zdjęcie karty telefonem albo menu w PDF od lokalu."
-            subfolder="menu"
-            maxMb={10}
-            allowPdf
-            previewClass="w-32 h-20 rounded-xl"
-            value={form.menu_image_url ?? ""}
-            onChange={(url) => setForm({ ...form, menu_image_url: url })}
-          />
-          <div className="flex flex-wrap items-center gap-2 -mt-1">
-            <button
-              type="button"
-              onClick={extractMenu}
-              disabled={!form.menu_image_url || extractingMenu}
-              className="inline-flex items-center gap-2 rounded-full bg-navy text-cream px-4 py-2 text-sm font-semibold hover:bg-navy/90 disabled:opacity-50"
-              title={
-                form.menu_image_url
-                  ? "Odczytaj pozycje menu ze zdjęcia lub PDF (zastąpi obecne menu powyżej)"
-                  : "Najpierw dodaj zdjęcie lub PDF menu"
-              }
-            >
-              {extractingMenu ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <Sparkles size={14} />
+              {!reelValid && (
+                <span className="text-xs text-destructive mt-1 block">
+                  Podaj poprawny adres http(s)://
+                </span>
               )}
-              Wyodrębnij menu z AI
-            </button>
-            <span className="text-xs text-muted-foreground">
-              Odczyta pozycje ze zdjęcia lub PDF i wypełni menu powyżej (nadpisze obecne pozycje).
-            </span>
+            </FormField>
           </div>
-          <div className="rounded-xl border border-border p-3 space-y-2 bg-muted/30">
-            <FormField label="Pasek nowości / promocji (max 100 znaków)">
+        </SekcjaEdytora>
+
+        <SekcjaEdytora id="godziny" tytul="Godziny otwarcia" znacznik={znGodziny}>
+          <OpeningHoursEditor
+            value={form.opening_hours}
+            onChange={(v) => setForm({ ...form, opening_hours: v })}
+          />
+        </SekcjaEdytora>
+
+        <SekcjaEdytora id="menu" tytul="Menu" znacznik={znMenu}>
+          <MenuItemsEditor
+            value={form.menu_items}
+            onChange={(v) => setForm({ ...form, menu_items: v })}
+          />
+
+
+          <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
+            <FormField label="Link do menu (PDF lub strona)">
               <input
-                type="text"
-                maxLength={100}
-                value={form.promo_label ?? ""}
-                onChange={(e) => setForm({ ...form, promo_label: e.target.value })}
-                placeholder="🆕 Nowe menu od maja - sprawdź co się zmieniło"
-                className="input"
+                type="url"
+                value={form.menu_url ?? ""}
+                onChange={(e) => setForm({ ...form, menu_url: e.target.value })}
+                placeholder="https://..."
+                className={`input ${!menuUrlValid ? "border-destructive" : ""}`}
               />
             </FormField>
-            <label className="inline-flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={!!form.promo_active}
-                onChange={(e) => setForm({ ...form, promo_active: e.target.checked })}
-              />
-              Pokaż pasek na profilu lokalu
-            </label>
-          </div>
-        </div>
-
-        <div className="bg-card border border-border rounded-2xl p-5">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
-              Dodatkowe oddziały ({extras.length})
-            </span>
-            <button
-              type="button"
-              onClick={() =>
-                setExtras([...extras, { address: "", lat: form.lat, lng: form.lng, label: "" }])
-              }
-              className="inline-flex items-center gap-1 text-xs font-semibold text-tomato hover:underline"
-            >
-              <Plus size={12} /> Dodaj oddział
-            </button>
-          </div>
-          {extras.length === 0 && (
-            <p className="text-xs text-muted-foreground">
-              Lokal ma jedną pinezkę. Dodaj oddziały jeśli to sieć z wieloma adresami.
-            </p>
-          )}
-          <div className="space-y-3">
-            {extras.map((loc, i) => (
-              <div
-                key={loc.id ?? `new-${i}`}
-                className="rounded-xl border border-border p-3 space-y-2 bg-muted/30"
+            <div className="-mt-1 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={wyodrebnijMenuZLinku}
+                disabled={menuZLinku || !(form.menu_url || form.website) || !menuUrlValid}
+                className="inline-flex items-center gap-2 rounded-full bg-navy text-cream px-4 py-2 text-sm font-semibold hover:bg-navy/90 disabled:opacity-50"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-muted-foreground">
-                    Oddział #{i + 1}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setExtras(extras.filter((_, idx) => idx !== i))}
-                    className="text-destructive hover:opacity-80"
-                    aria-label="Usuń oddział"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
+                {menuZLinku ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                {menuZLinku ? "Czytam stronę…" : "Wyodrębnij menu z linku (AI)"}
+              </button>
+              <span className="text-xs text-muted-foreground">
+                Strona lub PDF z linku wyżej (albo strona lokalu). Nadpisze obecne pozycje menu.
+              </span>
+            </div>
+            <ImageUploader
+              title="Zdjęcie lub PDF menu (opcjonalnie)"
+              hint="JPG/PNG/WEBP albo PDF, do 10 MB. Zdjęcie karty telefonem albo menu w PDF od lokalu."
+              subfolder="menu"
+              maxMb={10}
+              allowPdf
+              previewClass="w-32 h-20 rounded-xl"
+              value={form.menu_image_url ?? ""}
+              onChange={(url) => setForm({ ...form, menu_image_url: url })}
+            />
+            <div className="flex flex-wrap items-center gap-2 -mt-1">
+              <button
+                type="button"
+                onClick={extractMenu}
+                disabled={!form.menu_image_url || extractingMenu}
+                className="inline-flex items-center gap-2 rounded-full bg-navy text-cream px-4 py-2 text-sm font-semibold hover:bg-navy/90 disabled:opacity-50"
+                title={
+                  form.menu_image_url
+                    ? "Odczytaj pozycje menu ze zdjęcia lub PDF (zastąpi obecne menu powyżej)"
+                    : "Najpierw dodaj zdjęcie lub PDF menu"
+                }
+              >
+                {extractingMenu ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Sparkles size={14} />
+                )}
+                Wyodrębnij menu z AI
+              </button>
+              <span className="text-xs text-muted-foreground">
+                Odczyta pozycje ze zdjęcia lub PDF i wypełni menu powyżej (nadpisze obecne pozycje).
+              </span>
+            </div>
+            <div className="rounded-xl border border-border p-3 space-y-2 bg-muted/30">
+              <FormField label="Pasek nowości / promocji (max 100 znaków)">
                 <input
-                  value={loc.label ?? ""}
-                  onChange={(e) => updateExtra(i, { label: e.target.value })}
-                  placeholder="Etykieta (np. Stary Browar) - opcjonalna"
+                  type="text"
+                  maxLength={100}
+                  value={form.promo_label ?? ""}
+                  onChange={(e) => setForm({ ...form, promo_label: e.target.value })}
+                  placeholder="🆕 Nowe menu od maja - sprawdź co się zmieniło"
                   className="input"
                 />
+              </FormField>
+              <label className="inline-flex items-center gap-2 text-sm cursor-pointer">
                 <input
-                  required
-                  value={loc.address}
-                  onChange={(e) => updateExtra(i, { address: e.target.value })}
-                  placeholder="Adres oddziału"
-                  className="input"
+                  type="checkbox"
+                  checked={!!form.promo_active}
+                  onChange={(e) => setForm({ ...form, promo_active: e.target.checked })}
                 />
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="number"
-                    step="0.0001"
-                    required
-                    value={loc.lat}
-                    onChange={(e) => updateExtra(i, { lat: parseFloat(e.target.value) })}
-                    placeholder="lat"
-                    className="input"
-                  />
-                  <input
-                    type="number"
-                    step="0.0001"
-                    required
-                    value={loc.lng}
-                    onChange={(e) => updateExtra(i, { lng: parseFloat(e.target.value) })}
-                    placeholder="lng"
-                    className="input"
-                  />
-                </div>
-              </div>
-            ))}
+                Pokaż pasek na profilu lokalu
+              </label>
+            </div>
           </div>
-        </div>
+        </SekcjaEdytora>
+
+        <SekcjaEdytora id="zdjecia" tytul="Logo i zdjęcia" znacznik={znZdjecia}>
+          {/* Avatar / miniaturka lokalu (file upload) */}
+          <AvatarUploader
+            value={form.avatar_url ?? ""}
+            fallbackName={form.name}
+            onChange={(url) => setForm({ ...form, avatar_url: url })}
+          />
+          <label className="inline-flex items-center gap-2 cursor-pointer text-sm -mt-2">
+            <input
+              type="checkbox"
+              checked={form.avatar_cutout_enabled ?? true}
+              onChange={(e) => setForm({ ...form, avatar_cutout_enabled: e.target.checked })}
+            />
+            ✂️ Automatycznie wytnij tło loga na kartach (działa dobrze przy jednolitym tle; wyłącz,
+            jeśli logo ma zdjęcie/gradient w tle)
+          </label>
+
+          {/* Cover (file upload) */}
+          <ImageUploader
+            title="Okładka lokalu (banner 3:1)"
+            hint="Min 900×300 px, JPG/PNG/WEBP, do 5 MB. Wyświetlana jako baner i miniaturka."
+            recommendedLabel="Zalecane 1200×400 px (3:1)"
+            subfolder="covers"
+            maxMb={5}
+            minW={900}
+            minH={300}
+            targetAspect={3}
+            aspectTolerance={0.25}
+            previewClass="w-32 h-20 rounded-xl"
+            value={form.cover_image_url ?? ""}
+            onChange={(url) => setForm({ ...form, cover_image_url: url })}
+          />
+        </SekcjaEdytora>
+
+        <SekcjaEdytora id="oddzialy" tytul="Dodatkowe oddziały">
+          <div className="bg-card border border-border rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs uppercase tracking-wider font-semibold text-muted-foreground">
+                Dodatkowe oddziały ({extras.length})
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  { otworzSekcje("oddzialy"); setExtras([...extras, { address: "", lat: form.lat, lng: form.lng, label: "" }]); }
+                }
+                className="inline-flex items-center gap-1 text-xs font-semibold text-tomato hover:underline"
+              >
+                <Plus size={12} /> Dodaj oddział
+              </button>
+            </div>
+            {extras.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                Lokal ma jedną pinezkę. Dodaj oddziały jeśli to sieć z wieloma adresami.
+              </p>
+            )}
+            <div className="space-y-3">
+              {extras.map((loc, i) => (
+                <div
+                  key={loc.id ?? `new-${i}`}
+                  className="rounded-xl border border-border p-3 space-y-2 bg-muted/30"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-muted-foreground">
+                      Oddział #{i + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setExtras(extras.filter((_, idx) => idx !== i))}
+                      className="text-destructive hover:opacity-80"
+                      aria-label="Usuń oddział"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                  <input
+                    value={loc.label ?? ""}
+                    onChange={(e) => updateExtra(i, { label: e.target.value })}
+                    placeholder="Etykieta (np. Stary Browar) - opcjonalna"
+                    className="input"
+                  />
+                  <input
+                    required
+                    value={loc.address}
+                    onChange={(e) => updateExtra(i, { address: e.target.value })}
+                    placeholder="Adres oddziału"
+                    className="input"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="number"
+                      step="0.0001"
+                      required
+                      value={loc.lat}
+                      onChange={(e) => updateExtra(i, { lat: parseFloat(e.target.value) })}
+                      placeholder="lat"
+                      className="input"
+                    />
+                    <input
+                      type="number"
+                      step="0.0001"
+                      required
+                      value={loc.lng}
+                      onChange={(e) => updateExtra(i, { lng: parseFloat(e.target.value) })}
+                      placeholder="lng"
+                      className="input"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </SekcjaEdytora>
 
         {!coverValid || !reelValid || !menuUrlValid || !menuImgValid ? (
           <div className="text-xs text-destructive">
