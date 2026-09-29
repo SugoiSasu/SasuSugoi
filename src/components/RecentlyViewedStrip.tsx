@@ -5,6 +5,9 @@ import { usePlaces } from "@/lib/places-api";
 import { cuisineMeta } from "@/data/places";
 import { useRecentlyViewed, clearRecentlyViewed } from "@/lib/recently-viewed";
 
+/** Pokazujemy tylko najnowsze; reszta to szum - to skrot powrotu, nie historia. */
+const MAX_POZYCJI = 8;
+
 /**
  * "Take me back to the one I was looking at."
  *
@@ -51,12 +54,15 @@ export function RecentlyViewedStrip() {
         </button>
       </div>
 
-      <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 scrollbar-none [mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:[mask-image:none]">
-        {items.map((p) => {
+      {/* Zawsze jeden rzad z przewijaniem w bok (wczesniej na szerokim ekranie
+          zawijal sie na kilka wierszy i zjadal pol strony). */}
+      <ul className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2 scrollbar-none [mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] sm:mx-0 sm:px-0">
+
+        {items.slice(0, MAX_POZYCJI).map((p) => {
           const meta = cuisineMeta(p.cuisine);
           const cover = p.avatar_url ?? p.cover_image_url;
           return (
-            <li key={p.id} className="shrink-0">
+            <li key={p.id} className="shrink-0 snap-start">
               <Link
                 to="/k/$id"
                 params={{ id: p.slug ?? p.id }}
@@ -76,7 +82,7 @@ export function RecentlyViewedStrip() {
                 >
                   {!cover && meta.emoji}
                 </span>
-                <span className="max-w-40 truncate text-sm font-semibold">{p.name}</span>
+                <span className="max-w-32 truncate text-sm font-semibold">{p.name}</span>
               </Link>
             </li>
           );
