@@ -194,14 +194,29 @@ function Index() {
       .slice(0, 12);
   }, [user, friendRecs, published, filteredIds]);
 
-  const topPicks = useMemo(
-    () =>
-      filtered
-        .slice()
-        .sort((a, b) => (ratings?.get(b.id)?.avg ?? 0) - (ratings?.get(a.id)?.avg ?? 0))
-        .slice(0, 12),
-    [filtered, ratings],
-  );
+  // Kolejnosc remisow losowa przy kazdym wejsciu na strone. Losujemy dopiero po
+  // zamontowaniu (przed nim klucz = 0): serwer i klient musza wyrenderowac to
+  // samo, inaczej hydratacja sie rozjedzie.
+  const losowyKlucz = useMemo(() => (mounted ? Math.random() : 0), [mounted]);
+  // Max 2 rzedy siatki (4 kolumny na desktopie). Dopoki nikt nie ocenil lokali,
+  // wszystkie maja ocene 0, wiec calosc jest losowa; z recenzjami wygrywaja
+  // najlepiej oceniane, a remisy sa tasowane.
+  const topPicks = useMemo(() => {
+    const los = (id: string) => {
+      let h = 0;
+      const s = id + losowyKlucz;
+      for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+      return h;
+    };
+    return filtered
+      .slice()
+      .sort(
+        (a, b) =>
+          (ratings?.get(b.id)?.avg ?? 0) - (ratings?.get(a.id)?.avg ?? 0) ||
+          (losowyKlucz ? los(a.id) - los(b.id) : 0),
+      )
+      .slice(0, 8);
+  }, [filtered, ratings, losowyKlucz]);
 
   const NEWEST_WINDOW_DAYS = 20;
   const newest = useMemo(() => {
@@ -412,12 +427,25 @@ function PlaceRail({
                 </div>
               </div>
             ))
-          : places.flatMap((p, i) => {
-              const card = <DiscoverCard key={p.id} place={p} stat={ratings?.get(p.id)} />;
-              return ad && i === adPosition
-                ? [<SponsoredDiscoverCard key={`ad-${ad.id}`} ad={ad} />, card]
-                : [card];
-            })}
+          : places
+              .flatMap((p, i) => {
+                const card = <DiscoverCard key={p.id} place={p} stat={ratings?.get(p.id)} />;
+                return ad && i === adPosition
+                  ? [<SponsoredDiscoverCard key={`ad-${ad.id}`} ad={ad} />, card]
+                  : [card];
+              })
+              // Max 2 rzedy siatki: xl ma 4 kolumny (8 kafli), lg 3 kolumny (6).
+              // Na telefonie to pozioma lista, wiec limit tam nie dotyczy.
+              .slice(0, 8)
+              .map((el, i) =>
+                i >= 6 ? (
+                  <div key={el.key} className="contents lg:max-xl:hidden">
+                    {el}
+                  </div>
+                ) : (
+                  el
+                ),
+              )}
       </div>
     </section>
   );
