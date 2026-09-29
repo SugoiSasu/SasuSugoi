@@ -30,7 +30,6 @@ import { levelInfo } from "@/components/LevelProgress";
 import { VipBadge, isVipActive, vipNameStyle } from "@/components/VipBadge";
 import { RandomPlaceCard } from "@/components/RandomPlaceCard";
 import { SidebarAdCard } from "@/components/SidebarAdCard";
-import { SidebarFollowedPlaces } from "@/components/SidebarFollowedPlaces";
 import { InviteFriendsModal } from "@/components/InviteFriendsModal";
 import { useCurrentAwardsEvent } from "@/lib/awards-api";
 import logoDark from "@/assets/brand/po_zeramy-logo-dark-nav.webp.asset.json";
@@ -231,12 +230,6 @@ export function AppSidebar() {
           )}
 
           {user && (
-            <div className="pz-sidebar-followed">
-              <SidebarFollowedPlaces />
-            </div>
-          )}
-
-          {user && (
             <div className="sidebar-random-card">
               <RandomPlaceCard userId={user.id} />
             </div>
@@ -268,7 +261,6 @@ export function AppSidebar() {
             .pz-sidebar-stats { display: none; }
           }
           @media (max-height: 940px) { .sidebar-random-card { display: none; } }
-          @media (max-height: 900px) { .pz-sidebar-followed { display: none; } }
 
           /* Ponizej ~860px stopka zwija sie do rzedu samych ikon. Kazda
              pozycja ma aria-label i title, wiec nazwa nie ginie - znika
