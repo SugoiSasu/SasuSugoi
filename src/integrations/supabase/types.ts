@@ -2715,7 +2715,7 @@ export type Database = {
         Args: never
         Returns: {
           enabled: boolean
-          password: string
+          has_password: boolean
         }[]
       }
       alpha_gate_set: {

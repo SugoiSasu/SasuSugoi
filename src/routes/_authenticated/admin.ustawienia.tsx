@@ -54,6 +54,7 @@ function AlphaGateTab() {
   const [loading, setLoading] = useState(true);
   const [enabled, setEnabled] = useState(false);
   const [password, setPassword] = useState("");
+  const [hasPassword, setHasPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -64,19 +65,23 @@ function AlphaGateTab() {
       const { data, error } = await (supabase as any).rpc("alpha_gate_get");
       if (!error && data && data[0]) {
         setEnabled(!!data[0].enabled);
-        setPassword(String(data[0].password ?? ""));
+        // Haslo jest w bazie tylko jako hash - nie da sie go pokazac. Puste pole
+        // przy zapisie = zostaje obecne haslo.
+        setHasPassword(!!data[0].has_password);
       }
       setLoading(false);
     })();
   }, [isSuper]);
 
   async function save() {
-    if (!password.trim()) { toast.error("Hasło nie może być puste"); return; }
+    if (!password.trim() && !hasPassword) { toast.error("Ustaw hasło dostępu"); return; }
     setSaving(true);
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase as any).rpc("alpha_gate_set", { _enabled: enabled, _password: password });
       if (error) throw error;
+      if (password.trim()) setHasPassword(true);
+      setPassword("");
       toast.success("Zapisano ustawienia");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Błąd");
@@ -123,7 +128,8 @@ function AlphaGateTab() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-lg border border-border bg-background px-3 py-2 pr-10 text-sm font-mono focus:border-tomato outline-none"
-              placeholder="np. pozeramy-alpha-2025"
+              placeholder={hasPassword ? "•••••••• (ustawione) - wpisz nowe, aby zmienić" : "Ustaw hasło dostępu"}
+              autoComplete="new-password"
             />
             <button
               type="button"
@@ -136,7 +142,7 @@ function AlphaGateTab() {
             </button>
           </div>
           <p className="text-[11px] text-muted-foreground mt-1">
-            Zmiana hasła wymaga ponownej weryfikacji u osób, które jeszcze go nie wpisały (już zalogowani goście nadal mają dostęp dopóki nie wyczyszczą danych przeglądarki).
+            Hasło jest przechowywane tylko jako hash i po zapisie nie da się go już wyświetlić. Zostaw pole puste, żeby go nie zmieniać. Zmiana hasła wymaga ponownej weryfikacji u osób, które jeszcze go nie wpisały (już zalogowani goście nadal mają dostęp dopóki nie wyczyszczą danych przeglądarki).
           </p>
         </label>
 
