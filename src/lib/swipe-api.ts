@@ -112,7 +112,7 @@ function seededShuffle<T>(items: T[], seed: string): T[] {
 /** Places the user hasn't reacted to yet - no "chcę odwiedzić"/odwiedzone/ulubione,
  * and not skipped in the last 5 days. Shuffled once per day so the order is stable
  * across re-renders/refetches but varies day to day. */
-export function useSwipeDeck() {
+export function useSwipeDeck(shuffleKey = 0) {
   const { user } = useUser();
   const placesQ = usePlaces();
   const statusesQ = useMyVisitStatuses();
@@ -138,8 +138,8 @@ export function useSwipeDeck() {
       return true;
     });
     const today = new Date().toISOString().slice(0, 10);
-    return seededShuffle(undecided, `${user?.id ?? "anon"}-${today}`);
-  }, [placesQ.data, statusesQ.data, favIdsQ.data, skippedQ.data, user?.id]);
+    return seededShuffle(undecided, `${user?.id ?? "anon"}-${today}-${shuffleKey}`);
+  }, [placesQ.data, statusesQ.data, favIdsQ.data, skippedQ.data, user?.id, shuffleKey]);
 
   return { deck, isLoading };
 }

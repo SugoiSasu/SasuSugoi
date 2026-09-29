@@ -65,6 +65,7 @@ const NOTIF_LABELS: Record<NotificationType, { label: string; hint: string }> = 
   friend_accepted: { label: "Zaakceptowane zaproszenia", hint: "Gdy ktoś zaakceptuje Twoje zaproszenie." },
   place_post: { label: "Nowości w ulubionych miejscach", hint: "Gdy ulubiony lokal doda coś nowego." },
   achievement: { label: "Zdobyte odznaki", hint: "Gdy odblokujesz osiągnięcie." },
+  outing: { label: "Propozycje wspólnych wyjść", hint: "Gdy znajomy zaprosi Cię do lokalu, który obaj chcecie odwiedzić." },
 };
 
 function ProfilePage() {

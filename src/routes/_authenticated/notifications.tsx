@@ -1,7 +1,7 @@
 import { BackButton } from "@/components/BackButton";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
-import { ArrowLeft, Bell, CheckCheck, Loader2, UserPlus, UserCheck, Newspaper, Trophy } from "lucide-react";
+import { ArrowLeft, Bell, CheckCheck, Loader2, UserPlus, UserCheck, Newspaper, Trophy, Utensils } from "lucide-react";
 import {
   useNotificationsInfinite,
   useMarkRead,
@@ -36,6 +36,7 @@ function iconFor(type: string) {
     case "friend_accepted": return <UserCheck size={16} className="text-tomato" />;
     case "place_post": return <Newspaper size={16} className="text-tomato" />;
     case "achievement": return <Trophy size={16} className="text-tomato" />;
+    case "outing": return <Utensils size={16} className="text-tomato" />;
     default: return <Bell size={16} className="text-tomato" />;
   }
 }

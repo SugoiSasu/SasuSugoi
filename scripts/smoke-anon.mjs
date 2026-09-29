@@ -175,6 +175,20 @@ if (SUPABASE && KLUCZ) {
   console.log("UWAGA: brak VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY - pomijam odczyty z bazy");
 }
 
+// 5. Funkcje tylko dla zalogowanych: gosc ma dostac odmowe, nie dane.
+if (SUPABASE && KLUCZ && przykladowyLokal) {
+  try {
+    const r = await fetch(`${SUPABASE}/rest/v1/rpc/propose_outing`, {
+      method: "POST",
+      headers: { apikey: KLUCZ, "Content-Type": "application/json" },
+      body: JSON.stringify({ _place_id: przykladowyLokal.id }),
+    });
+    zapisz("anon NIE wola propose_outing (propozycja wyjscia)", !r.ok, r.ok ? "wywolanie przeszlo" : `HTTP ${r.status}`);
+  } catch (err) {
+    zapisz("anon NIE wola propose_outing (propozycja wyjscia)", false, err.message);
+  }
+}
+
 const ok = wyniki.filter(Boolean).length;
 console.log(`\npodsumowanie: ${ok}/${wyniki.length}`);
 process.exit(ok === wyniki.length ? 0 : 1);

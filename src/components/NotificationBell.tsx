@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Bell, UserPlus, UserCheck, Newspaper, Trophy, CheckCheck, ArrowRight, WifiOff, AtSign, Heart, MessageCircle } from "lucide-react";
+import { Bell, UserPlus, UserCheck, Newspaper, Trophy, CheckCheck, ArrowRight, WifiOff, AtSign, Heart, MessageCircle, Utensils } from "lucide-react";
 import { useUser } from "@/lib/use-auth";
 import {
   useNotifications,
@@ -19,6 +19,7 @@ function iconFor(type: string) {
     case "friend_accepted": return <UserCheck size={14} className="text-tomato" />;
     case "place_post": return <Newspaper size={14} className="text-tomato" />;
     case "achievement": return <Trophy size={14} className="text-tomato" />;
+    case "outing": return <Utensils size={14} className="text-tomato" />;
     case "review_tag": return <AtSign size={14} className="text-tomato" />;
     case "review_reaction": return <Heart size={14} className="text-tomato" />;
     case "review_comment": return <MessageCircle size={14} className="text-tomato" />;

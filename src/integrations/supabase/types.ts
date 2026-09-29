@@ -2980,6 +2980,10 @@ export type Database = {
           srednia_ocena: number
         }[]
       }
+      propose_outing: {
+        Args: { _place_id: string }
+        Returns: number
+      }
       ranking_tablica: {
         Args: { _metryka: string; _okres: string }
         Returns: {

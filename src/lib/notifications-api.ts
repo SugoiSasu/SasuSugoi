@@ -28,6 +28,7 @@ export const NOTIFICATION_TYPES = [
   "friend_accepted",
   "place_post",
   "achievement",
+  "outing",
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
@@ -302,4 +303,5 @@ export const NOTIFICATION_TYPE_LABELS: Record<string, string> = {
   friend_accepted: "Nowe znajomości",
   place_post: "Wpisy lokali",
   achievement: "Odznaki",
+  outing: "Wspólne wyjścia",
 };
