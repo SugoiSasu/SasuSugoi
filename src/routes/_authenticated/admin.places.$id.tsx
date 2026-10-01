@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { DOMYSLNY_PUNKT, czyDomyslnyPunkt, geokodujAdres } from "@/lib/geocode";
 import { punktyKompletnosci } from "@/lib/place-completeness";
+import { NAZWY_POZIOMOW, OPISY_POZIOMOW, formatCena, poziomCeny, wartoscCeny } from "@/lib/price";
 import { PlaceTrophiesPanel } from "@/components/admin/PlaceTrophiesPanel";
 import { SekcjaEdytora, NawigacjaSekcji, otworzSekcje, ustawWszystkie, type Znacznik } from "@/components/admin/EditorSekcje";
 import { MigratePlaceImagesButton } from "@/components/PlaceImageMigration";
@@ -997,40 +998,42 @@ function OpeningHoursEditor({
 }
 
 function PriceLevelPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  // Store as "$", "$$", ..., "$$$$$". Legacy free-text values are shown read-only with an option to convert.
-  const isDollar = /^\${1,5}$/.test(value);
-  const level = isDollar ? value.length : 0;
-  const isLegacy = !isDollar && value.trim() !== "";
-  const LABELS = ["Bez oceny", "Bardzo tanio", "Tanio", "Średnio", "Drogo", "Bardzo drogo"];
+  // W bazie "$".."$$$$", pokazujemy "zł zł ..." (jedna skala 1-4, patrz lib/price.ts).
+  // Dawne wartosci (np. "$$$$$" albo tekst w zl) pokazujemy jako przeliczone.
+  const level = poziomCeny(value);
+  const canonical = wartoscCeny(level);
+  const isLegacy = value.trim() !== "" && value.trim() !== canonical;
   return (
     <div className="space-y-1.5">
       <div className="flex flex-wrap gap-1.5">
-        {[0, 1, 2, 3, 4, 5].map((n) => {
+        {[0, 1, 2, 3, 4].map((n) => {
           const active = level === n;
+          const etykieta = n === 0 ? "Bez oceny" : `${NAZWY_POZIOMOW[n]} (${OPISY_POZIOMOW[n]})`;
           return (
             <button
               key={n}
               type="button"
-              onClick={() => onChange(n === 0 ? "" : "$".repeat(n))}
+              onClick={() => onChange(wartoscCeny(n))}
               className={`min-w-[3rem] rounded-full px-3 py-1.5 text-sm font-bold border transition ${active ? "bg-tomato text-cream border-tomato shadow" : "bg-background text-foreground border-border hover:border-tomato"}`}
               aria-pressed={active}
-              aria-label={LABELS[n]}
-              title={LABELS[n]}
+              aria-label={etykieta}
+              title={etykieta}
             >
-              {n === 0 ? " - " : "$".repeat(n)}
+              {n === 0 ? " - " : formatCena(wartoscCeny(n))}
             </button>
           );
         })}
       </div>
+      {level > 0 && (
+        <p className="text-[11px] text-muted-foreground">
+          {NAZWY_POZIOMOW[level]}: danie główne {OPISY_POZIOMOW[level].toLowerCase()}
+        </p>
+      )}
       {isLegacy && (
         <div className="text-[11px] text-muted-foreground flex items-center gap-2">
-          <span>Stara wartość: „{value}"</span>
-          <button
-            type="button"
-            onClick={() => onChange("")}
-            className="text-tomato font-semibold hover:underline"
-          >
-            Wyczyść
+          <span>Stara wartość: „{value}" (przeliczona na skalę)</span>
+          <button type="button" onClick={() => onChange(canonical)} className="text-tomato font-semibold hover:underline">
+            Zapisz w nowym formacie
           </button>
         </div>
       )}

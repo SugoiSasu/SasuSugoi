@@ -11,6 +11,7 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { imieZnajomego, type ZnajomyLite } from "@/lib/karty-api";
 import { cechyLokalu, liniaZnajomych, pierwszaPozycjaMenu } from "@/lib/karty-utils";
 import { formatDistancePl } from "@/lib/geo";
+import { formatCena } from "@/lib/price";
 
 const SWIPE_THRESHOLD = 120;
 const UP_THRESHOLD = 130;
@@ -266,9 +267,9 @@ export function SwipeCard({
                   <span className="font-semibold text-cream/70">({rating.count})</span>
                 </span>
               )}
-              {place.price_range && (
+              {formatCena(place.price_range) && (
                 <span className="rounded-full bg-cream/15 px-2.5 py-1 text-[11px] font-extrabold backdrop-blur-sm">
-                  {place.price_range}
+                  {formatCena(place.price_range)}
                 </span>
               )}
               {friendSignal && friendSignal.kind !== "want" && (

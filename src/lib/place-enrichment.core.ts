@@ -157,8 +157,8 @@ function narzedzieWszystkichPol(w: WejscieLokalu) {
         ),
         kuchnia: pole({ type: "string", enum: w.kuchnie }, "Najlepiej pasujaca kategoria z listy."),
         poziom_cen: pole(
-          { type: "integer", minimum: 1, maximum: 5 },
-          "Cena typowego dania glownego: 1 ponizej 25 zl, 2 25-40 zl, 3 40-60 zl, 4 60-90 zl, 5 powyzej 90 zl.",
+          { type: "integer", minimum: 1, maximum: 4 },
+          "Cena typowego dania glownego: 1 ponizej 25 zl, 2 25-40 zl, 3 40-60 zl, 4 powyzej 60 zl.",
         ),
         na_wynos: pole({ type: "boolean" }, "Tylko jesli zrodlo wprost mowi o wynosie/dowozie."),
         bez_barier: pole({ type: "boolean" }, "Tylko jesli zrodlo wprost mowi o dostepnosci dla wozkow."),

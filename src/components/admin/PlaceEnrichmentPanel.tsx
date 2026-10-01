@@ -6,6 +6,7 @@ import type { OpeningHours, PlaceInput } from "@/lib/places-api";
 import { MODEL_DOKLADNY, type KandydatObrazu, type PropozycjaLokalu } from "@/lib/place-enrichment.core";
 import { pobierzObrazLokalu } from "@/lib/place-enrichment.functions";
 import { czyTrwa, useOdrzucPropozycje, usePropozycjaLokalu, useSzukajDanych } from "@/lib/place-enrichment-api";
+import { formatCena } from "@/lib/price";
 
 /**
  * "Uzupelnij z internetu": pokazuje propozycje pole po polu - obecna wartosc,
@@ -34,7 +35,7 @@ function godzinyTekst(g: OpeningHours | null | undefined): string {
   }).join(" · ");
 }
 
-const CENY = ["", "Bardzo tanio", "Tanio", "Średnio", "Drogo", "Bardzo drogo"];
+const CENY = ["", "Bardzo tanio", "Tanio", "Średnio", "Drogo"];
 
 type Klucz =
   | "address"
@@ -93,11 +94,11 @@ function zbudujWiersze(p: PropozycjaLokalu, f: PlaceInput): Wiersz[] {
         klucz: "price_range",
         etykieta: "Poziom cen",
         teraz: f.price_range ?? "",
-        propozycja: `${nowa} (${CENY[p.poziom_cen.wartosc]})`,
+        propozycja: `${formatCena(nowa)} (${CENY[p.poziom_cen.wartosc]})`,
         wartosc: nowa,
         zrodlo: p.poziom_cen.zrodlo,
         // Stare wpisy tekstowe ("20-50zl") tez traktujemy jak puste - i tak sa do zamiany.
-        puste: !/^\${1,5}$/.test(f.price_range ?? ""),
+        puste: !/^\${1,4}$/.test(f.price_range ?? ""),
       });
     }
   }

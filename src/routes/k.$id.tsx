@@ -30,6 +30,7 @@ import { OwnerRequestModal } from "@/components/OwnerRequestModal";
 import { EditableImageButton } from "@/components/EditableImageButton";
 import { Bell, BellOff, ShieldCheck, Settings2 } from "lucide-react";
 import { TrophyPill } from "@/components/TrophyIcon";
+import { formatCena } from "@/lib/price";
 import { useTrofeaLokalu } from "@/lib/trophies-api";
 import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import { ShareModal } from "@/components/ShareModal";
@@ -622,7 +623,7 @@ function PlaceProfile() {
                 badge={openInfo.open ? { text: "Otwarte", color: "#3C8A5A" } : { text: "Zamknięte", color: "#B23A3A" }}
               />
             )}
-            {place.price_range && <QuickChip icon={<Wallet size={14} />} label={place.price_range} />}
+            {formatCena(place.price_range) && <QuickChip icon={<Wallet size={14} />} label={formatCena(place.price_range)} />}
             {place.has_takeaway && <QuickChip icon={<ShoppingBag size={14} />} label="Na wynos" />}
             {place.wheelchair_accessible && <QuickChip icon={<Accessibility size={14} />} label="Bez schodów" />}
           </div>

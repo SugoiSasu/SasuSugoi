@@ -12,6 +12,7 @@ import { useUserLocation, haversineKm, formatDistancePl } from "@/lib/geo";
 import { useUser } from "@/lib/use-auth";
 import { pluralPl } from "@/lib/plural-pl";
 import { cuisineMeta } from "@/data/places";
+import { formatCena } from "@/lib/price";
 
 export const Route = createFileRoute("/mapa")({
   head: () => ({
@@ -602,7 +603,7 @@ function SelectedCard({
       <div className="min-w-0 flex-1">
         <p className="truncate font-display text-sm font-extrabold">{place.name}</p>
         <p className="truncate text-xs text-muted-foreground">
-          {[place.cuisine, place.district, place.price_range].filter(Boolean).join(" • ")}
+          {[place.cuisine, place.district, formatCena(place.price_range)].filter(Boolean).join(" • ")}
         </p>
         <p className="mt-0.5 flex items-center gap-1 text-xs font-semibold">
           {stat ? (

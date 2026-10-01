@@ -25,6 +25,7 @@ import { SponsoredDiscoverCard } from "@/components/SponsoredDiscoverCard";
 import { pickSeeded } from "@/lib/seeded-pick";
 import { useCutoutLogoReady } from "@/lib/chroma-cutout";
 import { TrophyIcon } from "@/components/TrophyIcon";
+import { formatCena } from "@/lib/price";
 import { useWszystkieTrofea } from "@/lib/trophies-api";
 import { podpisTrofeum, type Trofeum } from "@/lib/trophies";
 import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
@@ -601,11 +602,11 @@ const DiscoverCard = memo(function DiscoverCard({
               Dropped entirely when we know neither hours nor price: for such
               a place the line has nothing new to say, and an empty 0-height
               paragraph just breaks the card's internal rhythm. */}
-          {(place.opening_hours || place.price_range) && (
+          {(place.opening_hours || formatCena(place.price_range)) && (
             <p className="mt-1 flex items-center gap-2 truncate text-xs">
               <OpenStatus hours={place.opening_hours} />
-              {place.price_range && (
-                <span className="text-muted-foreground">{place.price_range}</span>
+              {formatCena(place.price_range) && (
+                <span className="text-muted-foreground">{formatCena(place.price_range)}</span>
               )}
             </p>
           )}

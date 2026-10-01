@@ -41,7 +41,7 @@ function brakujacePola(p: Record<string, unknown>): PoleAI[] {
   if (pusty(p.phone)) b.push("telefon");
   if (pusty(p.website)) b.push("strona_www");
   if (pusty(p.description)) b.push("opis");
-  if (!/^\${1,5}$/.test(String(p.price_range ?? ""))) b.push("poziom_cen");
+  if (!/^\${1,4}$/.test(String(p.price_range ?? ""))) b.push("poziom_cen");
   if (pusty(p.opening_hours)) b.push("godziny");
   if (pusty(p.menu_items)) b.push("menu", ...(pusty(p.menu_url) ? (["menu_url"] as PoleAI[]) : []));
   if (b.length) {
