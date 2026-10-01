@@ -32,6 +32,8 @@ import { punktyKompletnosci } from "@/lib/place-completeness";
 import { NAZWY_POZIOMOW, OPISY_POZIOMOW, formatCena, poziomCeny, wartoscCeny } from "@/lib/price";
 import { PlaceTrophiesPanel } from "@/components/admin/PlaceTrophiesPanel";
 import { napiszOpisLokalu } from "@/lib/place-description.functions";
+import { usePropozycjaLokalu } from "@/lib/place-enrichment-api";
+import type { PropozycjaLokalu } from "@/lib/place-enrichment.core";
 import { useTrofeaLokalu } from "@/lib/trophies-api";
 import { podpisTrofeum } from "@/lib/trophies";
 import { SekcjaEdytora, NawigacjaSekcji, otworzSekcje, ustawWszystkie, type Znacznik } from "@/components/admin/EditorSekcje";
@@ -256,39 +258,58 @@ function EditPlace() {
   const callNapiszOpis = useServerFn(napiszOpisLokalu);
   const { data: trofeaLokalu } = useTrofeaLokalu(isNew ? undefined : id);
   const [piszeOpis, setPiszeOpis] = useState(false);
-  async function napiszOpis() {
+  async function napiszOpis(z?: PropozycjaLokalu | null, automat = false) {
     setPiszeOpis(true);
     try {
       const dni: Record<string, string> = { mon: "pn", tue: "wt", wed: "śr", thu: "czw", fri: "pt", sat: "sob", sun: "nd" };
-      const godziny = Object.entries(form.opening_hours ?? {})
+      // Fakty z formularza; braki uzupelniamy propozycja z wyszukiwania (jeszcze
+      // niezatwierdzona), zeby opis dalo sie napisac od razu po szkicu.
+      const godzinyZrodlo = (form.opening_hours && Object.keys(form.opening_hours).length ? form.opening_hours : z?.godziny?.wartosc) ?? {};
+      const godziny = Object.entries(godzinyZrodlo)
         .filter(([, v]) => v && (v as { open?: string }).open)
         .map(([k, v]) => `${dni[k] ?? k} ${(v as { open: string }).open}-${(v as { close: string }).close}`)
         .join(", ");
-      const menu = (form.menu_items ?? []).flatMap((k) => k.items.map((i) => i.name)).filter(Boolean).slice(0, 25);
-      const poziom = poziomCeny(form.price_range);
+      const kategorie = form.menu_items?.length ? form.menu_items : (z?.menu?.wartosc ?? []);
+      const menu = kategorie.flatMap((k) => k.items.map((i) => i.name)).filter(Boolean).slice(0, 25);
+      const poziom = poziomCeny(form.price_range) || z?.poziom_cen?.wartosc || 0;
       const r = await callNapiszOpis({
         data: {
           nazwa: form.name,
           kuchnia: form.cuisine,
-          dzielnica: form.district ?? "",
-          adres: form.address,
+          dzielnica: form.district || z?.dzielnica?.wartosc || "",
+          adres: form.address || z?.adres?.wartosc || "",
           poziomCen: poziom ? `${NAZWY_POZIOMOW[poziom]} (danie główne ${OPISY_POZIOMOW[poziom].toLowerCase()})` : "",
-          naWynos: !!form.has_takeaway,
-          bezBarier: !!form.wheelchair_accessible,
+          naWynos: !!form.has_takeaway || !!z?.na_wynos?.wartosc,
+          bezBarier: !!form.wheelchair_accessible || !!z?.bez_barier?.wartosc,
           godziny,
           menu,
           trofea: (trofeaLokalu ?? []).map((x) => podpisTrofeum(x)),
           stary: form.description,
         },
       });
-      setForm((f) => ({ ...f, description: r.opis }));
-      toast.success("Opis napisany - przeczytaj i popraw, jeśli trzeba");
+      // Automat nigdy nie nadpisuje opisu, ktory ktos w miedzyczasie wpisal.
+      setForm((f) => (automat && f.description.trim() ? f : { ...f, description: r.opis }));
+      toast.success(automat ? "Opis napisany automatycznie - przeczytaj i zapisz" : "Opis napisany - przeczytaj i popraw, jeśli trzeba");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Nie udało się napisać opisu");
     } finally {
       setPiszeOpis(false);
     }
   }
+
+  // Po "Utworz szkic i uzupelnij z AI": gdy wyszukiwanie danych skonczy prace i
+  // opis jest pusty, piszemy go sami (raz). Flaga z montowania, bo parametr ai
+  // znika z adresu po chwili.
+  const { data: wierszWyszukiwania } = usePropozycjaLokalu(isNew ? null : id);
+  const autoOpis = useRef(ai === 1);
+  useEffect(() => {
+    if (!autoOpis.current || !hydrated) return;
+    if (wierszWyszukiwania?.status !== "gotowe" || !wierszWyszukiwania.propozycja) return;
+    autoOpis.current = false;
+    if (form.description.trim()) return;
+    void napiszOpis(wierszWyszukiwania.propozycja, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [wierszWyszukiwania, hydrated]);
 
   // Parametr ai zdejmujemy po chwili, zeby odswiezenie strony nie odpalalo (i nie placilo za) wyszukiwania drugi raz;
   // panele i tak startuja raz na zamontowanie.
@@ -542,7 +563,7 @@ function EditPlace() {
             <div className="-mt-1 flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={napiszOpis}
+                onClick={() => napiszOpis()}
                 disabled={piszeOpis || form.name.trim().length < 2}
                 className="inline-flex items-center gap-2 rounded-full bg-navy px-4 py-2 text-sm font-semibold text-cream hover:bg-navy/90 disabled:opacity-50"
               >
