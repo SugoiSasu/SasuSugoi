@@ -488,8 +488,14 @@ function PlaceProfile() {
             </div>
 
             <div className="min-w-[200px] flex-1 pr-10 sm:pr-0">
-              <SmartText as="h1" className="font-persona mb-2 text-[clamp(1.6rem,2.6vw,2.15rem)] leading-[1.05] text-balance">
-                {place.name}
+              {/* Nazwa pisana bardzo szeroka czcionka: dlugie slowa (JEMRAMEN&CHICKEN,
+                  START.WSCHOD) wychodzily poza karte. Dozwolone lamanie po & . - /,
+                  a na telefonie rozmiar maleje z dlugoscia najdluzszego slowa. */}
+              <SmartText
+                as="h1"
+                className={`font-persona mb-2 break-words text-[clamp(1.6rem,2.6vw,2.15rem)] leading-[1.05] text-balance [overflow-wrap:anywhere] ${rozmiarNazwyNaTelefonie(place.name)}`}
+              >
+                {place.name.replace(/([&./-])/g, "$1​")}
               </SmartText>
               <div className="flex flex-wrap items-center gap-2 text-[12.5px]">
                 {place.district && (
@@ -1187,3 +1193,16 @@ function FriendsFavoritedNotice({ placeId, placeName }: { placeId: string; place
 
 
 
+
+/**
+ * Na waskim ekranie (poza sm) mniejsza czcionka tytulu dla dlugich slow. Slowo to
+ * ciag miedzy spacja a & . - /, bo w tych miejscach dozwolone jest lamanie.
+ * Szeroka czcionka tytulow mieści ok. 8 znakow na ~200 px kolumny obok logo.
+ */
+function rozmiarNazwyNaTelefonie(nazwa: string): string {
+  const najdluzsze = Math.max(...nazwa.split(/[s&./-]+/).map((w) => w.length), 1);
+  if (najdluzsze <= 7) return "";
+  if (najdluzsze <= 9) return "max-sm:text-[1.35rem]";
+  if (najdluzsze <= 11) return "max-sm:text-[1.15rem]";
+  return "max-sm:text-[1rem]";
+}
