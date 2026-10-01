@@ -356,7 +356,7 @@ function ReviewForm({
         />
         {photoUrl ? (
           <div className="relative w-28 h-28">
-            <img src={photoUrl} alt="" className="w-full h-full rounded-xl object-cover" />
+            <img loading="lazy" decoding="async" src={photoUrl} alt="" className="w-full h-full rounded-xl object-cover" />
             <button
               type="button"
               onClick={() => setPhotoPath(null)}
@@ -563,7 +563,7 @@ function ReviewCard({
           </div>
           {review.body && <p className="text-sm mt-1.5 leading-relaxed">{review.body}</p>}
           {photoUrl && (
-            <img
+            <img loading="lazy" decoding="async"
               src={photoUrl}
               alt=""
               className="mt-2 max-h-64 rounded-xl object-cover"

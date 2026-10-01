@@ -202,7 +202,7 @@ export function PlaceListGrid({
                 style={{ backgroundColor: meta.color }}
               >
                 {p.avatar_url || p.cover_image_url ? (
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={p.avatar_url ?? p.cover_image_url!}
                     alt=""
                     className="w-full h-full object-cover"

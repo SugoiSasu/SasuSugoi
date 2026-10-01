@@ -84,7 +84,7 @@ export function AchievementDetail({
             ) : (
               <span className={`relative ${zdobyta ? "text-cream" : "text-foreground"}`}>
                 {a.icon_url && a.icon_url.startsWith("http") ? (
-                  <img src={a.icon_url} alt="" className="h-9 w-9 object-contain" />
+                  <img loading="lazy" decoding="async" src={a.icon_url} alt="" className="h-9 w-9 object-contain" />
                 ) : a.icon_url ? (
                   <span className="text-3xl leading-none">{a.icon_url}</span>
                 ) : (

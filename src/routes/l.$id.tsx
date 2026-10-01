@@ -206,7 +206,7 @@ function ListDetail() {
                     className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 transition hover:border-tomato hover:shadow-sm"
                   >
                     {img ? (
-                      <img
+                      <img loading="lazy" decoding="async"
                         src={img}
                         alt=""
                         className="h-14 w-14 shrink-0 rounded-lg object-cover"

@@ -291,7 +291,7 @@ function AdminAds() {
                 key={ad.id}
                 className="bg-card border border-border rounded-2xl p-3 flex items-center gap-3"
               >
-                <img
+                <img loading="lazy" decoding="async"
                   src={ad.image_url}
                   alt=""
                   className="w-32 h-12 object-cover rounded-md shrink-0 bg-muted"
@@ -494,7 +494,7 @@ function AdminAds() {
                   )}
                   {form.image_url && (
                     <div className="mt-1 rounded-md border border-border overflow-hidden bg-muted">
-                      <img src={form.image_url} alt="" className="w-full max-h-32 object-cover" />
+                      <img loading="lazy" decoding="async" src={form.image_url} alt="" className="w-full max-h-32 object-cover" />
                     </div>
                   )}
                 </div>

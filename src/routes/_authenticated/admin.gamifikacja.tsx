@@ -443,7 +443,7 @@ function AchievementsTab() {
 
 function renderAchievementIcon(icon: string | null) {
   if (!icon) return "🏅";
-  if (icon.startsWith("http")) return <img src={icon} alt="" className="w-8 h-8 rounded" />;
+  if (icon.startsWith("http")) return <img loading="lazy" decoding="async" src={icon} alt="" className="w-8 h-8 rounded" />;
   return icon;
 }
 

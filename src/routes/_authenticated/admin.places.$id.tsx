@@ -1184,7 +1184,7 @@ function AvatarUploader({
       <div className="flex items-start gap-3">
         <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-navy bg-muted grid place-items-center flex-shrink-0 shadow-sm">
           {value ? (
-            <img src={value} alt="Avatar" className="w-full h-full object-cover" />
+            <img loading="lazy" decoding="async" src={value} alt="Avatar" className="w-full h-full object-cover" />
           ) : (
             <div
               className="w-full h-full grid place-items-center text-cream font-black text-2xl"
@@ -1339,7 +1339,7 @@ function ImageUploader({
               <FileText size={22} /> PDF
             </a>
           ) : value ? (
-            <img src={value} alt="Podgląd" className="w-full h-full object-cover" />
+            <img loading="lazy" decoding="async" src={value} alt="Podgląd" className="w-full h-full object-cover" />
           ) : (
             <ImageIcon size={20} className="text-muted-foreground" />
           )}

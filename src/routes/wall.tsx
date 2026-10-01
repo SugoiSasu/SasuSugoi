@@ -471,7 +471,7 @@ function QuickPostBar() {
           />
           {imageUrl ? (
             <div className="relative inline-block">
-              <img
+              <img loading="lazy" decoding="async"
                 src={imageUrl}
                 alt=""
                 className="h-20 w-20 rounded-xl object-cover border border-border"
@@ -696,7 +696,7 @@ function PlaceAvatarDot({
   const img = place.avatar_url || place.cover_image_url;
   if (img) {
     return (
-      <img
+      <img loading="lazy" decoding="async"
         src={img}
         alt=""
         style={{ width: size, height: size }}

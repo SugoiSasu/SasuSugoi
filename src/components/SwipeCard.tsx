@@ -168,7 +168,7 @@ export function SwipeCard({
             fade the frame to nothing. The cuisine colour sits underneath so a
             logo that is mostly transparent still lands on something. */}
         <div className="absolute inset-0 overflow-hidden" style={{ backgroundColor: meta.color }}>
-          <img
+          <img loading="lazy" decoding="async"
             src={logoSrc}
             alt=""
             aria-hidden="true"
@@ -206,7 +206,7 @@ export function SwipeCard({
                 className="absolute inset-[-18%] rounded-full blur-xl"
                 style={{ backgroundColor: meta.color, opacity: 0.85 }}
               />
-              <img
+              <img loading="lazy" decoding="async"
                 src={logoSrc}
                 alt=""
                 aria-hidden="true"

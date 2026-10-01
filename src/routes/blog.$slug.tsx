@@ -151,7 +151,7 @@ function BlogPostPage() {
 
       {post.cover_image_url && (
         <div className="mx-auto max-w-3xl px-4 sm:px-6 -mt-8">
-          <img src={post.cover_image_url} alt={post.title} className="w-full rounded-3xl shadow-2xl" />
+          <img loading="lazy" decoding="async" src={post.cover_image_url} alt={post.title} className="w-full rounded-3xl shadow-2xl" />
         </div>
       )}
 

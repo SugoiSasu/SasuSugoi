@@ -39,7 +39,7 @@ function OwnerLayout() {
             >
               <div className="w-14 h-14 rounded-xl overflow-hidden bg-muted shrink-0 grid place-items-center">
                 {place.cover_image_url ? (
-                  <img src={place.cover_image_url} alt="" className="w-full h-full object-cover" />
+                  <img loading="lazy" decoding="async" src={place.cover_image_url} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <Store size={22} className="text-muted-foreground" />
                 )}

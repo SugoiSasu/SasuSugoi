@@ -180,7 +180,7 @@ function Lightbox({
           </button>
         </>
       )}
-      <img
+      <img loading="lazy" decoding="async"
         src={p.url}
         alt={p.caption ?? ""}
         className="max-w-full max-h-[85dvh] object-contain rounded-xl"

@@ -168,7 +168,7 @@ function PlaceNotFound({ id }: { id: string }) {
               </Link>
             </div>
           </div>
-          <img src={sadPizza} alt="Smutna pizza" className="w-full h-auto drop-shadow-2xl" />
+          <img loading="lazy" decoding="async" src={sadPizza} alt="Smutna pizza" className="w-full h-auto drop-shadow-2xl" />
         </div>
         <div className="mt-10 rounded-3xl border border-cream/15 bg-cream/5 p-5">
           <div className="text-cream/90 mb-4 font-display uppercase">A może coś innego?</div>

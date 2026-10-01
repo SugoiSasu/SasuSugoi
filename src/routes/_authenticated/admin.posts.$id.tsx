@@ -179,7 +179,7 @@ function EditPost() {
 
         {preview ? (
           <article className="prose prose-neutral max-w-none bg-card border border-border rounded-2xl p-6 min-h-[400px] prose-headings:font-display prose-a:text-tomato prose-img:rounded-xl">
-            {form.cover_image_url && <img src={form.cover_image_url} alt="" className="w-full rounded-xl mb-4" />}
+            {form.cover_image_url && <img loading="lazy" decoding="async" src={form.cover_image_url} alt="" className="w-full rounded-xl mb-4" />}
             {form.excerpt && <p className="text-lg text-muted-foreground italic">{form.excerpt}</p>}
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{form.content_md || "*Pusty wpis…*"}</ReactMarkdown>
           </article>
@@ -252,7 +252,7 @@ function EditPost() {
           <Field label="Okładka wpisu">
             <div className="space-y-2">
               {form.cover_image_url && (
-                <img src={form.cover_image_url} alt="okładka" className="w-full h-32 object-cover rounded-lg border border-border" />
+                <img loading="lazy" decoding="async" src={form.cover_image_url} alt="okładka" className="w-full h-32 object-cover rounded-lg border border-border" />
               )}
               <div className="flex gap-2">
                 <label className="flex-1 inline-flex items-center justify-center gap-2 cursor-pointer chip border border-border hover:border-tomato">

@@ -639,7 +639,7 @@ function ReviewListItem({ review }: { review: any }) {
   return (
     <li className="group rounded-2xl bg-card border border-border p-4 sm:p-5 flex gap-4 transition-all duration-300 hover:border-tomato/40 hover:shadow-md hover:-translate-y-0.5">
       {photoUrl && (
-        <img
+        <img loading="lazy" decoding="async"
           src={photoUrl}
           alt=""
           className="w-20 h-20 rounded-xl object-cover shrink-0 transition-transform duration-500 group-hover:scale-[1.03]"
@@ -1110,7 +1110,7 @@ function AchievementTile({
       >
         <div className="text-2xl mb-1" aria-hidden="true">
           {a.icon_url?.startsWith("http") ? (
-            <img src={a.icon_url} alt="" className="w-6 h-6" />
+            <img loading="lazy" decoding="async" src={a.icon_url} alt="" className="w-6 h-6" />
           ) : (
             (a.icon_url ?? "🏅")
           )}
@@ -1137,7 +1137,7 @@ function AchievementTile({
     >
       <div className="text-3xl shrink-0 opacity-60 grayscale" aria-hidden="true">
         {a.icon_url?.startsWith("http") ? (
-          <img src={a.icon_url} alt="" className="w-8 h-8" />
+          <img loading="lazy" decoding="async" src={a.icon_url} alt="" className="w-8 h-8" />
         ) : (
           (a.icon_url ?? "🏅")
         )}

@@ -323,7 +323,7 @@ export default function FoodMap({ places, onSelect, focusPlaceId, focusTick, que
             );
             const coverSrc = p.avatar_url ?? p.cover_image_url;
             const coverHtml = coverSrc
-              ? `<img src="${escapeHtml(coverSrc)}" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover;flex:0 0 auto;border:1px solid #eee" onerror="this.style.display='none'" />`
+              ? `<img loading="lazy" decoding="async" src="${escapeHtml(coverSrc)}" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover;flex:0 0 auto;border:1px solid #eee" onerror="this.style.display='none'" />`
               : `<div style="width:56px;height:56px;border-radius:12px;background:${color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;flex:0 0 auto">${initials}</div>`;
             marker.bindPopup(
               `<div style="min-width:220px">

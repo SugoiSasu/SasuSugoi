@@ -60,7 +60,7 @@ function Wiersz({
         style={thumb ? undefined : { backgroundColor: meta.color }}
       >
         {thumb ? (
-          <img src={thumb} alt="" aria-hidden="true" className="h-full w-full object-cover" />
+          <img loading="lazy" decoding="async" src={thumb} alt="" aria-hidden="true" className="h-full w-full object-cover" />
         ) : null}
       </span>
       <span className="min-w-0 flex-1">

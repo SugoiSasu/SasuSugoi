@@ -65,7 +65,7 @@ function CoverThumb({
 }) {
   if (url) {
     return (
-      <img
+      <img loading="lazy" decoding="async"
         src={url}
         alt=""
         style={{ width: size, height: size }}
@@ -861,7 +861,7 @@ function PlacePostsTab() {
                 className="bg-card border border-border rounded-2xl p-3 flex items-center gap-3"
               >
                 {p.image_url && (
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={p.image_url}
                     alt=""
                     className="w-20 h-16 object-cover rounded-md shrink-0"
@@ -953,7 +953,7 @@ function PlacePostsTab() {
                   placeholder="https://..."
                 />
                 {form.image_url && (
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={form.image_url}
                     alt=""
                     className="mt-2 w-full max-h-40 object-cover rounded-md"

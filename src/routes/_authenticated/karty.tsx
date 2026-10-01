@@ -773,7 +773,7 @@ function MatchOverlay({
           style={{ backgroundColor: meta.color }}
         >
           {place.avatar_url ? (
-            <img src={place.avatar_url} alt="" aria-hidden="true" className="h-full w-full object-contain p-2" />
+            <img loading="lazy" decoding="async" src={place.avatar_url} alt="" aria-hidden="true" className="h-full w-full object-contain p-2" />
           ) : null}
         </span>
       </div>
