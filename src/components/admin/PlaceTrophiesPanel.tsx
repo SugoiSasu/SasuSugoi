@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, ExternalLink, Loader2, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -26,7 +26,7 @@ const RODZAJE_RECZNE: RodzajTrofeum[] = [
  * Trofea lokalu w edytorze admina: zatwierdzone (reczne), propozycje z AI do
  * zatwierdzenia oraz wygrane z naszego glosowania (tylko do odczytu).
  */
-export function PlaceTrophiesPanel({ placeId }: { placeId: string }) {
+export function PlaceTrophiesPanel({ placeId, autoSearch = false }: { placeId: string; autoSearch?: boolean }) {
   const { data: wiersze, isLoading } = useTrofeaWierszeAdmin(placeId);
   const { data: wszystkie } = useTrofeaLokalu(placeId);
   const dodaj = useDodajTrofeum(placeId);
@@ -60,6 +60,14 @@ export function PlaceTrophiesPanel({ placeId }: { placeId: string }) {
       setSzuka(false);
     }
   }
+
+  const wystartowano = useRef(false);
+  useEffect(() => {
+    if (!autoSearch || wystartowano.current) return;
+    wystartowano.current = true;
+    void szukajAI();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoSearch]);
 
   async function dodajRecznie() {
     if (rodzaj === "inna_nagroda" && !opis.trim()) {

@@ -1,6 +1,7 @@
 import { BackButton } from "@/components/BackButton";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   usePlaces,
@@ -38,6 +39,9 @@ import { useStorageImageUpload } from "@/components/admin/useStorageImageUpload"
 import { PlaceEnrichmentPanel } from "@/components/admin/PlaceEnrichmentPanel";
 
 export const Route = createFileRoute("/_authenticated/admin/places/$id")({
+  // ai=1: wejscie tu zaraz po "Utworz szkic i uzupelnij z AI" - edytor sam
+  // odpala wyszukiwanie danych i trofeow (raz, parametr jest potem zdejmowany).
+  validateSearch: (s: Record<string, unknown>): { ai?: 1 } => (s.ai === 1 || s.ai === "1" ? { ai: 1 } : {}),
   component: EditPlace,
 });
 
@@ -93,6 +97,8 @@ function isValidHttpUrl(s: string): boolean {
 
 function EditPlace() {
   const { id } = Route.useParams();
+  const { ai } = Route.useSearch();
+  const qc = useQueryClient();
   const navigate = useNavigate();
   const isNew = id === "new";
   const { data: places, isLoading } = usePlaces();
@@ -243,6 +249,33 @@ function EditPlace() {
     }
   }
 
+  // Parametr ai zdejmujemy po chwili, zeby odswiezenie strony nie odpalalo (i nie placilo za) wyszukiwania drugi raz;
+  // panele i tak startuja raz na zamontowanie.
+  useEffect(() => {
+    if (ai !== 1 || isNew) return;
+    otworzSekcje("trofea");
+    const tm = setTimeout(() => navigate({ to: "/admin/places/$id", params: { id }, search: {}, replace: true }), 1500);
+    return () => clearTimeout(tm);
+  }, [ai, isNew, id, navigate]);
+
+  // Nowy lokal: szkic tylko z nazwy, potem edytor z automatycznym AI.
+  async function utworzSzkicZAI() {
+    if (form.name.trim().length < 2) {
+      toast.error("Wpisz nazwę lokalu (min. 2 znaki)");
+      return;
+    }
+    try {
+      const nowyId = await save.mutateAsync({ values: { ...form, name: form.name.trim(), is_published: false } });
+      if (!nowyId) throw new Error("Nie udało się utworzyć szkicu");
+      // Lista lokali musi znac nowy lokal, zanim edytor go poszuka - inaczej mignie "Nie znaleziono lokalu".
+      await qc.refetchQueries({ queryKey: ["places"] });
+      toast.success("Szkic utworzony - AI szuka reszty danych");
+      navigate({ to: "/admin/places/$id", params: { id: nowyId }, search: { ai: 1 } });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Nie udało się utworzyć szkicu");
+    }
+  }
+
   if (!isNew && isLoading && !place) {
     return (
       <div className="grid place-items-center py-20">
@@ -332,6 +365,7 @@ function EditPlace() {
 
         {!isNew && hydrated && (
           <PlaceEnrichmentPanel
+            autoStart={ai === 1}
             placeId={id}
             form={form}
             onApply={(patch) => {
@@ -366,6 +400,23 @@ function EditPlace() {
                 className="input"
               />
             </FormField>
+            {isNew && (
+              <div className="space-y-2 rounded-xl border border-navy/30 bg-navy/5 p-3">
+                <p className="text-xs text-muted-foreground">
+                  Wystarczy nazwa. Utworzę szkic (niewidoczny publicznie), a AI od razu poszuka reszty: adresu, opisu,
+                  godzin, menu, cen, logo i trofeów Michelin. Każdą propozycję zatwierdzasz sam.
+                </p>
+                <button
+                  type="button"
+                  onClick={utworzSzkicZAI}
+                  disabled={save.isPending || form.name.trim().length < 2}
+                  className="inline-flex items-center gap-2 rounded-full bg-navy px-4 py-2 text-sm font-semibold text-cream hover:bg-navy/90 disabled:opacity-50"
+                >
+                  {save.isPending ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                  Utwórz szkic i uzupełnij z AI
+                </button>
+              </div>
+            )}
             <FormField label="Kuchnia">
               <select
                 value={form.cuisine}
@@ -667,7 +718,7 @@ function EditPlace() {
 
         {!isNew && (
           <SekcjaEdytora id="trofea" tytul="Trofea i wyróżnienia">
-            <PlaceTrophiesPanel placeId={id} />
+            <PlaceTrophiesPanel placeId={id} autoSearch={ai === 1} />
           </SekcjaEdytora>
         )}
 

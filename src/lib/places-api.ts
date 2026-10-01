@@ -163,7 +163,7 @@ async function syncExtraLocations(placeId: string, extras: PlaceLocationInput[] 
 export function useSavePlace() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, values }: { id?: string; values: PlaceInput }) => {
+    mutationFn: async ({ id, values }: { id?: string; values: PlaceInput }): Promise<string | undefined> => {
       const { extra_locations, ...placeFields } = values;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const payload = placeFields as any;
@@ -181,6 +181,7 @@ export function useSavePlace() {
         placeId = data.id;
       }
       if (placeId) await syncExtraLocations(placeId, extra_locations);
+      return placeId;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["places"] }),
   });

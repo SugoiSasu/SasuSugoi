@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { AlertCircle, Check, ExternalLink, Loader2, RefreshCw, Sparkles, X } from "lucide-react";
@@ -198,10 +198,13 @@ export function PlaceEnrichmentPanel({
   placeId,
   form,
   onApply,
+  autoStart = false,
 }: {
   placeId: string;
   form: PlaceInput;
   onApply: (patch: Partial<PlaceInput>) => void;
+  /** Po utworzeniu szkicu z AI: odpal wyszukiwanie od razu, raz. */
+  autoStart?: boolean;
 }) {
   const { data: wiersz } = usePropozycjaLokalu(placeId);
   const szukaj = useSzukajDanych();
@@ -228,6 +231,14 @@ export function PlaceEnrichmentPanel({
   }, [znacznik]);
 
   const trwa = szukaj.isPending || czyTrwa(wiersz);
+
+  const wystartowano = useRef(false);
+  useEffect(() => {
+    if (!autoStart || wystartowano.current) return;
+    wystartowano.current = true;
+    void start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart]);
 
   async function start(dokladnie = false) {
     try {
