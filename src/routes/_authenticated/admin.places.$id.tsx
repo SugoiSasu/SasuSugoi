@@ -31,6 +31,9 @@ import { DOMYSLNY_PUNKT, czyDomyslnyPunkt, geokodujAdres } from "@/lib/geocode";
 import { punktyKompletnosci } from "@/lib/place-completeness";
 import { NAZWY_POZIOMOW, OPISY_POZIOMOW, formatCena, poziomCeny, wartoscCeny } from "@/lib/price";
 import { PlaceTrophiesPanel } from "@/components/admin/PlaceTrophiesPanel";
+import { napiszOpisLokalu } from "@/lib/place-description.functions";
+import { useTrofeaLokalu } from "@/lib/trophies-api";
+import { podpisTrofeum } from "@/lib/trophies";
 import { SekcjaEdytora, NawigacjaSekcji, otworzSekcje, ustawWszystkie, type Znacznik } from "@/components/admin/EditorSekcje";
 import { MigratePlaceImagesButton } from "@/components/PlaceImageMigration";
 import { MenuItemsEditor } from "@/components/MenuItemsEditor";
@@ -246,6 +249,44 @@ function EditPlace() {
       navigate({ to: "/admin/places" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Błąd zapisu");
+    }
+  }
+
+  // Opis z AI na podstawie calego formularza + trofeow (bez szukania w sieci).
+  const callNapiszOpis = useServerFn(napiszOpisLokalu);
+  const { data: trofeaLokalu } = useTrofeaLokalu(isNew ? undefined : id);
+  const [piszeOpis, setPiszeOpis] = useState(false);
+  async function napiszOpis() {
+    setPiszeOpis(true);
+    try {
+      const dni: Record<string, string> = { mon: "pn", tue: "wt", wed: "śr", thu: "czw", fri: "pt", sat: "sob", sun: "nd" };
+      const godziny = Object.entries(form.opening_hours ?? {})
+        .filter(([, v]) => v && (v as { open?: string }).open)
+        .map(([k, v]) => `${dni[k] ?? k} ${(v as { open: string }).open}-${(v as { close: string }).close}`)
+        .join(", ");
+      const menu = (form.menu_items ?? []).flatMap((k) => k.items.map((i) => i.name)).filter(Boolean).slice(0, 25);
+      const poziom = poziomCeny(form.price_range);
+      const r = await callNapiszOpis({
+        data: {
+          nazwa: form.name,
+          kuchnia: form.cuisine,
+          dzielnica: form.district ?? "",
+          adres: form.address,
+          poziomCen: poziom ? `${NAZWY_POZIOMOW[poziom]} (danie główne ${OPISY_POZIOMOW[poziom].toLowerCase()})` : "",
+          naWynos: !!form.has_takeaway,
+          bezBarier: !!form.wheelchair_accessible,
+          godziny,
+          menu,
+          trofea: (trofeaLokalu ?? []).map((x) => podpisTrofeum(x)),
+          stary: form.description,
+        },
+      });
+      setForm((f) => ({ ...f, description: r.opis }));
+      toast.success("Opis napisany - przeczytaj i popraw, jeśli trzeba");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Nie udało się napisać opisu");
+    } finally {
+      setPiszeOpis(false);
     }
   }
 
@@ -498,6 +539,21 @@ function EditPlace() {
                 className="input"
               />
             </FormField>
+            <div className="-mt-1 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={napiszOpis}
+                disabled={piszeOpis || form.name.trim().length < 2}
+                className="inline-flex items-center gap-2 rounded-full bg-navy px-4 py-2 text-sm font-semibold text-cream hover:bg-navy/90 disabled:opacity-50"
+              >
+                {piszeOpis ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                {piszeOpis ? "Piszę…" : form.description.trim() ? "Przepisz opis z AI" : "Napisz opis z AI"}
+              </button>
+              <span className="text-xs text-muted-foreground">
+                Na podstawie tego, co lokal ma w formularzu: kuchnia, dzielnica, ceny, godziny, menu i trofea. Najpierw
+                zatwierdź dane z wyszukiwania, żeby opis je znał. Nadpisuje obecny opis.
+              </span>
+            </div>
             <FormField label="Adres">
               <input
                 required
