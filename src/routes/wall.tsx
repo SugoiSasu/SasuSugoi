@@ -37,7 +37,7 @@ import {
   useToggleSave,
   type WallItem,
 } from "@/lib/wall-api";
-import { usePlaces, usePlaceRatingsMap, type Place } from "@/lib/places-api";
+import { usePlaces, usePlacesWithMenus, usePlaceRatingsMap, type Place } from "@/lib/places-api";
 import { useMyFollowedPlaceIds, useIsFollowing, useToggleFollow } from "@/lib/follows-api";
 import { useFriendFavoriteCounts } from "@/lib/favorites-api";
 import { badgesLabel } from "@/lib/plural-pl";
@@ -531,11 +531,11 @@ function QuickPostBar() {
 }
 
 function CreateListModal({ onClose }: { onClose: () => void }) {
-  const { data: places } = usePlaces();
+  const [query, setQuery] = useState("");
+  const { data: places } = usePlacesWithMenus(query.trim().length > 0);
   const create = useCreateList();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [query, setQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const { results } = searchPlaces(places ?? [], query);
   const selectedPlaces = (places ?? []).filter((p) => selectedIds.includes(p.id));

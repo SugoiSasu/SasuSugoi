@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  usePlaces,
+  usePlacesWithMenus,
   useSavePlace,
   type PlaceInput,
   type PlaceLocationInput,
@@ -106,7 +106,7 @@ function EditPlace() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const isNew = id === "new";
-  const { data: places, isLoading } = usePlaces();
+  const { data: places, isLoading } = usePlacesWithMenus(true); // edytor potrzebuje menu
   const place = isNew ? null : ((places ?? []).find((p) => p.id === id) ?? null);
   const { data: cuisines } = useCuisines();
   const cuisineNames = useMemo(

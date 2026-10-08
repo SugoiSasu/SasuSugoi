@@ -10,6 +10,7 @@ import {
   usePlaces,
   usePlaceRatingsMap,
   placesQueryOptions,
+  usePlacesWithMenus,
   placeRatingsMapQueryOptions,
   isPlaceOpenNow,
   type Place,
@@ -95,7 +96,9 @@ function Index() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const { data: places, isLoading } = usePlaces();
+  // Menu (najciezsza kolumna) dociagamy dopiero, gdy ktos wpisze fraze - wyszukiwarka
+  // szuka tez po daniach. Bez frazy lista jest lekka.
+  const { data: places, isLoading } = usePlacesWithMenus(debouncedQuery.trim().length > 0);
   const { data: ratings } = usePlaceRatingsMap();
   const { user } = useUser();
   const { data: friendRecs } = useFriendRecommendations();

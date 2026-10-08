@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AlertCircle, ArrowRight, Loader2, Sparkles, Square } from "lucide-react";
-import { usePlaces, type Place } from "@/lib/places-api";
+import { usePlacesWithMenus, type Place } from "@/lib/places-api";
 import { szukajDanychLokalu } from "@/lib/place-enrichment.functions";
 import { czyTrwa, usePropozycjeLokali, type WierszPropozycji } from "@/lib/place-enrichment-api";
 
@@ -57,7 +57,7 @@ function Status({ w, wKolejce }: { w: WierszPropozycji | undefined; wKolejce: bo
 }
 
 export function PlaceEnrichmentBatch() {
-  const { data: places, isLoading } = usePlaces();
+  const { data: places, isLoading } = usePlacesWithMenus(true);
   const { data: propozycje } = usePropozycjeLokali();
   const szukaj = useServerFn(szukajDanychLokalu);
   const qc = useQueryClient();

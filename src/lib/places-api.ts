@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient, queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -107,22 +108,59 @@ export function placesQueryOptions() {
     // immediately: the mutations below already invalidateQueries on success.
     staleTime: 5 * 60_000,
     queryFn: async (): Promise<Place[]> => {
+      // BEZ menu_items: to ok. polowy payloadu calej listy (ok. 80 z 175 KB), a
+      // potrzebne jest tylko na stronie lokalu, w wyszukiwarce po daniach, na
+      // Kartach i w adminie - te biora je osobno (usePlacesWithMenus). Nowa kolumna
+      // w tabeli places = dopisz ja tutaj.
       const { data, error } = await supabase
         .from("places")
-        .select("*, locations:place_locations(*)")
+        .select(`${PLACES_LITE_COLUMNS}, locations:place_locations(*)`)
         .order("sort_order", { ascending: true })
         .order("created_at", { ascending: true });
       if (error) throw error;
       return ((data ?? []) as unknown as Place[]).map((p) => ({
         ...p,
+        menu_items: null,
         locations: (p.locations ?? []).slice().sort((a, b) => a.sort_order - b.sort_order),
       }));
     },
   });
 }
 
+const PLACES_LITE_COLUMNS =
+  "id,name,cuisine,description,rating,address,lat,lng,reel_url,cover_image_url,sort_order,created_at,updated_at,menu_url,menu_image_url,slug,promo_label,promo_active,phone,website,price_range,has_takeaway,wheelchair_accessible,district,opening_hours,is_published,avatar_url,avatar_cutout_enabled";
+
 export function usePlaces() {
   return useQuery(placesQueryOptions());
+}
+
+/** id -> menu (osobne zapytanie, bo menu to najciezsza kolumna listy lokali). */
+export function placeMenusQueryOptions() {
+  return queryOptions({
+    queryKey: ["place-menus"],
+    staleTime: 5 * 60_000,
+    queryFn: async (): Promise<Map<string, MenuCategory[] | null>> => {
+      const { data, error } = await supabase.from("places").select("id, menu_items");
+      if (error) throw error;
+      return new Map(((data ?? []) as { id: string; menu_items: unknown }[]).map((r) => [r.id, r.menu_items as MenuCategory[] | null]));
+    },
+  });
+}
+
+/**
+ * Lista lokali z dolaczonym menu. `enabled=false` = jak zwykle usePlaces() (bez
+ * menu, tanio); `true` dociaga menu osobnym zapytaniem i skleja. Uzywac tam, gdzie
+ * menu jest naprawde potrzebne: szukanie po daniach, Karty, admin.
+ */
+export function usePlacesWithMenus(enabled = true) {
+  const places = usePlaces();
+  const menus = useQuery({ ...placeMenusQueryOptions(), enabled });
+  const data = useMemo(() => {
+    if (!places.data) return places.data;
+    if (!enabled || !menus.data) return places.data;
+    return places.data.map((p) => ({ ...p, menu_items: menus.data.get(p.id) ?? null }));
+  }, [places.data, menus.data, enabled]);
+  return { ...places, data, menusLoading: enabled && menus.isLoading };
 }
 
 async function syncExtraLocations(placeId: string, extras: PlaceLocationInput[] | undefined) {
@@ -183,7 +221,10 @@ export function useSavePlace() {
       if (placeId) await syncExtraLocations(placeId, extra_locations);
       return placeId;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["places"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["places"] });
+      qc.invalidateQueries({ queryKey: ["place-menus"] });
+    },
   });
 }
 

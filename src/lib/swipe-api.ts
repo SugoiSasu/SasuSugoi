@@ -2,7 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/lib/use-auth";
-import { usePlaces } from "@/lib/places-api";
+import { usePlacesWithMenus } from "@/lib/places-api";
 import { useMyVisitStatuses } from "@/lib/visits-api";
 import { useMyFavoritePlaceIds } from "@/lib/favorites-api";
 
@@ -114,7 +114,7 @@ function seededShuffle<T>(items: T[], seed: string): T[] {
  * across re-renders/refetches but varies day to day. */
 export function useSwipeDeck(shuffleKey = 0) {
   const { user } = useUser();
-  const placesQ = usePlaces();
+  const placesQ = usePlacesWithMenus(true); // Karty pokazuja pierwsza pozycje z menu
   const statusesQ = useMyVisitStatuses();
   const favIdsQ = useMyFavoritePlaceIds();
   const skippedQ = useSkippedPlaceIds();

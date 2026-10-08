@@ -5,7 +5,7 @@ import { OpenStatus, isNewPlace } from "@/components/OpenStatus";
 import FoodMap, { type MapBounds } from "@/components/FoodMap";
 import { useMyFavoritePlaceIds, useFriendFavoriteCounts } from "@/lib/favorites-api";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { usePlaces, usePlaceRatingsMap, isPlaceOpenNow, type Place } from "@/lib/places-api";
+import { usePlacesWithMenus, usePlaceRatingsMap, isPlaceOpenNow, type Place } from "@/lib/places-api";
 import { useCuisines } from "@/lib/cuisines-api";
 import { searchPlaces } from "@/lib/place-search";
 import { useUserLocation, haversineKm, formatDistancePl } from "@/lib/geo";
@@ -38,10 +38,11 @@ export const Route = createFileRoute("/mapa")({
 const COVERAGE_KM = 20;
 
 function MapaPage() {
-  const { data: places } = usePlaces();
+  const [query, setQuery] = useState("");
+  // Menu tylko przy szukaniu (wyszukiwarka obejmuje dania).
+  const { data: places } = usePlacesWithMenus(query.trim().length > 0);
   const { data: ratings } = usePlaceRatingsMap();
   const { data: cuisines } = useCuisines();
-  const [query, setQuery] = useState("");
   const [cuisine, setCuisine] = useState<string | null>(null);
   const [minRating, setMinRating] = useState(0);
   const [openNow, setOpenNow] = useState(false);

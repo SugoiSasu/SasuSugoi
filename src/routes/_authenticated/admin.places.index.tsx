@@ -4,7 +4,7 @@ import { brakiLokalu } from "@/lib/place-completeness";
 import { useWszystkieTrofea } from "@/lib/trophies-api";
 import { TrophyIcon } from "@/components/TrophyIcon";
 import { podpisTrofeum } from "@/lib/trophies";
-import { usePlaces, usePlaceRatingsMap, useDeletePlace, type Place } from "@/lib/places-api";
+import { usePlaces, usePlacesWithMenus, usePlaceRatingsMap, useDeletePlace, type Place } from "@/lib/places-api";
 import {
   useCuisines,
   useSaveCuisine,
@@ -141,7 +141,7 @@ function AdminPlaces() {
  * this bar exists rather than just showing a total.
  */
 function PlacesStatBar() {
-  const { data: places, isLoading } = usePlaces();
+  const { data: places, isLoading } = usePlacesWithMenus(true);
   const { data: ratings } = usePlaceRatingsMap();
   const { data: cuisines } = useCuisines();
 
@@ -186,7 +186,7 @@ function PlacesStatBar() {
 }
 
 function PlacesTab() {
-  const { data: places, isLoading } = usePlaces();
+  const { data: places, isLoading } = usePlacesWithMenus(true);
   const { data: ratings } = usePlaceRatingsMap();
   const del = useDeletePlace();
   const [confirmDelete, setConfirmDelete] = useState<Place | null>(null);
