@@ -49,7 +49,7 @@ function AuthConfirmPage() {
         return;
       }
       setStatus("success");
-      const target = redirectTo && redirectTo.startsWith("/") ? redirectTo : "/profile";
+      const target = redirectTo && redirectTo.startsWith("/") ? redirectTo : "/";
       setTimeout(() => navigate({ to: target }), 1200);
     }).catch((err) => {
       // A rejected promise (network hiccup, a GoTrue internal lock conflict, etc.)

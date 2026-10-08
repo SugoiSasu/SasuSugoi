@@ -42,9 +42,11 @@ function AuthPage() {
   // here to log in first, then wants them back on /i/$token.
   const redirectTo = (() => {
     // Na serwerze nie ma window (to rozwalalo SSR strony logowania - blad React #419).
-    if (typeof window === "undefined") return "/profile";
+    if (typeof window === "undefined") return "/";
     const raw = new URLSearchParams(window.location.search).get("redirect");
-    return raw && raw.startsWith("/") ? raw : "/profile";
+    // Domyslnie strona glowna (nie profil): nowy uzytkownik ma od razu zobaczyc lokale,
+    // a uzupelnianie profilu przypomina mail po dobie.
+    return raw && raw.startsWith("/") ? raw : "/";
   })();
 
   useEffect(() => {

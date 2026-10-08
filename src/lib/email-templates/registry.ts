@@ -18,7 +18,9 @@ export interface TemplateEntry {
  *   // then add to TEMPLATES: 'welcome': welcomeTemplate
  */
 import { template as collabConfirmation } from './collab-confirmation'
+import { template as profileReminder } from './profile-reminder'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'collab-confirmation': collabConfirmation,
+  'profile-reminder': profileReminder,
 }
