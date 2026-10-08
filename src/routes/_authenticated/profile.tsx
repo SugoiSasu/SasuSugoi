@@ -291,9 +291,12 @@ function ProfilePage() {
               )}
             </h1>
             {handleOf({ username: username || profile?.username }) ? (
-              <p className="text-sm text-muted-foreground truncate">
-                {handleOf({ username: username || profile?.username })}
-              </p>
+              // Bez imienia naglowek i tak pokazuje @nick - drugi raz pod nim bylby powtorzeniem.
+              (displayName || profile?.display_name)?.trim() ? (
+                <p className="text-sm text-muted-foreground truncate">
+                  {handleOf({ username: username || profile?.username })}
+                </p>
+              ) : null
             ) : (
               // No signup path sets a nick, so a fresh account lands here without one.
               <button
