@@ -134,7 +134,7 @@ export const Route = createFileRoute("/k/$id")({
   errorComponent: ({ error }) => (
     <div className="max-w-2xl mx-auto py-20 px-6 text-center">
       <h1 className="font-display text-3xl mb-2">Coś poszło nie tak</h1>
-      <p className="text-muted-foreground">{error.message}</p>
+      <p className="text-muted-foreground">{error instanceof Error ? error.message : String(error)}</p>
     </div>
   ),
   notFoundComponent: () => {

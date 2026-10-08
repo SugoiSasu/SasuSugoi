@@ -148,7 +148,9 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error: rawError, reset }: { error: unknown; reset: () => void }) {
+  // Typ bledu w routerze to teraz unknown/Error zaleznie od wersji - normalizujemy.
+  const error = rawError instanceof Error ? rawError : new Error(String(rawError));
   console.error(error);
   const router = useRouter();
   useEffect(() => {

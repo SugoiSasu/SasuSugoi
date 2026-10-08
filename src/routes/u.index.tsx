@@ -38,7 +38,7 @@ export const Route = createFileRoute("/u/")({
       <main id="main-content" className="min-h-dvh grid place-items-center p-4">
         <div className="text-center">
           <p className="text-muted-foreground mb-3">Nie udało się załadować rankingu.</p>
-          <p className="text-xs text-muted-foreground/70 mb-4">{error.message}</p>
+          <p className="text-xs text-muted-foreground/70 mb-4">{error instanceof Error ? error.message : String(error)}</p>
           <button
             onClick={() => {
               router.invalidate();

@@ -41,6 +41,8 @@ function AuthPage() {
   // Optional ?redirect=/some/path - e.g. an invite link sends the visitor
   // here to log in first, then wants them back on /i/$token.
   const redirectTo = (() => {
+    // Na serwerze nie ma window (to rozwalalo SSR strony logowania - blad React #419).
+    if (typeof window === "undefined") return "/profile";
     const raw = new URLSearchParams(window.location.search).get("redirect");
     return raw && raw.startsWith("/") ? raw : "/profile";
   })();
