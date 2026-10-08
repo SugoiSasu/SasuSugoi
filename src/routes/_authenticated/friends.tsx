@@ -369,7 +369,7 @@ function TabsBar({ tab, onChange }: { tab: TabKey; onChange: (t: TabKey) => void
     { key: "invite", label: "Zaproś", icon: <Share2 size={14} /> },
   ];
   return (
-    <div className="-mx-4 px-4 flex-1 min-w-0 overflow-x-auto">
+    <div className="-mx-3 px-3 sm:-mx-4 sm:px-4 flex-1 min-w-0 overflow-x-auto">
       <div className="flex gap-2 min-w-max">
         {tabs.map((t) => (
           <button
