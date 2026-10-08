@@ -8,7 +8,7 @@ import { Loader2, Mail, ArrowLeft, Apple, Eye, EyeOff } from "lucide-react";
 import { TERMS_CONSENT_VERSION } from "@/lib/consent";
 import { passwordStrengthError } from "@/lib/password";
 import { requestPasswordReset } from "@/lib/password-reset.functions";
-import { TurnstileWidget } from "@/components/TurnstileWidget";
+import { TurnstileWidget, TURNSTILE_SITE_KEY } from "@/components/TurnstileWidget";
 
 export const Route = createFileRoute("/auth/")({
   head: () => ({
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/auth/")({
   component: AuthPage,
 });
 
-const captchaRequired = Boolean(import.meta.env.VITE_TURNSTILE_SITE_KEY);
+const captchaRequired = Boolean(TURNSTILE_SITE_KEY);
 
 function AuthPage() {
   const navigate = useNavigate();

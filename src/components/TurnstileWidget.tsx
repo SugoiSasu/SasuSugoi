@@ -1,7 +1,16 @@
 import { useEffect, useRef } from "react";
 
 const SCRIPT_SRC = "https://challenges.cloudflare.com/turnstile/v0/api.js";
-const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined;
+/**
+ * Klucz witryny Turnstile jest PUBLICZNY z zalozenia (widac go w kazdej stronie
+ * z widzetem; sekretny klucz stoi tylko w Supabase). Wartosc domyslna w kodzie
+ * chroni przed awaria z 2026-10-08: zmiennej VITE_TURNSTILE_SITE_KEY zabraklo
+ * w buildzie Vercela, widzet sie nie renderowal, a Supabase (captcha wlaczona)
+ * odrzucal kazda rejestracje i logowanie ("no captcha_token found").
+ */
+export const TURNSTILE_SITE_KEY: string =
+  (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined) || "0x4AAAAAAAEWtZP7PUxXw7dcS";
+const SITE_KEY = TURNSTILE_SITE_KEY;
 
 declare global {
   interface Window {
