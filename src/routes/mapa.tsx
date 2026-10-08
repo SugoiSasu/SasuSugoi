@@ -13,6 +13,9 @@ import { useUser } from "@/lib/use-auth";
 import { pluralPl } from "@/lib/plural-pl";
 import { cuisineMeta } from "@/data/places";
 import { formatCena } from "@/lib/price";
+import { TrophyIcon } from "@/components/TrophyIcon";
+import { useWszystkieTrofea } from "@/lib/trophies-api";
+import { podpisTrofeum, type Trofeum } from "@/lib/trophies";
 
 export const Route = createFileRoute("/mapa")({
   head: () => ({
@@ -42,6 +45,7 @@ function MapaPage() {
   // Menu tylko przy szukaniu (wyszukiwarka obejmuje dania).
   const { data: places } = usePlacesWithMenus(query.trim().length > 0);
   const { data: ratings } = usePlaceRatingsMap();
+  const { mapa: trofeaMapa } = useWszystkieTrofea();
   const { data: cuisines } = useCuisines();
   const [cuisine, setCuisine] = useState<string | null>(null);
   const [minRating, setMinRating] = useState(0);
@@ -518,13 +522,13 @@ function MapaPage() {
                   paskiem na iPhonie (zrzuty 2026-09-28, dwa razy). */}
               <div className="pointer-events-none fixed inset-x-0 bottom-[var(--pz-tabbar-h,4.5rem)] z-30 px-4 pb-3 lg:hidden">
                 <div className="pointer-events-auto mx-auto max-w-md">
-                  <SelectedCard place={selected} stat={selRating} dist={distanceFor(selected)} />
+                  <SelectedCard place={selected} stat={selRating} dist={distanceFor(selected)} trofeum={trofeaMapa.get(selected.id)?.[0] ?? null} />
                 </div>
               </div>
               {/* Desktop: floating panel next to the map */}
               <div className="pointer-events-none absolute right-4 top-4 hidden w-80 lg:block">
                 <div className="pointer-events-auto">
-                  <SelectedCard place={selected} stat={selRating} dist={distanceFor(selected)} />
+                  <SelectedCard place={selected} stat={selRating} dist={distanceFor(selected)} trofeum={trofeaMapa.get(selected.id)?.[0] ?? null} />
                 </div>
               </div>
             </>
@@ -536,6 +540,7 @@ function MapaPage() {
 }
 
 function SelectedCard({
+  trofeum = null,
   place,
   stat,
   dist,
@@ -543,6 +548,7 @@ function SelectedCard({
   place: Place;
   stat?: { avg: number; count: number };
   dist?: number | null;
+  trofeum?: Trofeum | null;
 }) {
   // Skrot najwazniejszych cech lokalu. Kazda plakietka pojawia sie tylko, gdy
   // faktycznie cos znaczy - "Na wynos: nie" nie jest informacja, ktorej ktos
@@ -606,6 +612,12 @@ function SelectedCard({
         <p className="truncate text-xs text-muted-foreground">
           {[place.cuisine, place.district, formatCena(place.price_range)].filter(Boolean).join(" • ")}
         </p>
+        {trofeum && (
+          <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs font-bold" title={podpisTrofeum(trofeum)}>
+            <TrophyIcon trofeum={trofeum} size={16} />
+            <span className="truncate">{podpisTrofeum(trofeum)}</span>
+          </p>
+        )}
         <p className="mt-0.5 flex items-center gap-1 text-xs font-semibold">
           {stat ? (
             <>

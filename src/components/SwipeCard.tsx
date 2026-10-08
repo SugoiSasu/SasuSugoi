@@ -12,6 +12,8 @@ import { imieZnajomego, type ZnajomyLite } from "@/lib/karty-api";
 import { cechyLokalu, liniaZnajomych, pierwszaPozycjaMenu } from "@/lib/karty-utils";
 import { formatDistancePl } from "@/lib/geo";
 import { formatCena } from "@/lib/price";
+import { TrophyIcon } from "@/components/TrophyIcon";
+import { podpisTrofeum, type Trofeum } from "@/lib/trophies";
 
 const SWIPE_THRESHOLD = 120;
 const UP_THRESHOLD = 130;
@@ -41,6 +43,7 @@ export function SwipeCard({
   rating,
   friendSignal = null,
   friendsWant = [],
+  trofeum = null,
   distanceKm = null,
   expanded = false,
   onToggleExpanded,
@@ -55,6 +58,8 @@ export function SwipeCard({
   friendSignal?: FriendSignal;
   /** Friends who marked this place "chcę odwiedzić" - avatars + names on the card. */
   friendsWant?: ZnajomyLite[];
+  /** Najwyzsze trofeum lokalu (Michelin / Warte poZarcia), jesli jest. */
+  trofeum?: Trofeum | null;
   /** Distance from the user, when they shared their location. */
   distanceKm?: number | null;
   expanded?: boolean;
@@ -265,6 +270,12 @@ export function SwipeCard({
                   <Star size={11} className="fill-mustard text-mustard" aria-hidden="true" />
                   {rating.avg.toFixed(1).replace(".", ",")}
                   <span className="font-semibold text-cream/70">({rating.count})</span>
+                </span>
+              )}
+              {trofeum && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-cream/95 px-2.5 py-1 text-[11px] font-extrabold text-navy">
+                  <TrophyIcon trofeum={trofeum} size={16} />
+                  {podpisTrofeum(trofeum)}
                 </span>
               )}
               {formatCena(place.price_range) && (

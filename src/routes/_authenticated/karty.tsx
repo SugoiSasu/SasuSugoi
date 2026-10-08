@@ -8,6 +8,7 @@ import { usePlaceRatingsMap } from "@/lib/places-api";
 import { useFriendFavoriteCounts, useToggleFavorite } from "@/lib/favorites-api";
 import { useFriendRecommendCounts } from "@/lib/reviews-api";
 import { useMyProfile } from "@/lib/profile-api";
+import { useWszystkieTrofea } from "@/lib/trophies-api";
 import { useProponujWyjscie, useZnajomiChcacy, imieZnajomego, type ZnajomyLite } from "@/lib/karty-api";
 import {
   PROMIENIE_KM,
@@ -133,6 +134,7 @@ function KartyPage() {
   const { data: friendVisitedCounts } = useFriendVisitedCounts();
   const { data: friendRecommendCounts } = useFriendRecommendCounts();
   const { data: znajomiChca } = useZnajomiChcacy();
+  const { mapa: trofeaMapa } = useWszystkieTrofea();
   const lok = useLokalizacjaNaZadanie();
 
   // One badge, not three: a friend's opinion ("poleca") is stronger proof than
@@ -556,6 +558,7 @@ function KartyPage() {
                         rating={ratings?.get(place.id)}
                         friendSignal={topFriendSignal(place.id)}
                         friendsWant={znajomiChca?.get(place.id) ?? []}
+                        trofeum={trofeaMapa.get(place.id)?.[0] ?? null}
                         distanceKm={odleglosci.get(place.id) ?? null}
                         expanded={idxFromTop === 0 && rozwinieteId === place.id}
                         onToggleExpanded={() => setRozwinieteId((id) => (id === place.id ? null : place.id))}
