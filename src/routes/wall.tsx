@@ -1425,8 +1425,10 @@ function WallRail() {
     .sort((a, b) => b.friends - a.friends)
     .slice(0, 3);
 
+  // Prog 1250 px zamiast xl (1280): okno 1280 px na Windowsie ma ok. 15 px mniej przez
+  // belke przewijania, wiec panel znikal tam, gdzie na Macu byl widoczny.
   return (
-    <aside className="sticky top-6 hidden w-72 shrink-0 flex-col gap-4 xl:flex">
+    <aside className="sticky top-6 hidden w-72 shrink-0 flex-col gap-4 min-[1250px]:flex">
       {liveNow.length > 0 && (
         <div className="rounded-3xl bg-navy p-5 text-cream">
           <div className="mb-3 text-[10px] font-extrabold uppercase tracking-widest text-cream/50">

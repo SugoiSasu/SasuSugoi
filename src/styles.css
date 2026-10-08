@@ -153,6 +153,11 @@
 @layer base {
   * { border-color: var(--color-border); }
   html { scroll-behavior: smooth; }
+  /* Belka przewijania wygladala inaczej na kazdym systemie: Windows rysowal
+     szeroka, stala (ok. 15 px, zjadala szerokosc i przesuwala progi ukladu), Mac
+     przezroczysta nakladkowa. Cienka, subtelna belka (w kolorze tekstu z
+     przezroczystoscia, wiec dziala w obu motywach) zbliza oba. */
+  * { scrollbar-width: thin; scrollbar-color: color-mix(in oklab, currentColor 30%, transparent) transparent; }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
