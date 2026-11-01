@@ -592,7 +592,7 @@
   .input:focus { border-color: var(--tomato); }
 
   .prose { line-height: 1.7; }
-  .prose h1, .prose h2, .prose h3 { font-family: var(--font-display); letter-spacing: -0.02em; margin-top: 1.5em; margin-bottom: 0.5em; }
+  .prose h1, .prose h2, .prose h3 { color: var(--foreground); font-family: var(--font-display); letter-spacing: -0.02em; margin-top: 1.5em; margin-bottom: 0.5em; }
   .prose h1 { font-size: 2rem; }
   .prose h2 { font-size: 1.5rem; }
   .prose h3 { font-size: 1.2rem; }

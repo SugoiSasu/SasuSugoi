@@ -165,7 +165,7 @@ export function AppSidebar() {
 
       <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto">
         <div>
-          <nav className={sectionPanel}>
+          <nav aria-label="Główne" className={sectionPanel}>
             {coreItems.map(({ to, label, icon: Icon, ...rest }) => (
               <Link
                 key={to}
@@ -187,7 +187,7 @@ export function AppSidebar() {
             <span className="h-px flex-1 bg-gradient-to-r from-cream/15 to-transparent" />
           </div>
 
-          <nav className={sectionPanel}>
+          <nav aria-label="Społeczność" className={sectionPanel}>
             {socialItems.map(({ to, label, icon: Icon, exact }) => (
               <Link
                 key={to}
