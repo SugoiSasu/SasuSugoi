@@ -23,6 +23,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const FUNC_DIR = join(process.cwd(), ".vercel/output/functions/__server.func");
 const SSR_PATH = join(FUNC_DIR, "_ssr/ssr.mjs");
@@ -59,6 +60,14 @@ function patchSsrExports() {
 }
 
 function patchCircularCreateMiddleware() {
+  if (!existsSync(SSR2_PATH)) {
+    // Nowszy bundler scala moduly i cykl createMiddleware znika. Zamiast latac, sprawdzamy,
+    // ze scalony ssr.mjs faktycznie sie laduje (blad TDZ wywalilby produkcje z 500).
+    return import(pathToFileURL(SSR_PATH).href).then(
+      () => console.log("[fix-nitro-vercel-ssr] ssr2.mjs nie istnieje, ssr.mjs laduje sie poprawnie - lata niepotrzebna"),
+      (e) => { throw new Error("[fix-nitro-vercel-ssr] brak ssr2.mjs i ssr.mjs sie nie laduje: " + e.message); },
+    );
+  }
   let content = readFileSync(SSR2_PATH, "utf-8");
   const lazyMarker = "function __lazyDefaultCsrfMiddleware()";
   if (content.includes(lazyMarker)) {
@@ -114,4 +123,4 @@ function patchCircularCreateMiddleware() {
 }
 
 patchSsrExports();
-patchCircularCreateMiddleware();
+await patchCircularCreateMiddleware();
