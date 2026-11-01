@@ -31,7 +31,7 @@ import { useWszystkieTrofea } from "@/lib/trophies-api";
 import { podpisTrofeum, type Trofeum } from "@/lib/trophies";
 import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
 import { OpenStatus, isNewPlace } from "@/components/OpenStatus";
-import { readableTextClass } from "@/lib/readable-text";
+import { readableFill, readableTextClass } from "@/lib/readable-text";
 import { HomeSocialBand } from "@/components/HomeSocialBand";
 import { RandomPlaceCard } from "@/components/RandomPlaceCard";
 import { RecentlyViewedStrip } from "@/components/RecentlyViewedStrip";
@@ -589,8 +589,8 @@ const DiscoverCard = memo(function DiscoverCard({
             </span>
           )}
           <span
-            className={`absolute bottom-3 left-3 chip shadow-sm ${readableTextClass(meta.color)}`}
-            style={{ backgroundColor: meta.color }}
+            className={`absolute bottom-3 left-3 chip shadow-sm ${readableTextClass(readableFill(meta.color))}`}
+            style={{ backgroundColor: readableFill(meta.color) }}
           >
             {meta.emoji} {place.cuisine}
           </span>

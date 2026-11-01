@@ -9,7 +9,7 @@ import type { Place, OpeningHours } from "@/lib/places-api";
 
 import { cuisineMeta, CUISINES } from "@/data/places";
 import { recordPlaceView } from "@/lib/recently-viewed";
-import { readableTextClass } from "@/lib/readable-text";
+import { readableFill, readableTextClass } from "@/lib/readable-text";
 import {
   ArrowLeft, Star, MapPin, Loader2, BookOpen, ExternalLink, Home,
   Map as MapIcon, Heart, Play, Navigation, Phone, Globe, Clock, Wallet,
@@ -176,7 +176,7 @@ function PlaceNotFound({ id }: { id: string }) {
             {CUISINES.map((c) => {
               const meta = cuisineMeta(c);
               return (
-                <Link key={c} to="/" hash="mapa" className={`chip ${readableTextClass(meta.color)}`} style={{ backgroundColor: meta.color }}>
+                <Link key={c} to="/" hash="mapa" className={`chip ${readableTextClass(readableFill(meta.color))}`} style={{ backgroundColor: readableFill(meta.color) }}>
                   <span>{meta.emoji}</span> {c}
                 </Link>
               );

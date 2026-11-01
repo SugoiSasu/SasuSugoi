@@ -175,7 +175,7 @@ function AuthPage() {
   return (
     <main id="main-content" className="min-h-dvh bg-terrazzo-navy text-cream flex flex-col items-center justify-center p-4">
       <div className="absolute top-6 left-6"><BackButton to="/" label="Strona główna" /></div>
-      <div className="w-full max-w-md bg-cream text-navy rounded-3xl p-8 shadow-2xl">
+      <div className="w-full max-w-md bg-cream text-navy rounded-3xl p-8 shadow-2xl [--muted-foreground:#5b6275]">
         <h1 className="font-display text-3xl mb-1">
           {mode === "signin" ? "Witaj poŻeraczu!" : mode === "signup" ? "Dołącz do poŻeramy" : "Zresetuj hasło"}
         </h1>

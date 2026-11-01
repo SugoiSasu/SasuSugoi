@@ -54,3 +54,26 @@ export function readableTextClass(fill: string | null | undefined): string {
   if (!rgb) return "text-cream";
   return contrastRatio(CREAM, rgb) >= contrastRatio(NAVY, rgb) ? "text-cream" : "text-navy";
 }
+
+/**
+ * Fill for a text label: `fill` itself when cream or navy already reach 4.5:1
+ * on it, otherwise the fill darkened toward navy until cream does. Mid-tone
+ * oranges (#e35d2e, #d4582a) sit between the two text colours and fail both,
+ * so the label colour cannot fix them - the fill has to move.
+ */
+export function readableFill(fill: string | null | undefined): string | undefined {
+  if (!fill) return undefined;
+  const rgb = hexToRgb(fill);
+  if (!rgb) return fill;
+  const best = (c: RGB) => Math.max(contrastRatio(CREAM, c), contrastRatio(NAVY, c));
+  if (best(rgb) >= 4.5) return fill;
+  let c: RGB = rgb;
+  for (let i = 0; i < 20 && contrastRatio(CREAM, c) < 4.5; i++) {
+    c = [
+      Math.round(c[0] + (NAVY[0] - c[0]) * 0.08),
+      Math.round(c[1] + (NAVY[1] - c[1]) * 0.08),
+      Math.round(c[2] + (NAVY[2] - c[2]) * 0.08),
+    ];
+  }
+  return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+}
