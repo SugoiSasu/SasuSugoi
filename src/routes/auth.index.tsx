@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Loader2, Mail, ArrowLeft, Apple, Eye, EyeOff } from "lucide-react";
 import { TERMS_CONSENT_VERSION } from "@/lib/consent";
 import { passwordStrengthError } from "@/lib/password";
+import { isNativeApp, listenForNativeAuth, startNativeOAuth } from "@/lib/native-auth";
 import { requestPasswordReset } from "@/lib/password-reset.functions";
 import { TurnstileWidget, TURNSTILE_SITE_KEY } from "@/components/TurnstileWidget";
 
@@ -151,6 +152,17 @@ function AuthPage() {
     }
   }
 
+  // W aplikacji natywnej logowanie wraca z przegladarki systemowej linkiem pl.pozeramy.app://auth.
+  useEffect(() => {
+    if (!isNativeApp()) return;
+    return listenForNativeAuth((err) => {
+      setLoading(false);
+      if (err) toast.error(err.message);
+      else navigate({ to: redirectTo });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function handleOAuth(provider: "google" | "apple") {
     if (mode === "signup" && !termsAccepted) {
       toast.error("Zaakceptuj Regulamin i Politykę prywatności, żeby założyć konto.");
@@ -158,6 +170,11 @@ function AuthPage() {
     }
     setLoading(true);
     try {
+      if (isNativeApp()) {
+        await startNativeOAuth(provider);
+        setLoading(false);
+        return;
+      }
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: { redirectTo: window.location.origin + redirectTo },
