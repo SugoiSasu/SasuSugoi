@@ -110,7 +110,7 @@ export function RandomPlaceCard({
           <button
             type="button"
             onClick={reroll}
-            className="inline-flex items-center gap-2 rounded-full bg-cream/20 px-4 py-2 text-xs font-bold transition hover:bg-cream/30 active:scale-95"
+            className="inline-flex items-center gap-2 rounded-full bg-navy/40 px-4 py-2 text-xs font-bold text-cream transition hover:bg-navy/55 active:scale-95"
           >
             <RefreshCw size={13} /> Losuj ponownie
           </button>
