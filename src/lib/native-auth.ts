@@ -18,7 +18,7 @@ type ListenerHandle = { remove?: () => void };
 type CapacitorPlugins = {
   Browser?: { open(o: { url: string }): unknown; close(): unknown };
   // Na stronie zdalnej most natywny zwraca sam uchwyt, a pakiet @capacitor/core - obietnice. Obslugujemy oba.
-  App?: { addListener(ev: "appUrlOpen", cb: (e: { url: string }) => void): unknown };
+  App?: { addListener(ev: string, cb: (e: never) => void): unknown };
 };
 type CapacitorGlobal = { isNativePlatform?: () => boolean; Plugins?: CapacitorPlugins };
 
@@ -35,14 +35,14 @@ function closeBrowser(): void {
   }
 }
 
-/** Rejestruje nasluch appUrlOpen niezaleznie od ksztaltu wyniku; zwraca funkcje odlaczajaca. Nigdy nie rzuca. */
-function onAppUrlOpen(cb: (url: string) => void): () => void {
+/** Rejestruje nasluch zdarzenia aplikacji (appUrlOpen, appStateChange) niezaleznie od ksztaltu wyniku mostu; zwraca funkcje odlaczajaca. Nigdy nie rzuca. */
+export function onAppEvent<E>(event: string, cb: (e: E) => void): () => void {
   const app = cap()?.Plugins?.App;
   if (!app) return () => {};
   let handle: ListenerHandle | undefined;
   let removed = false;
   try {
-    const r = app.addListener("appUrlOpen", ({ url }) => cb(url));
+    const r = app.addListener(event, cb as (e: never) => void);
     void Promise.resolve(r)
       .then((h) => {
         if (removed) (h as ListenerHandle | undefined)?.remove?.();
@@ -105,7 +105,7 @@ export async function startNativeOAuth(provider: "google" | "apple"): Promise<vo
  * `onDone` dostaje blad (albo null, gdy sesja ustawiona).
  */
 export function listenForNativeAuth(onDone: (error: Error | null) => void): () => void {
-  return onAppUrlOpen(async (url) => {
+  return onAppEvent<{ url: string }>("appUrlOpen", async ({ url }) => {
     if (!url.startsWith(`${NATIVE_SCHEME}://auth`)) return;
     try {
       const params = new URL(url).searchParams;
@@ -139,7 +139,7 @@ const APP_LINK_PATHS = ["/auth/confirm", "/k/"];
  * więc nawigujemy sami - tylko w obrębie własnej domeny i tylko na dozwolone ścieżki.
  */
 export function installAppLinkNavigation(): () => void {
-  return onAppUrlOpen((url) => {
+  return onAppEvent<{ url: string }>("appUrlOpen", ({ url }) => {
     try {
       const u = new URL(url);
       if (u.origin !== window.location.origin) return;

@@ -75,8 +75,8 @@ import { AlphaGate } from "@/components/AlphaGate";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteNav } from "@/components/SiteNav";
 import { AppSidebar } from "@/components/AppSidebar";
-import { installAppLinkNavigation, isNativeApp } from "@/lib/native-auth";
-import { BOOT_SPLASH_SCRIPT, dismissBootSplash } from "@/lib/boot-splash";
+import { installAppLinkNavigation, isNativeApp, onAppEvent } from "@/lib/native-auth";
+import { BOOT_SPLASH_SCRIPT, dismissBootSplash, installResumeBootSplash } from "@/lib/boot-splash";
 import { BottomTabBar } from "@/components/BottomTabBar";
 import { useNowaWersja } from "@/lib/nowa-wersja";
 
@@ -382,6 +382,7 @@ function RootComponent() {
   }, []);
   useEffect(() => (isNativeApp() ? installAppLinkNavigation() : undefined), []);
   useEffect(() => dismissBootSplash(), []);
+  useEffect(() => (isNativeApp() ? installResumeBootSplash(onAppEvent) : undefined), []);
   // Aplikacja z ekranu glownego iPhone'a trzymala stara wersje do zamkniecia.
   useNowaWersja();
 

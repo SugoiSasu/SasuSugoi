@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { BITE_TIMES, BITES, GULP_AT } from './boot-splash-art'
-import { BOOT_SPLASH_SCRIPT } from './boot-splash'
+import { BOOT_SPLASH_SCRIPT, RESUME_AFTER_MS, installResumeBootSplash } from './boot-splash'
 
 /** Uruchamia wygenerowany skrypt na atrapach przeglądarki; zwraca, ile razy dołożył ekran startowy do strony. */
 function uruchom(userAgent: string, store: Record<string, string>) {
@@ -77,5 +77,42 @@ describe('ekran startowy aplikacji', () => {
       }
     }
     expect(niepokryte).toEqual([])
+  })
+})
+
+describe('ponowne pokazanie ekranu po powrocie do aplikacji', () => {
+  afterEach(() => {
+    delete (globalThis as unknown as { window?: unknown }).window
+  })
+
+  function przygotuj() {
+    const show = vi.fn()
+    ;(globalThis as unknown as { window: unknown }).window = { __pzBootShow: show }
+    let cb: ((e: { isActive: boolean }) => void) | undefined
+    let teraz = 1_000_000
+    installResumeBootSplash(
+      (_ev, fn) => {
+        cb = fn
+        return () => {}
+      },
+      () => teraz,
+    )
+    return { show, ruch: (isActive: boolean, po = 0) => { teraz += po; cb?.({ isActive }) } }
+  }
+
+  it('krótka nieobecność nie odpala animacji', () => {
+    const t = przygotuj()
+    t.ruch(false)
+    t.ruch(true, RESUME_AFTER_MS - 1)
+    expect(t.show).not.toHaveBeenCalled()
+  })
+
+  it('dłuższa nieobecność odpala animację raz, a kolejny powrót liczy czas od nowa', () => {
+    const t = przygotuj()
+    t.ruch(false)
+    t.ruch(true, RESUME_AFTER_MS)
+    expect(t.show).toHaveBeenCalledTimes(1)
+    t.ruch(true, RESUME_AFTER_MS * 2) // aktywna bez wcześniejszego wyjścia w tło: nic
+    expect(t.show).toHaveBeenCalledTimes(1)
   })
 })

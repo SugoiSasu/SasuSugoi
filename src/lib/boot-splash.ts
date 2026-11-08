@@ -65,47 +65,91 @@ window.__pzSynth=function(ctx,dest,t,kind){
 
 export const BOOT_SPLASH_SCRIPT = `(function(){try{
 if(!/PozeramyApp/.test(navigator.userAgent))return;
-try{if(sessionStorage.getItem('pz-boot'))return;sessionStorage.setItem('pz-boot','1');}catch(e){}
 ${SYNTH_JS}
-var s=document.createElement('style');s.textContent=${JSON.stringify(CSS)};document.head.appendChild(s);
-var d=document.createElement('div');d.id='pz-boot';d.setAttribute('aria-hidden','true');d.innerHTML=${JSON.stringify(HTML)};
-document.documentElement.appendChild(d);
-var ac=null,tStart=0,done=false,ready=false;
-function closeAudio(){try{if(ac&&ac.state!=='closed')ac.close();}catch(e){}ac=null;}
-function startSound(){
-  try{
-    var AC=window.AudioContext||window.webkitAudioContext;
-    if(!AC||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
-    ac=new AC();var master=ac.createGain();master.gain.value=.7;master.connect(ac.destination);
-    var plan=function(){
-      if(!ac||done)return;
-      var el=(Date.now()-tStart)/1000,base=ac.currentTime;
-      ${JSON.stringify([...BITE_TIMES])}.forEach(function(o){var w=o-el;if(w>=-0.05)window.__pzSynth(ac,master,base+Math.max(0,w),'bite');});
-      var gw=${GULP_AT}-el;if(gw>=-0.05)window.__pzSynth(ac,master,base+Math.max(0,gw),'gulp');
-    };
-    if(ac.state==='running')plan();
-    else if(ac.resume)ac.resume().then(function(){if(ac&&ac.state==='running')plan();}).catch(function(){});
-    setTimeout(closeAudio,${Math.round((GULP_AT + 1) * 1000)});
-  }catch(e){}
+var cur=null;
+function play(){
+  var s=document.createElement('style');s.textContent=${JSON.stringify(CSS)};document.head.appendChild(s);
+  var d=document.createElement('div');d.id='pz-boot';d.setAttribute('aria-hidden','true');d.innerHTML=${JSON.stringify(HTML)};
+  document.documentElement.appendChild(d);
+  var ac=null,tStart=0,ready=false,wantDone=false,gone=false;
+  function closeAudio(){try{if(ac&&ac.state!=='closed')ac.close();}catch(e){}ac=null;}
+  function startSound(){
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+      ac=new AC();var master=ac.createGain();master.gain.value=.7;master.connect(ac.destination);
+      var plan=function(){
+        if(!ac||gone)return;
+        var el=(Date.now()-tStart)/1000,base=ac.currentTime;
+        ${JSON.stringify([...BITE_TIMES])}.forEach(function(o){var w=o-el;if(w>=-0.05)window.__pzSynth(ac,master,base+Math.max(0,w),'bite');});
+        var gw=${GULP_AT}-el;if(gw>=-0.05)window.__pzSynth(ac,master,base+Math.max(0,gw),'gulp');
+      };
+      if(ac.state==='running')plan();
+      else if(ac.resume)ac.resume().then(function(){if(ac&&ac.state==='running')plan();}).catch(function(){});
+      setTimeout(closeAudio,${Math.round((GULP_AT + 1) * 1000)});
+    }catch(e){}
+  }
+  function tryDismiss(force){
+    if(!wantDone||gone)return;
+    if(!ready&&!force)return;
+    gone=true;
+    var w=ready?Math.max(0,${MIN_MS}-(Date.now()-tStart)):0;
+    setTimeout(function(){d.classList.add('pz-out');closeAudio();setTimeout(function(){d.remove();s.remove();},500);},w);
+  }
+  var lg=d.querySelector('.lg'),im=new Image();
+  im.className='ch';im.alt='';im.decoding='async';
+  function start(){tStart=Date.now();ready=true;startSound();tryDismiss(false);}
+  im.onload=function(){
+    var go=function(){lg.appendChild(im);start();};
+    if(im.decode)im.decode().then(go,go);else go();
+  };
+  im.onerror=function(){var f=new Image();f.alt='';f.src='/brand/po_zeramy-logo-dark-nav.webp';f.style.cssText='width:112px;height:112px;border-radius:26px';lg.appendChild(f);start();};
+  im.src='/brand/boot-chomp.webp';
+  return {done:function(force){wantDone=true;tryDismiss(!!force);}};
 }
-var lg=d.querySelector('.lg'),im=new Image();
-im.className='ch';im.alt='';im.decoding='async';
-im.onload=function(){
-  var go=function(){tStart=Date.now();ready=true;lg.appendChild(im);startSound();};
-  if(im.decode)im.decode().then(go,go);else go();
+// Pierwsze zaladowanie okna WebView: raz na jego zycie (przeladowania i przejscia nie powtarzaja ekranu).
+var first=true;
+try{if(sessionStorage.getItem('pz-boot'))first=false;else sessionStorage.setItem('pz-boot','1');}catch(e){}
+if(first){
+  cur=play();
+  setTimeout(function(){if(cur)cur.done(true);},10000);
+}
+window.__pzBootDone=function(){if(cur)cur.done(false);};
+// Powrot do aplikacji po dluzszej nieobecnosci (strona sie wtedy nie przeladowuje): gramy ekran jeszcze raz.
+window.__pzBootShow=function(){
+  if(document.getElementById('pz-boot'))return;
+  cur=play();cur.done(false);
 };
-im.onerror=function(){var f=new Image();f.alt='';f.src='/brand/po_zeramy-logo-dark-nav.webp';f.style.cssText='width:112px;height:112px;border-radius:26px';lg.appendChild(f);tStart=Date.now();ready=true;};
-im.src='/brand/boot-chomp.webp';
-window.__pzBootDone=function(){
-  if(done)return;done=true;
-  var w=ready?Math.max(0,${MIN_MS}-(Date.now()-tStart)):0;
-  setTimeout(function(){d.classList.add('pz-out');closeAudio();setTimeout(function(){d.remove();s.remove();},500);},w);
-};
-setTimeout(window.__pzBootDone,10000);
 }catch(e){}})();`;
 
 /** Wołane po zamontowaniu aplikacji - zdejmuje ekran startowy (no-op poza aplikacją). */
 export function dismissBootSplash(): void {
   const done = (window as unknown as { __pzBootDone?: () => void }).__pzBootDone;
   done?.();
+}
+
+/** Po jakiej nieobecności w tle powrót do aplikacji znów pokazuje ekran startowy. */
+export const RESUME_AFTER_MS = 30_000;
+
+/**
+ * Android nie niszczy okna WebView po zamknięciu aplikacji - zostaje w pamięci, a ponowne otwarcie nie
+ * ładuje strony od nowa, więc sam skrypt w <head> by się nie odpalił. Ta funkcja nasłuchuje zmian stanu
+ * aplikacji (przekazanych z mostu, patrz onAppEvent) i po powrocie po dłuższej nieobecności odtwarza ekran.
+ * Zwraca funkcję odłączającą nasłuch.
+ */
+export function installResumeBootSplash(
+  subscribe: (event: string, cb: (e: { isActive: boolean }) => void) => () => void,
+  now: () => number = Date.now,
+): () => void {
+  let hiddenAt = 0;
+  return subscribe("appStateChange", ({ isActive }) => {
+    if (!isActive) {
+      hiddenAt = now();
+      return;
+    }
+    if (hiddenAt && now() - hiddenAt >= RESUME_AFTER_MS) {
+      (window as unknown as { __pzBootShow?: () => void }).__pzBootShow?.();
+    }
+    hiddenAt = 0;
+  });
 }
