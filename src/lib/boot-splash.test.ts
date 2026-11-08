@@ -1,18 +1,68 @@
 import { describe, expect, it } from 'vitest'
-import { BITE_TIMES, BITES, BOOT_SPLASH_SCRIPT } from './boot-splash'
+import { BITE_TIMES, BITES, GULP_AT } from './boot-splash-art'
+import { BOOT_SPLASH_SCRIPT } from './boot-splash'
+
+/** Uruchamia wygenerowany skrypt na atrapach przeglądarki; zwraca, ile razy dołożył ekran startowy do strony. */
+function uruchom(userAgent: string, store: Record<string, string>) {
+  let dolozono = 0
+  const el = (): Record<string, unknown> => ({
+    style: {},
+    classList: { add() {} },
+    setAttribute() {},
+    appendChild() {},
+    querySelector: () => el(),
+    remove() {},
+  })
+  const doc = {
+    createElement: () => el(),
+    head: { appendChild() {} },
+    documentElement: { appendChild: () => void dolozono++ },
+  }
+  const sessionStorage = {
+    getItem: (k: string) => store[k] ?? null,
+    setItem: (k: string, v: string) => void (store[k] = v),
+  }
+  class FakeImage {
+    style: Record<string, unknown> = {}
+    set src(_v: string) {}
+  }
+  const win: Record<string, unknown> = {}
+  new Function('navigator', 'sessionStorage', 'document', 'window', 'matchMedia', 'Image', 'setTimeout', BOOT_SPLASH_SCRIPT)(
+    { userAgent },
+    sessionStorage,
+    doc,
+    win,
+    () => ({ matches: false }),
+    FakeImage,
+    () => 0,
+  )
+  return dolozono
+}
+
+const APP = 'Mozilla/5.0 (Linux; Android 14) Chrome/120 Mobile Safari/537.36 PozeramyApp/1.0'
+const PRZEGLADARKA = 'Mozilla/5.0 (Linux; Android 14) Chrome/120 Mobile Safari/537.36'
 
 describe('ekran startowy aplikacji', () => {
   it('wygenerowany skrypt jest poprawnym JavaScriptem', () => {
     expect(() => new Function(BOOT_SPLASH_SCRIPT)).not.toThrow()
   })
 
-  it('włącza się tylko w aplikacji (znacznik w User-Agent)', () => {
-    expect(BOOT_SPLASH_SCRIPT).toContain('PozeramyApp')
+  it('pokazuje się w aplikacji, ale nie w zwykłej przeglądarce', () => {
+    expect(uruchom(APP, {})).toBe(1)
+    expect(uruchom(PRZEGLADARKA, {})).toBe(0)
   })
 
-  it('każdy gryz ma swój moment i swoje kółka', () => {
+  it('gra raz na uruchomienie aplikacji: kolejne przeładowania go nie powtarzają', () => {
+    const store: Record<string, string> = {}
+    expect(uruchom(APP, store)).toBe(1)
+    expect(uruchom(APP, store)).toBe(0)
+    expect(uruchom(APP, store)).toBe(0)
+  })
+
+  it('każdy gryz ma swój moment i swoje kółka, a gulp jest po ostatnim gryzie', () => {
     expect(BITES.length).toBe(BITE_TIMES.length)
     for (let i = 1; i < BITE_TIMES.length; i++) expect(BITE_TIMES[i]).toBeGreaterThan(BITE_TIMES[i - 1])
+    expect(GULP_AT).toBeGreaterThan(BITE_TIMES[BITE_TIMES.length - 1])
   })
 
   it('gryzy razem zjadają cały kafelek (zaokrąglony kwadrat 104, rx 26)', () => {
