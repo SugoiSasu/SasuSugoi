@@ -28,3 +28,10 @@ Decyzje Mateusza po badaniu rynku (Beli, Dither/Munch, Swarm, Google Maps, Wolt/
 ## Etap 1 - system (wdrożone 2026-11-08)
 - `PlaceLogo` (src/components/PlaceLogo.tsx): jedno logo lokalu w kółku; małe pliki w naturalnym rozmiarze, ciemny motyw z poświatą, brak logo = emoji kuchni; `tryb="lekki"` do długich list. Wdrożone na liście mapy; kolejne miejsca (karta główna, Karty, Moje miejsca) w etapach 2-3.
 - Skala napisów: min 10 px (11 px dla tekstu czytanego), pilnuje tego `src/lib/min-font-size.test.ts` (wyjątki: cyfry w okrągłych plakietkach).
+
+## Etap 2 - strona główna i karta lokalu (wdrożone 2026-11-08)
+Nowa karta (hero z kolorem kuchni/okładką + logo w kółku wsunięte w róg, nazwa obok logo), jasne logo na ciemnym kółku, "Wylosuj mi obiad" wyżej na telefonie. Nie zrobione (wymagają danych): filtry intencji randka/szybko/z ekipą (tagi lokali), pas "Znajomi byli tu".
+
+## Etap 3 - Karty, Mapa, Wspólne wyjście (wdrożone 2026-11-08)
+- Karty i Mapa: logo małej rozdzielczości w naturalnym rozmiarze; wybrany lokal na mapie z `PlaceLogo`.
+- **Wspólne wyjście:** migracja `20261108130000` (outing_sessions/members/votes + create_outing, outing_get, outing_vote, outing_results, outing_close, outing_friends). Host wybiera do 5 znajomych (tylko zaakceptowani, z kontem logowania) i talię 2-8 lokali z filtrów Kart; sesja 24 h; wynik (liczby "tak") widoczny dopiero po oddaniu własnych głosów albo po zamknięciu; wygrywa najwięcej "tak", remis = wszystkie. UI: arkusz w Kartach + `/wyjscie/$id`. Zapisy tylko przez funkcje SECURITY DEFINER; test na bazie w transakcji z rollbackiem + kontrole anon w `scripts/smoke-anon.mjs`.
