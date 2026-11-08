@@ -35,3 +35,7 @@ Nowa karta (hero z kolorem kuchni/okładką + logo w kółku wsunięte w róg, n
 ## Etap 3 - Karty, Mapa, Wspólne wyjście (wdrożone 2026-11-08)
 - Karty i Mapa: logo małej rozdzielczości w naturalnym rozmiarze; wybrany lokal na mapie z `PlaceLogo`.
 - **Wspólne wyjście:** migracja `20261108130000` (outing_sessions/members/votes + create_outing, outing_get, outing_vote, outing_results, outing_close, outing_friends). Host wybiera do 5 znajomych (tylko zaakceptowani, z kontem logowania) i talię 2-8 lokali z filtrów Kart; sesja 24 h; wynik (liczby "tak") widoczny dopiero po oddaniu własnych głosów albo po zamknięciu; wygrywa najwięcej "tak", remis = wszystkie. UI: arkusz w Kartach + `/wyjscie/$id`. Zapisy tylko przez funkcje SECURITY DEFINER; test na bazie w transakcji z rollbackiem + kontrole anon w `scripts/smoke-anon.mjs`.
+
+## Etap 4 - społeczność (wdrożone 2026-11-08)
+- Pożeralnia: kompaktowe karty pojedynczej odznaki i "chce odwiedzić" (cichsza gamifikacja).
+- **Taste Profile + Match Score:** migracja `20261108140000` (taste_profile, taste_match; funkcje pomocnicze wewnętrzne). Wagi kuchni: ulubione z profilu +3, wizyta "byłem" +2 / "chcę" +1, ulubione +2, ocena >=4 +2 / <=2 -1. Zgodność = 60% kosinus kuchni + 30% Jaccard miejsc + 10% zgodność ocen; < 3 sygnały po którejkolwiek stronie = "za_malo_danych". Widoczne tylko dla właściciela i zaakceptowanych znajomych. UI: karta "Gust" na profilu, plakietka i arkusz zgodności przy znajomych (`TasteComponents.tsx`, `taste-api.ts`).
