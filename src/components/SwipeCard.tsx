@@ -320,7 +320,7 @@ export function SwipeCard({
                       ★
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-[9px] font-extrabold tracking-[0.1em] text-cream/55">
+                      <span className="block text-[10px] font-extrabold tracking-[0.08em] text-cream/70">
                         Z MENU
                       </span>
                       <span className="block truncate text-xs font-extrabold">{danie}</span>

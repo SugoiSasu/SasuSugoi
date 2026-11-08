@@ -145,7 +145,7 @@ export function AppSidebar() {
               <div className="mt-1">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[11px] text-cream/55">Poziom {level.level}</span>
-                  <span className="text-[10px] text-cream/40">{level.xpToNext} XP dalej</span>
+                  <span className="text-[11px] text-cream/70">{level.xpToNext} XP dalej</span>
                 </div>
                 <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-cream/15">
                   <div
@@ -181,7 +181,7 @@ export function AppSidebar() {
           </nav>
 
           <div className="pz-sidebar-divider my-2.5 flex items-center gap-2 px-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-cream/35">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-cream/65">
               Społeczność
             </span>
             <span className="h-px flex-1 bg-gradient-to-r from-cream/15 to-transparent" />
@@ -380,7 +380,7 @@ function StatChip({
     >
       <Icon size={15} className="text-tomato-on-dark" />
       <p className="font-display text-sm font-extrabold leading-none text-cream">{value}</p>
-      <p className="truncate text-[9px] font-semibold uppercase tracking-wide text-cream/45">
+      <p className="truncate text-[10px] font-semibold uppercase tracking-normal text-cream/70">
         {label}
       </p>
     </Link>

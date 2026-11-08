@@ -374,7 +374,7 @@ function MobileStatChip({
     >
       <Icon size={15} className="text-tomato" />
       <p className="font-display text-sm font-extrabold leading-none">{value}</p>
-      <p className="truncate text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+      <p className="truncate text-[10px] font-semibold uppercase tracking-normal text-muted-foreground">
         {label}
       </p>
     </Link>
