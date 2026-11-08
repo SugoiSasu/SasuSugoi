@@ -568,32 +568,20 @@ function SelectedCard({
       params={{ id: place.slug }}
       className="flex items-start gap-3 rounded-2xl border border-border bg-card p-3 shadow-xl transition hover:border-tomato"
     >
-      <div
-        className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl text-2xl"
-        style={
-          place.avatar_url || place.cover_image_url
-            ? { backgroundColor: place.avatar_url ? "#ffffff" : undefined }
-            : { background: `${cuisineMeta(place.cuisine).color}26` }
-        }
-      >
-        {place.avatar_url ? (
-          <img
-            src={place.avatar_url}
-            alt=""
-            className="h-full w-full object-contain p-1.5"
-            loading="lazy"
-          />
-        ) : place.cover_image_url ? (
-          <img
-            src={place.cover_image_url}
-            alt=""
-            className="h-full w-full object-cover"
-            loading="lazy"
-          />
-        ) : (
-          cuisineMeta(place.cuisine).emoji
-        )}
-      </div>
+      {place.avatar_url || !place.cover_image_url ? (
+        <PlaceLogo
+          name=""
+          avatarUrl={place.avatar_url}
+          cutoutEnabled={place.avatar_cutout_enabled !== false}
+          fallbackEmoji={cuisineMeta(place.cuisine).emoji}
+          fallbackColor={cuisineMeta(place.cuisine).color + "26"}
+          className="h-14 w-14 shrink-0 text-2xl"
+        />
+      ) : (
+        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full">
+          <img src={place.cover_image_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+        </div>
+      )}
       <div className="min-w-0 flex-1">
         <p className="truncate font-display text-sm font-extrabold">{place.name}</p>
         <p className="truncate text-xs text-muted-foreground">

@@ -94,6 +94,9 @@ export function SwipeCard({
   // Logo pokazujemy dopiero, gdy wycinanie sie skonczylo - wczesniej oryginal
   // z tlem podmienial sie po chwili na wyciety i logo "mrugalo".
   const logoWidoczne = cutout.gotowe;
+  // Logo o malej rozdzielczosci (np. 64 px) powiekszone do ok. 190 px jest rozmazane: pokazujemy je
+  // w naturalnym rozmiarze na srodku.
+  const [niskaRozdzielczosc, setNiskaRozdzielczosc] = useState(false);
 
   // Time-dependent state must not be computed during SSR or the first client
   // render: the server runs in UTC and the visitor does not, so the two would
@@ -218,7 +221,8 @@ export function SwipeCard({
                 draggable={false}
                 // Prostokatne/kwadratowe logo w kole w kolorze wlasnego tla (spojnie z okraglymi).
                 style={cutout.kafel ? { backgroundColor: cutout.kolor, borderRadius: "9999px", padding: "12%" } : undefined}
-                className={`relative h-full w-full object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)] transition-opacity duration-300 ${logoWidoczne ? "opacity-100" : "opacity-0"}`}
+                onLoad={(e) => setNiskaRozdzielczosc(e.currentTarget.naturalWidth > 0 && e.currentTarget.naturalWidth < 160)}
+                className={`relative ${niskaRozdzielczosc ? "h-auto w-auto max-h-[45%] max-w-[45%]" : "h-full w-full"} object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)] transition-opacity duration-300 ${logoWidoczne ? "opacity-100" : "opacity-0"}`}
               />
             </div>
             {!expanded && !(place.logo_has_name && place.avatar_url) && (
