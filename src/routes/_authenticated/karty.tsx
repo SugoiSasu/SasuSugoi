@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Heart, Loader2, MapPin, PartyPopper, RotateCcw, Shuffle, Star, Undo2, X } from "lucide-react";
+import { Heart, Loader2, MapPin, PartyPopper, RotateCcw, Shuffle, Star, Undo2, Users, X } from "lucide-react";
+import { WspolneWyjscieSheet } from "@/components/WspolneWyjscieSheet";
 import { toast } from "sonner";
 import { useSwipeDeck, useSkipPlace, useUnskipPlace, useResetSkips, useSkippedPlaceIds } from "@/lib/swipe-api";
 import { useToggleVisit, useFriendVisitedCounts } from "@/lib/visits-api";
@@ -152,7 +153,7 @@ function KartyPage() {
   }
 
   const [promien, setPromien] = useState<PromienKm>(0);
-  const [arkusz, setArkusz] = useState<"filtry" | "decyzje" | null>(null);
+  const [arkusz, setArkusz] = useState<"filtry" | "decyzje" | "wyjscie" | null>(null);
   const [rozwinieteId, setRozwinieteId] = useState<string | null>(null);
   const [match, setMatch] = useState<{ place: Place; znajomi: ZnajomyLite[] } | null>(null);
   const [propozycja, setPropozycja] = useState<"brak" | "wyslana">("brak");
@@ -434,6 +435,15 @@ function KartyPage() {
                 Decyzje
                 <span className="rounded-full bg-tomato px-1.5 text-[11px] leading-[17px]">{history.length}</span>
               </button>
+              <button
+                type="button"
+                onClick={() => setArkusz("wyjscie")}
+                title="Wspólne wyjście"
+                aria-label="Wspólne wyjście"
+                className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card"
+              >
+                <Users size={16} aria-hidden="true" />
+              </button>
             </div>
           </div>
 
@@ -468,6 +478,13 @@ function KartyPage() {
               className="grid h-9 w-9 place-items-center rounded-full border border-border bg-card"
             >
               <Shuffle size={15} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setArkusz("wyjscie")}
+              className="hidden h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-extrabold lg:inline-flex"
+            >
+              <Users size={14} aria-hidden="true" /> Wspólne wyjście
             </button>
           </div>
 
@@ -633,6 +650,8 @@ function KartyPage() {
 
         <SwipeHistoryRail history={history} onUndo={undo} />
       </div>
+
+      <WspolneWyjscieSheet open={arkusz === "wyjscie"} onOpenChange={(o) => setArkusz(o ? "wyjscie" : null)} lokale={visible} />
 
       {/* Telefon: filtr obszaru w arkuszu od dołu. */}
       <Sheet open={arkusz === "filtry"} onOpenChange={(o) => setArkusz(o ? "filtry" : null)}>
