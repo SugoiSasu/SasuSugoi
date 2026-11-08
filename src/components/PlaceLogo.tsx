@@ -28,7 +28,18 @@ const POSWIATA_CIEMNA =
 const KOLKO = "relative grid aspect-square place-items-center overflow-hidden rounded-full";
 
 /** Obraz w kółku: pełne wypełnienie z marginesem, a dla małych plików naturalny rozmiar na środku. */
-function Obraz({ src, alt, gotowe = true }: { src: string; alt: string; gotowe?: boolean }) {
+function Obraz({
+  src,
+  alt,
+  gotowe = true,
+  poswiata = true,
+}: {
+  src: string;
+  alt: string;
+  gotowe?: boolean;
+  /** Poświata ciemnego motywu obrysowałaby kwadratowe tło logo-kafla, więc dla kafli jest wyłączona. */
+  poswiata?: boolean;
+}) {
   const [niska, setNiska] = useState(false);
   return (
     <img
@@ -40,7 +51,7 @@ function Obraz({ src, alt, gotowe = true }: { src: string; alt: string; gotowe?:
       onLoad={(e) => setNiska(e.currentTarget.naturalWidth > 0 && e.currentTarget.naturalWidth < 160)}
       className={`${
         niska ? "h-auto w-auto max-h-[62%] max-w-[62%]" : "h-full w-full p-[14%]"
-      } object-contain transition-opacity duration-300 ${gotowe ? "opacity-100" : "opacity-0"} ${POSWIATA_CIEMNA}`}
+      } object-contain transition-opacity duration-300 ${gotowe ? "opacity-100" : "opacity-0"} ${poswiata ? POSWIATA_CIEMNA : ""}`}
     />
   );
 }
@@ -61,7 +72,7 @@ function Lekkie({ name, avatarUrl, fallbackEmoji, fallbackColor, className = "" 
       className={`${KOLKO} ${k.kafel ? "" : "bg-white dark:bg-white/[0.08]"} ${className}`}
       style={k.kafel ? { backgroundColor: k.kolor } : undefined}
     >
-      <Obraz src={avatarUrl} alt={name} />
+      <Obraz src={avatarUrl} alt={name} poswiata={!k.kafel} />
     </span>
   );
 }
@@ -76,7 +87,7 @@ function Pelne({ name, avatarUrl, cutoutEnabled = true, fallbackEmoji, fallbackC
       className={`${KOLKO} ${kafel ? "" : "bg-white dark:bg-white/[0.08]"} ${className}`}
       style={kafel ? { backgroundColor: cutout.kolor } : undefined}
     >
-      <Obraz src={cutout.src ?? avatarUrl} alt={name} gotowe={cutout.gotowe} />
+      <Obraz src={cutout.src ?? avatarUrl} alt={name} gotowe={cutout.gotowe} poswiata={!kafel} />
     </span>
   );
 }
