@@ -373,10 +373,10 @@ function MapaPage() {
                     }`}
                   >
                     <div
-                      className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl text-2xl"
+                      className={`grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-xl text-2xl ${p.avatar_url ? "bg-white dark:bg-white/[0.08]" : ""}`}
                       style={
                         p.avatar_url || p.cover_image_url
-                          ? { backgroundColor: p.avatar_url ? "#ffffff" : undefined }
+                          ? undefined
                           : { background: `${cuisineMeta(p.cuisine).color}26` }
                       }
                     >
@@ -384,7 +384,7 @@ function MapaPage() {
                         <img
                           src={p.avatar_url}
                           alt=""
-                          className="h-full w-full object-contain p-1.5"
+                          className="h-full w-full object-contain p-1.5 dark:drop-shadow-[0_0_1.5px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_0_4px_rgba(255,255,255,0.4)]"
                           loading="lazy"
                         />
                       ) : p.cover_image_url ? (

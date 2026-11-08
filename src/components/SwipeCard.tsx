@@ -283,6 +283,12 @@ export function SwipeCard({
                   {formatCena(place.price_range)}
                 </span>
               )}
+              {place.district && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-cream/15 px-2.5 py-1 text-[11px] font-bold backdrop-blur-sm">
+                  <MapPin size={11} aria-hidden="true" />
+                  {place.district}
+                </span>
+              )}
               {friendSignal && friendSignal.kind !== "want" && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-tomato px-2.5 py-1 text-[11px] font-bold text-cream">
                   <Users size={11} aria-hidden="true" />
