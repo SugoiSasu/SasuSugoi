@@ -579,7 +579,7 @@ function CreateListModal({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-muted grid place-items-center hover:bg-muted/70"
+            className="pz-hit w-8 h-8 rounded-full bg-muted grid place-items-center hover:bg-muted/70"
           >
             <X size={16} />
           </button>
@@ -745,7 +745,7 @@ function PlacePickerField({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background pl-1.5 pr-3 py-1 text-xs font-semibold hover:border-tomato transition max-w-full"
+          className="pz-hit inline-flex items-center gap-1.5 rounded-full border border-border bg-background pl-1.5 pr-3 py-1 text-xs font-semibold hover:border-tomato transition max-w-full"
         >
           {selected ? (
             <>
@@ -876,7 +876,7 @@ function FeedCard({ item }: { item: WallItem }) {
               {item.listPlaces.map((p) => (
                 <div key={p.id} className="w-16 shrink-0 text-center">
                   <PlaceAvatarDot place={p as Place} size={56} />
-                  <span className="mt-1 block truncate text-[10px] text-muted-foreground">
+                  <span className="mt-1 block truncate text-[11px] text-muted-foreground">
                     {p.name}
                   </span>
                 </div>
@@ -1275,7 +1275,7 @@ function KindBadge({ kind }: { kind: WallItem["kind"] }) {
   const m = map[kind];
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${m.cls}`}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider ${m.cls}`}
     >
       {m.icon} {m.label}
     </span>
@@ -1323,7 +1323,7 @@ function FollowedPlacesStrip() {
                 <PlaceAvatarDot place={p} size={48} />
               </span>
             </span>
-            <span className="w-full truncate text-[10px] font-semibold text-muted-foreground">
+            <span className="w-full truncate text-[11px] font-semibold text-muted-foreground">
               {p.name}
             </span>
           </Link>
@@ -1396,7 +1396,7 @@ function PlaceInfoCard({ place }: { place: WallItem["place"] & {} }) {
       <Link
         to="/k/$id"
         params={{ id: place.slug ?? place.id }}
-        className="shrink-0 rounded-full border border-border px-3 py-1.5 text-xs font-bold text-foreground transition hover:border-tomato hover:text-tomato"
+        className="pz-hit shrink-0 rounded-full border border-border px-3 py-1.5 text-xs font-bold text-foreground transition hover:border-tomato hover:text-tomato"
       >
         Zobacz
       </Link>

@@ -432,7 +432,7 @@ function KartyPage() {
                 className="inline-flex h-10 items-center gap-2 rounded-full bg-navy px-3 text-xs font-extrabold text-cream"
               >
                 Decyzje
-                <span className="rounded-full bg-tomato px-1.5 text-[10.5px] leading-[17px]">{history.length}</span>
+                <span className="rounded-full bg-tomato px-1.5 text-[11px] leading-[17px]">{history.length}</span>
               </button>
             </div>
           </div>

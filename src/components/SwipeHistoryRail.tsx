@@ -32,7 +32,7 @@ function Liczniki({ history }: { history: SwipeDecision[] }) {
   const kafel = (n: number, label: string, cls: string) => (
     <div className={`rounded-2xl px-2 py-2 text-center ${cls}`}>
       <div className="font-display text-xl font-extrabold leading-none">{n}</div>
-      <div className="mt-0.5 text-[10.5px] font-bold text-foreground/60">{label}</div>
+      <div className="mt-0.5 text-[11px] font-bold text-foreground/60">{label}</div>
     </div>
   );
   return (

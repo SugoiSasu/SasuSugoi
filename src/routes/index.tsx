@@ -595,7 +595,7 @@ const DiscoverCard = memo(function DiscoverCard({
             </span>
           )}
           {isNewPlace(place.created_at) && (
-            <span className="absolute left-3 top-3 rounded-full bg-tomato px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-cream shadow-sm">
+            <span className="absolute left-3 top-3 rounded-full bg-tomato px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-cream shadow-sm">
               Nowość
             </span>
           )}

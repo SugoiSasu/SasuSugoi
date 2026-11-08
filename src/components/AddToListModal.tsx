@@ -179,7 +179,7 @@ export function AddToListModal({ placeId, placeName, onClose }: Props) {
                 className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none transition focus:border-tomato"
               />
               <fieldset>
-                <legend className="mb-1.5 text-[10px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                <legend className="mb-1.5 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
                   Kto widzi listę
                 </legend>
                 <div className="flex gap-1.5">

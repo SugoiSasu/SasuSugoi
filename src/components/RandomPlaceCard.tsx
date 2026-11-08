@@ -122,7 +122,7 @@ export function RandomPlaceCard({
   return (
     <div className="pz-fade-in overflow-hidden rounded-2xl bg-tomato text-cream">
       <div className="flex items-center justify-between gap-2 px-3 pt-2.5">
-        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-cream">
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-cream">
           <Dices size={12} /> Losowa polecajka
         </span>
         <button

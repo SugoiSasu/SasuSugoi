@@ -15,7 +15,7 @@ export function TitleTag({
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full border border-tomato/40 bg-tomato/10 font-semibold text-tomato ${
-        isMd ? "px-2.5 py-1 text-xs" : "px-1.5 py-0.5 text-[10px]"
+        isMd ? "px-2.5 py-1 text-xs" : "px-1.5 py-0.5 text-[11px]"
       }`}
     >
       <Sparkles size={isMd ? 12 : 10} className="shrink-0" />

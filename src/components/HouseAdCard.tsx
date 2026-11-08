@@ -23,7 +23,7 @@ export function HouseAdCard() {
     >
       <div className="flex items-center justify-center gap-2 px-3 pt-2.5">
         <Megaphone size={13} className="text-tomato-on-dark" />
-        <span className="text-[10px] font-bold uppercase tracking-wider text-cream/50">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-cream/50">
           Wolne miejsce
         </span>
       </div>

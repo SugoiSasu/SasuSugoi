@@ -1,3 +1,4 @@
+import { SekcjaEdytora } from "@/components/admin/EditorSekcje";
 import { displayNameOf, handleOf } from "@/lib/display-name";
 import { BackButton } from "@/components/BackButton";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -488,10 +489,8 @@ function ProfilePage() {
               </div>
             </section>
 
-            <section className="rounded-2xl bg-card border border-border p-5">
-              <label className="block text-xs uppercase tracking-wider font-semibold mb-3">
-                Ulubione kuchnie
-              </label>
+            <SekcjaEdytora id="kuchnie" tytul="Ulubione kuchnie">
+              <div className="rounded-2xl bg-card border border-border p-5">
               <div className="flex flex-wrap gap-2">
                 {CUISINES.map((c) => {
                   const active = favCuisines.includes(c);
@@ -511,12 +510,11 @@ function ProfilePage() {
                   );
                 })}
               </div>
-            </section>
+            </div>
+            </SekcjaEdytora>
 
-            <section className="rounded-2xl bg-card border border-border p-5">
-              <label className="block text-xs uppercase tracking-wider font-semibold mb-3">
-                Moje social media
-              </label>
+            <SekcjaEdytora id="social" tytul="Moje social media">
+              <div className="rounded-2xl bg-card border border-border p-5">
               <div className="grid sm:grid-cols-2 gap-3">
                 <SocialInput
                   label="Instagram"
@@ -552,10 +550,11 @@ function ProfilePage() {
               <p className="text-[11px] text-muted-foreground mt-2">
                 Pełne URL-e. Linki pojawią się na Twoim publicznym profilu.
               </p>
-            </section>
+            </div>
+            </SekcjaEdytora>
 
-            <section className="rounded-2xl bg-card border border-border p-5">
-              <p className="font-semibold mb-1">Domyślny awatar</p>
+            <SekcjaEdytora id="awatar" tytul="Domyślny awatar">
+              <div className="rounded-2xl bg-card border border-border p-5">
               <p className="text-xs text-muted-foreground mb-3">
                 Dobiera kolor awatara, dopóki nie wgrasz własnego zdjęcia.
               </p>
@@ -580,7 +579,8 @@ function ProfilePage() {
                   </button>
                 ))}
               </div>
-            </section>
+            </div>
+            </SekcjaEdytora>
 
             <section className="rounded-2xl bg-card border border-border p-4 flex items-center gap-3">
               <MapPin size={16} className="text-muted-foreground shrink-0" />

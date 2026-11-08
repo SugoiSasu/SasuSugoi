@@ -281,7 +281,7 @@ function MyPlacesPage() {
                     {/* Ile WLASNYCH list zawiera ten lokal - odpowiedz na
                         "czy juz to gdzies zapisalem", a nie licznik cudzych. */}
                     {(przynaleznosc?.get(p.id)?.length ?? 0) > 0 && (
-                      <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-tomato/10 px-2 py-0.5 text-[10px] font-extrabold text-tomato">
+                      <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-tomato/10 px-2 py-0.5 text-[11px] font-extrabold text-tomato">
                         <ListChecks size={10} />
                         {przynaleznosc!.get(p.id)!.length === 1
                           ? "Na 1 liście"
@@ -328,6 +328,16 @@ function MyPlacesPage() {
               </li>
             );
           })}
+          {list.length > 0 && list.length < 4 && !query && (
+            <li className="rounded-2xl border border-dashed border-border p-5 text-center lg:col-span-full">
+              <p className="text-sm font-semibold">Szukasz kolejnych miejscówek?</p>
+              <p className="mt-1 text-xs text-muted-foreground">Przeglądaj Karty albo zajrzyj na mapę - to, co zapiszesz, wyląduje tutaj.</p>
+              <div className="mt-3 flex flex-wrap justify-center gap-2">
+                <Link to="/karty" className="inline-flex min-h-11 items-center rounded-full bg-tomato px-5 text-xs font-semibold text-cream">Przeglądaj Karty</Link>
+                <Link to="/mapa" className="inline-flex min-h-11 items-center rounded-full border border-border px-5 text-xs font-semibold">Otwórz mapę</Link>
+              </div>
+            </li>
+          )}
           {list.length === 0 && (
             <EmptyState
               icon={

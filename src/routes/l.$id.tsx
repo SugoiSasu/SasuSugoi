@@ -152,7 +152,7 @@ function ListDetail() {
               {/* Widoczna legenda zamiast pary "sr-only legend + akapit" -
                   ta sama tresc dwa razy w DOM znaczy, ze czytnik ekranu czyta
                   ja dwukrotnie. */}
-              <legend className="mb-2 text-[10px] font-extrabold uppercase tracking-wide text-muted-foreground">
+              <legend className="mb-2 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
                 Kto widzi listę
               </legend>
               <div className="flex gap-1.5">

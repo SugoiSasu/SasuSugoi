@@ -37,7 +37,7 @@ export function VipBadge({ size = "sm" }: { size?: "sm" | "md" }) {
     <span
       title="Status VIP"
       className={`inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 font-bold text-amber-950 shadow-sm ${
-        isMd ? "px-2.5 py-1 text-xs" : "px-1.5 py-0.5 text-[10px]"
+        isMd ? "px-2.5 py-1 text-xs" : "px-1.5 py-0.5 text-[11px]"
       }`}
     >
       <Crown size={isMd ? 13 : 11} className="shrink-0" />

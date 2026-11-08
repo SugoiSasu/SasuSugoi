@@ -47,7 +47,7 @@ export function BottomTabBar() {
   // Six items either side of the FAB can't all carry full-width text labels on a
   // phone screen - only the active tab shows its label; the rest stay icon-only.
   const itemCls = (active: boolean) =>
-    `flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-semibold transition-colors ${
+    `flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-semibold transition-colors ${
       active ? "text-tomato" : "text-muted-foreground"
     }`;
   // Even the active tab's own label can overflow its ~43px slot on a 320px

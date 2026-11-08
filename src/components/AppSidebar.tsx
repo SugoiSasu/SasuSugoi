@@ -110,7 +110,7 @@ export function AppSidebar() {
         />
         <span className="leading-tight">
           <span className="block font-persona text-lg font-extrabold text-cream">poŻeramy</span>
-          <span className="block text-[10px] font-semibold uppercase tracking-wide text-cream/50">
+          <span className="block text-[11px] font-semibold uppercase tracking-wide text-cream/50">
             Foodie App
           </span>
         </span>
@@ -380,7 +380,7 @@ function StatChip({
     >
       <Icon size={15} className="text-tomato-on-dark" />
       <p className="font-display text-sm font-extrabold leading-none text-cream">{value}</p>
-      <p className="truncate text-[10px] font-semibold uppercase tracking-normal text-cream/70">
+      <p className="truncate text-[11px] font-semibold uppercase tracking-normal text-cream/70">
         {label}
       </p>
     </Link>

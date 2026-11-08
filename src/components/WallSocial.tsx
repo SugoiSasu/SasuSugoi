@@ -69,7 +69,7 @@ export function WallSocial({ kind, refId }: { kind: WallSocialKind; refId: strin
                     toast.error(err instanceof Error ? err.message : "Nie udało się dodać reakcji"),
                 });
               }}
-              className={`pz-reaction-pop chip text-sm disabled:opacity-60 disabled:pointer-events-none ${active ? "bg-tomato text-cream" : "bg-card border border-border hover:border-tomato"}`}
+              className={`pz-hit pz-reaction-pop chip text-sm disabled:opacity-60 disabled:pointer-events-none ${active ? "bg-tomato text-cream" : "bg-card border border-border hover:border-tomato"}`}
               aria-pressed={active}
               aria-label={WALL_REACTION_LABEL[t]}
               title={WALL_REACTION_LABEL[t]}
@@ -81,7 +81,7 @@ export function WallSocial({ kind, refId }: { kind: WallSocialKind; refId: strin
         })}
         <button
           onClick={() => setShowComments((s) => !s)}
-          className="chip bg-card border border-border hover:border-tomato text-sm"
+          className="pz-hit chip bg-card border border-border hover:border-tomato text-sm"
           aria-expanded={showComments}
         >
           <MessageCircle size={12} /> {comments?.length ?? 0}
@@ -176,7 +176,7 @@ function CommentItem({
             <TooltipProvider delayDuration={200}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="cursor-default text-[10px] text-muted-foreground">
+                  <span className="cursor-default text-[11px] text-muted-foreground">
                     (edytowano)
                   </span>
                 </TooltipTrigger>
@@ -217,7 +217,7 @@ function CommentItem({
               onClick={saveEdit}
               disabled={!draft.trim() || update.isPending}
               aria-label="Zapisz"
-              className="grid h-7 w-7 place-items-center rounded-full text-tomato hover:bg-tomato/10 disabled:opacity-50"
+              className="pz-hit grid h-7 w-7 place-items-center rounded-full text-tomato hover:bg-tomato/10 disabled:opacity-50"
             >
               <Check size={14} />
             </button>
@@ -228,7 +228,7 @@ function CommentItem({
                 setDraft(comment.body);
               }}
               aria-label="Anuluj"
-              className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted"
+              className="pz-hit grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-muted"
             >
               <X size={14} />
             </button>
@@ -243,7 +243,7 @@ function CommentItem({
             type="button"
             onClick={() => setEditing(true)}
             aria-label="Edytuj komentarz"
-            className="grid h-6 w-6 place-items-center rounded-full text-muted-foreground hover:bg-tomato/10 hover:text-tomato"
+            className="pz-hit grid h-6 w-6 place-items-center rounded-full text-muted-foreground hover:bg-tomato/10 hover:text-tomato"
           >
             <Pencil size={12} />
           </button>
@@ -252,7 +252,7 @@ function CommentItem({
             onClick={handleDelete}
             disabled={del.isPending}
             aria-label="Usuń komentarz"
-            className="grid h-6 w-6 place-items-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+            className="pz-hit grid h-6 w-6 place-items-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
           >
             <Trash2 size={12} />
           </button>

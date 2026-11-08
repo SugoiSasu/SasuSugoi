@@ -409,7 +409,7 @@ function GADebugPanel({ analyticsGranted }: { analyticsGranted: boolean }) {
 
 function StatusPill({ ok, okLabel, offLabel }: { ok: boolean; okLabel: string; offLabel: string }) {
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${ok ? "bg-emerald-500/20 text-emerald-200" : "bg-cream/10 text-cream/70"}`}>
+    <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${ok ? "bg-emerald-500/20 text-emerald-200" : "bg-cream/10 text-cream/70"}`}>
       {ok ? okLabel : offLabel}
     </span>
   );

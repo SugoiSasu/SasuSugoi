@@ -128,7 +128,7 @@ export function PlaceReviewsSection({ placeId }: { placeId: string }) {
                 <MyReviewAuthorLine />
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <RatingStars rating={myReview.rating} />
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
                     {new Date(myReview.created_at).toLocaleDateString("pl-PL")}
                   </span>
                   <EditedMarker createdAt={myReview.created_at} updatedAt={myReview.updated_at} />
@@ -435,7 +435,7 @@ function EditedMarker({
   if (new Date(updatedAt).getTime() - new Date(createdAt).getTime() <= 60_000) return null;
   return (
     <span
-      className="text-[10px] uppercase tracking-wider text-muted-foreground italic"
+      className="text-[11px] uppercase tracking-wider text-muted-foreground italic"
       title={`Edytowano ${new Date(updatedAt).toLocaleString("pl-PL")}`}
     >
       · edytowano
@@ -479,13 +479,13 @@ function ReviewAuthorLine({
           </Link>
           {isVipActive(author) && <VipBadge />}
           {isMe && (
-            <span className="rounded-full bg-tomato/15 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-tomato">
+            <span className="rounded-full bg-tomato/15 px-2 py-0.5 text-[11px] font-extrabold uppercase tracking-wider text-tomato">
               Ty
             </span>
           )}
         </div>
         <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-          <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground/70">
+          <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-foreground/70">
             Poziom {level}
           </span>
           <TitleTag title={author.active_title} />
@@ -556,7 +556,7 @@ function ReviewCard({
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <RatingStars rating={review.rating} />
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
               {new Date(review.created_at).toLocaleDateString("pl-PL")}
             </span>
             <EditedMarker createdAt={review.created_at} updatedAt={review.updated_at} />

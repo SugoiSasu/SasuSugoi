@@ -252,7 +252,7 @@ export function SiteNav() {
 
             <div>
               <div className="flex items-center gap-2 px-1 pb-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">
                   Odkrywaj
                 </span>
                 <span className="h-px flex-1 bg-border" />
@@ -272,7 +272,7 @@ export function SiteNav() {
             {user && (
               <div>
                 <div className="flex items-center gap-2 px-1 pb-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">
                     Społeczność
                   </span>
                   <span className="h-px flex-1 bg-border" />
@@ -307,7 +307,7 @@ export function SiteNav() {
 
             <div>
               <div className="flex items-center gap-2 px-1 pb-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">
                   Więcej
                 </span>
                 <span className="h-px flex-1 bg-border" />
@@ -374,7 +374,7 @@ function MobileStatChip({
     >
       <Icon size={15} className="text-tomato" />
       <p className="font-display text-sm font-extrabold leading-none">{value}</p>
-      <p className="truncate text-[10px] font-semibold uppercase tracking-normal text-muted-foreground">
+      <p className="truncate text-[11px] font-semibold uppercase tracking-normal text-muted-foreground">
         {label}
       </p>
     </Link>

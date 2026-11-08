@@ -892,7 +892,7 @@ function OwnerFooter({ placeId, placeName }: { placeId: string; placeName: strin
         >
           Jesteś właścicielem tego miejsca? Zgłoś się
         </button>
-        <div className="text-[10px] text-foreground/40 mt-0.5">
+        <div className="text-[11px] text-foreground/40 mt-0.5">
           Zweryfikujemy to i odezwiemy się do Ciebie
         </div>
       </div>

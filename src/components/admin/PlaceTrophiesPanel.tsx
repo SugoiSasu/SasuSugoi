@@ -166,7 +166,7 @@ export function PlaceTrophiesPanel({ placeId, autoSearch = false }: { placeId: s
               <li key={`g${i}`} className="flex items-center gap-2 text-sm">
                 <TrophyIcon trofeum={t} size={20} />
                 <span className="font-semibold">{podpisTrofeum(t)}</span>
-                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
                   z głosowania
                 </span>
               </li>
@@ -176,7 +176,7 @@ export function PlaceTrophiesPanel({ placeId, autoSearch = false }: { placeId: s
                 <TrophyIcon trofeum={t} size={20} />
                 <span className="font-semibold">{podpisTrofeum(t)}</span>
                 {t.proposed_by_ai && (
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
                     AI, zatwierdzone
                   </span>
                 )}

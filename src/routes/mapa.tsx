@@ -636,7 +636,7 @@ function SelectedCard({
             {chips.map((chip) => (
               <span
                 key={chip.label}
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${chip.cls}`}
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${chip.cls}`}
               >
                 {chip.icon}
                 {chip.label}

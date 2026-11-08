@@ -269,7 +269,7 @@ function PostCard({
     <li className="rounded-2xl border border-border bg-card p-4">
       <div className="flex items-start gap-2 mb-2">
         <span
-          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${typeMeta.cls}`}
+          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider ${typeMeta.cls}`}
         >
           {typeMeta.label}
         </span>

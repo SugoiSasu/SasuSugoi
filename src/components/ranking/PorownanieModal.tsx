@@ -55,7 +55,7 @@ export function PorownanieModal({ znajomy, onClose }: { znajomy: Gracz; onClose:
           <button type="button" onClick={onClose} aria-label="Zamknij" className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-cream/10">
             <X size={15} />
           </button>
-          <div className="text-[10px] font-extrabold uppercase tracking-[.13em] text-blush">Porównanie</div>
+          <div className="text-[11px] font-extrabold uppercase tracking-[.13em] text-blush">Porównanie</div>
           <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
             <div className="flex min-w-0 flex-col items-center gap-1.5">
               <UserAvatar

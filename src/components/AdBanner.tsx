@@ -67,7 +67,7 @@ export function AdBanner() {
         className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/15 to-transparent animate-[adb-shimmer_3.6s_linear_infinite]"
       />
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 py-1.5 flex items-center gap-3">
-        <span className="hidden sm:inline-flex items-center gap-1 chip bg-tomato text-cream text-[10px] uppercase tracking-wider animate-[adb-pulse_2.4s_ease-in-out_infinite]">
+        <span className="hidden sm:inline-flex items-center gap-1 chip bg-tomato text-cream text-[11px] uppercase tracking-wider animate-[adb-pulse_2.4s_ease-in-out_infinite]">
           <Megaphone size={10} /> Reklama
         </span>
         {ad.image_url && (
@@ -112,7 +112,7 @@ function AdContent({ ad, userId }: { ad: Ad; userId: string | undefined }) {
   const inner = (
     <span className="flex items-center gap-2 min-w-0">
       <span className="font-medium truncate">{ad.message}</span>
-      <span className="hidden sm:inline shrink-0 chip bg-tomato text-cream text-[10px]">
+      <span className="hidden sm:inline shrink-0 chip bg-tomato text-cream text-[11px]">
         {ad.cta_label || DEFAULT_AD_CTA}
       </span>
     </span>

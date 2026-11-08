@@ -500,7 +500,7 @@ function StatCard({ label, value, accent }: { label: string; value: number; acce
       >
         {value}
       </div>
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-2">{label}</div>
+      <div className="text-[11px] uppercase tracking-wider text-muted-foreground mt-2">{label}</div>
     </div>
   );
 }
@@ -666,13 +666,13 @@ function ReviewListItem({ review }: { review: any }) {
           )}
         </div>
         {review.body && <p className="text-sm text-muted-foreground line-clamp-3">{review.body}</p>}
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
           <span>{new Date(review.created_at).toLocaleDateString("pl-PL")}</span>
           {review.updated_at &&
             new Date(review.updated_at).getTime() - new Date(review.created_at).getTime() >
               60_000 && (
               <span
-                className="chip bg-cream border border-navy/20 text-navy/70 text-[10px] normal-case tracking-normal"
+                className="chip bg-cream border border-navy/20 text-navy/70 text-[11px] normal-case tracking-normal"
                 title={new Date(review.updated_at).toLocaleString("pl-PL")}
               >
                 edytowano · {relativeTimePl(review.updated_at)}
@@ -1164,7 +1164,7 @@ function AchievementTile({
             />
           </div>
           <div
-            className="mt-1 flex items-center justify-between gap-2 text-[10px]"
+            className="mt-1 flex items-center justify-between gap-2 text-[11px]"
             aria-hidden="true"
           >
             <span className="text-muted-foreground">

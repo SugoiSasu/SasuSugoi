@@ -259,7 +259,7 @@ function Stat({
       <div className={`font-display text-2xl leading-none ${highlight ? "text-tomato" : ""}`}>
         {value}
       </div>
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1.5">
+      <div className="text-[11px] uppercase tracking-wider text-muted-foreground mt-1.5">
         {label}
       </div>
     </button>
@@ -466,6 +466,13 @@ function FriendsTab({ myId }: { myId: string }) {
               />
             );
           })}
+          {(friends ?? []).length > 0 && (friends ?? []).length < 5 && filtered.length === (friends ?? []).length && (
+            <li className="rounded-2xl border border-dashed border-border p-5 text-center">
+              <p className="text-sm font-semibold">Więcej znajomych, więcej polecajek</p>
+              <p className="mt-1 text-xs text-muted-foreground">Zaproś osoby, które lubią jeść - zobaczysz, gdzie byli, i dostaniesz propozycje wspólnych wyjść.</p>
+              <Link to="/friends" search={{ tab: "invite" }} className="mt-3 inline-flex min-h-11 items-center rounded-full bg-tomato px-5 text-xs font-semibold text-cream">Zaproś znajomych</Link>
+            </li>
+          )}
         </ul>
       </AsyncState>
     </section>
@@ -924,7 +931,7 @@ function InviteBlock() {
         <div className="grid grid-cols-3 gap-2 mb-3">
           <div className="bg-card border border-border rounded-2xl p-3 text-center">
             <div className="font-display text-2xl leading-none">{stats.sent}</div>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1.5">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mt-1.5">
               Wysłane
             </div>
           </div>
@@ -932,7 +939,7 @@ function InviteBlock() {
             <div className="font-display text-2xl leading-none text-emerald-600">
               {stats.accepted}
             </div>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1.5">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mt-1.5">
               Dołączyło
             </div>
           </div>
@@ -940,7 +947,7 @@ function InviteBlock() {
             <div className="font-display text-2xl leading-none text-tomato">
               +{stats.totalPoints}
             </div>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1.5">
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mt-1.5">
               Punktów
             </div>
           </div>

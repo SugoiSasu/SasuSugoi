@@ -21,7 +21,7 @@ export function CollectionSummary({ zdobyte, lacznie, wToku, wgRzadkosci }: Prop
 
   return (
     <section className="rounded-2xl border border-border bg-card p-4">
-      <h2 className="text-[10px] font-extrabold uppercase tracking-[0.09em] text-muted-foreground">
+      <h2 className="text-[11px] font-extrabold uppercase tracking-[0.09em] text-muted-foreground">
         Twoja kolekcja
       </h2>
 
@@ -42,13 +42,13 @@ export function CollectionSummary({ zdobyte, lacznie, wToku, wgRzadkosci }: Prop
 
       <dl className="mt-3.5 grid grid-cols-2 gap-2">
         <div className="rounded-xl bg-muted/60 px-3 py-2">
-          <dt className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+          <dt className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
             W toku
           </dt>
           <dd className="font-display text-lg font-extrabold leading-tight text-tomato">{wToku}</dd>
         </div>
         <div className="rounded-xl bg-muted/60 px-3 py-2">
-          <dt className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+          <dt className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
             Do zdobycia
           </dt>
           <dd className="font-display text-lg font-extrabold leading-tight">{doZdobycia}</dd>

@@ -132,7 +132,7 @@ export function NotificationBell() {
               {offline && (
                 <span
                   title="Realtime niedostępne - używamy odpytywania co 15 s"
-                  className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-full px-2 py-0.5"
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-full px-2 py-0.5"
                 >
                   <WifiOff size={10} /> offline
                 </span>
@@ -211,7 +211,7 @@ function NotificationRow({ n, onClick }: { n: Notification; onClick: () => void 
       <div className="min-w-0 flex-1">
         <div className="text-sm font-semibold truncate">{n.title}</div>
         {n.body && <div className="text-xs text-muted-foreground line-clamp-2">{n.body}</div>}
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">{timeAgo(n.created_at)}</div>
+        <div className="text-[11px] uppercase tracking-wider text-muted-foreground mt-1">{timeAgo(n.created_at)}</div>
       </div>
       {!n.read_at && <span className="mt-1 w-2 h-2 rounded-full bg-tomato shrink-0" />}
     </>

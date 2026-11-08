@@ -320,7 +320,7 @@ export function SwipeCard({
                       ★
                     </span>
                     <span className="min-w-0">
-                      <span className="block text-[10px] font-extrabold tracking-[0.08em] text-cream/70">
+                      <span className="block text-[11px] font-extrabold tracking-[0.08em] text-cream/70">
                         Z MENU
                       </span>
                       <span className="block truncate text-xs font-extrabold">{danie}</span>
@@ -332,7 +332,7 @@ export function SwipeCard({
                     {cechy.map((c) => (
                       <span
                         key={c}
-                        className="rounded-full border border-cream/25 px-2.5 py-0.5 text-[10.5px] font-bold"
+                        className="rounded-full border border-cream/25 px-2.5 py-0.5 text-[11px] font-bold"
                       >
                         {c}
                       </span>
