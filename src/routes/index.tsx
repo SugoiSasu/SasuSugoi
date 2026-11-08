@@ -27,6 +27,7 @@ import { pickSeeded } from "@/lib/seeded-pick";
 import { useCutoutLogoReady } from "@/lib/chroma-cutout";
 import { TrophyIcon } from "@/components/TrophyIcon";
 import { formatCena } from "@/lib/price";
+import { PriceLevel } from "@/components/PriceLevel";
 import { useWszystkieTrofea } from "@/lib/trophies-api";
 import { podpisTrofeum, type Trofeum } from "@/lib/trophies";
 import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
@@ -373,6 +374,12 @@ function Index() {
             <Mail size={12} /> po.zeramy@gmail.com
           </a>
         </nav>
+        <p className="mt-2 text-center text-[11px] text-muted-foreground/80">
+          Flagi: Twemoji (Twitter), licencja{" "}
+          <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" className="underline hover:text-tomato">
+            CC-BY 4.0
+          </a>
+        </p>
       </div>
 
       <FirstVisitPopup />
@@ -487,6 +494,9 @@ const DiscoverCard = memo(function DiscoverCard({
   // prostokatem (po ciemku razi najbardziej).
   const cutout = useCutoutLogoReady(place.avatar_url, place.avatar_cutout_enabled !== false);
   const cutoutLogo = cutout.src;
+  // Logo o malej rozdzielczosci (np. 64 px) rozciagniete na cala karte wychodzi rozmazane: pokazujemy je
+  // w naturalnym rozmiarze na srodku, zamiast je powiekszac.
+  const [niskaRozdzielczosc, setNiskaRozdzielczosc] = useState(false);
   const { user } = useUser();
   const isFav = useIsFavorite(place.id);
   const toggle = useToggleFavorite();
@@ -555,7 +565,8 @@ const DiscoverCard = memo(function DiscoverCard({
                   src={cutoutLogo ?? place.avatar_url}
                   alt={place.name}
                   loading="lazy"
-                  className={`h-full w-full object-contain p-6 transition duration-500 ${cutout.gotowe ? "opacity-100" : "opacity-0"} group-hover:scale-[1.04] dark:p-4 dark:drop-shadow-[0_0_1.5px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_0_4px_rgba(255,255,255,0.45)] dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.2)]`}
+                  onLoad={(e) => setNiskaRozdzielczosc(e.currentTarget.naturalWidth > 0 && e.currentTarget.naturalWidth < 160)}
+                  className={`${niskaRozdzielczosc ? "absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 object-contain" : "h-full w-full object-contain p-6 group-hover:scale-[1.04] dark:p-4"} transition duration-500 ${cutout.gotowe ? "opacity-100" : "opacity-0"} dark:drop-shadow-[0_0_1.5px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_0_4px_rgba(255,255,255,0.45)] dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.2)]`}
                 />
               )}
             </div>
@@ -609,7 +620,7 @@ const DiscoverCard = memo(function DiscoverCard({
             <p className="mt-1 flex items-center gap-2 truncate text-xs">
               <OpenStatus hours={place.opening_hours} />
               {formatCena(place.price_range) && (
-                <span className="text-muted-foreground">{formatCena(place.price_range)}</span>
+                <PriceLevel value={place.price_range} />
               )}
             </p>
           )}

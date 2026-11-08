@@ -158,7 +158,7 @@ export function BottomTabBar() {
               type="button"
               onClick={() => setSheetOpen(true)}
               aria-label="Dodaj"
-              className="-mt-5 grid h-14 w-14 place-items-center rounded-full bg-tomato text-cream shadow-lg shadow-tomato/30 transition active:scale-95"
+              className={`${pathname.startsWith("/k/") ? "mt-1 h-12 w-12" : "-mt-5 h-14 w-14"} grid place-items-center rounded-full bg-tomato text-cream shadow-lg shadow-tomato/30 transition active:scale-95`}
             >
               <Plus size={26} />
             </button>
