@@ -56,7 +56,7 @@ const linkBase =
 const iconCls = "shrink-0 transition-transform duration-200 ease-out group-hover:scale-110";
 const activeCls = {
   className:
-    "animate-in fade-in zoom-in-95 duration-300 ease-out bg-tomato text-cream shadow-md shadow-tomato/25 hover:translate-x-0 hover:bg-tomato",
+    "animate-in fade-in zoom-in-95 duration-300 ease-out bg-tomato text-cream! shadow-md shadow-tomato/25 hover:translate-x-0 hover:bg-tomato",
 };
 const sectionPanel =
   "pz-sidebar-nav space-y-0.5 rounded-2xl bg-cream/[0.05] p-1.5 ring-1 ring-cream/[0.06]";

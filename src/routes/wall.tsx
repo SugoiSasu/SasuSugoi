@@ -1431,7 +1431,7 @@ function WallRail() {
     <aside className="sticky top-6 hidden w-72 shrink-0 flex-col gap-4 min-[1250px]:flex">
       {liveNow.length > 0 && (
         <div className="rounded-3xl bg-navy p-5 text-cream">
-          <div className="mb-3 text-[10px] font-extrabold uppercase tracking-widest text-cream/50">
+          <div className="mb-3 text-[11px] font-extrabold uppercase tracking-widest text-cream/70">
             Dzieje się teraz
           </div>
           <ul className="space-y-3">
@@ -1440,7 +1440,7 @@ function WallRail() {
                 <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-tomato-on-dark" />
                 <div className="min-w-0 text-sm leading-snug [&_a:hover]:text-tomato-on-dark">
                   <HeaderLine item={it} />
-                  <div className="mt-0.5 text-[11px] text-cream/50">{timeAgo(it.created_at)}</div>
+                  <div className="mt-0.5 text-[11px] text-cream/70">{timeAgo(it.created_at)}</div>
                 </div>
               </li>
             ))}
