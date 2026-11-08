@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useCutoutLogoReady } from "@/lib/chroma-cutout";
+import { useCutoutLogoReady, useKafelLogo } from "@/lib/chroma-cutout";
 
 /**
  * Logo lokalu zawsze w kółku - jedno miejsce na to, co dotąd było powielone w kartach, Kartach i liście mapy.
@@ -54,9 +54,13 @@ function Zastepcze({ emoji, color, className }: { emoji?: string; color?: string
 }
 
 function Lekkie({ name, avatarUrl, fallbackEmoji, fallbackColor, className = "" }: PlaceLogoProps) {
+  const k = useKafelLogo(avatarUrl);
   if (!avatarUrl) return <Zastepcze emoji={fallbackEmoji} color={fallbackColor} className={className} />;
   return (
-    <span className={`${KOLKO} bg-white dark:bg-white/[0.08] ${className}`}>
+    <span
+      className={`${KOLKO} ${k.kafel ? "" : "bg-white dark:bg-white/[0.08]"} ${className}`}
+      style={k.kafel ? { backgroundColor: k.kolor } : undefined}
+    >
       <Obraz src={avatarUrl} alt={name} />
     </span>
   );

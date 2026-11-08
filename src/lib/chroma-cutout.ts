@@ -273,6 +273,28 @@ export function useCutoutLogoReady(url: string | null | undefined, wytnij = true
   return stan;
 }
 
+/**
+ * Tylko rozpoznanie kafla (logo z jednolitym, pelnym tlem), bez wycinania tla - lekkie (probka 128 px,
+ * wynik w cache), wiec nadaje sie do dlugich list.
+ */
+export function useKafelLogo(url: string | null | undefined): Kafel {
+  const [k, setK] = useState<Kafel>(BRAK_KAFLA);
+  useEffect(() => {
+    if (!url) {
+      setK(BRAK_KAFLA);
+      return;
+    }
+    let cancelled = false;
+    void analizaKafla(url).then((r) => {
+      if (!cancelled) setK(r);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [url]);
+  return k;
+}
+
 /** Returns a background-cut-out blob URL once ready, or null while loading/unavailable. */
 export function useCutoutLogo(url: string | null | undefined): string | null {
   const [result, setResult] = useState<string | null>(null);
