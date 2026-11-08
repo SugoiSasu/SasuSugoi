@@ -408,12 +408,10 @@ function MapaPage() {
                             {r.avg.toFixed(1)}{" "}
                             <span className="font-normal text-muted-foreground">({r.count})</span>
                           </>
-                        ) : (
-                          <span className="font-normal text-muted-foreground">Brak ocen</span>
-                        )}
+                        ) : null}
                         {dist !== null && (
                           <span className="font-normal text-muted-foreground">
-                            · {formatDistancePl(dist)}
+                            {r ? "· " : ""}{formatDistancePl(dist)}
                           </span>
                         )}
                       </p>
@@ -625,11 +623,9 @@ function SelectedCard({
               {stat.avg.toFixed(1)}{" "}
               <span className="font-normal text-muted-foreground">({stat.count})</span>
             </>
-          ) : (
-            <span className="font-normal text-muted-foreground">Brak ocen</span>
-          )}
+          ) : null}
           {dist != null && (
-            <span className="font-normal text-muted-foreground">· {formatDistancePl(dist)}</span>
+            <span className="font-normal text-muted-foreground">{stat ? "· " : ""}{formatDistancePl(dist)}</span>
           )}
         </p>
         {/* OpenStatus sam nic nie rysuje, gdy lokal nie ma godzin otwarcia -
