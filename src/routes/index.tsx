@@ -24,10 +24,10 @@ import { useFriendRecommendations } from "@/lib/friends-api";
 import { useActiveAds, type Ad } from "@/lib/ads-api";
 import { SponsoredDiscoverCard } from "@/components/SponsoredDiscoverCard";
 import { pickSeeded } from "@/lib/seeded-pick";
-import { useCutoutLogoReady } from "@/lib/chroma-cutout";
 import { TrophyIcon } from "@/components/TrophyIcon";
 import { formatCena } from "@/lib/price";
 import { PriceLevel } from "@/components/PriceLevel";
+import { PlaceLogo } from "@/components/PlaceLogo";
 import { useWszystkieTrofea } from "@/lib/trophies-api";
 import { podpisTrofeum, type Trofeum } from "@/lib/trophies";
 import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
@@ -292,6 +292,12 @@ function Index() {
 
         {!empty && (
           <>
+            {/* Pod lg: losowanie tuz pod wyszukiwarka (to glowne narzedzie decyzji na telefonie), a nie na samym
+                dole. Na desktopie ten sam widget jest w panelu bocznym - dwa losowania na jednym ekranie by sobie
+                przeczyly. */}
+            <div className="pb-1 pt-3 lg:hidden">
+              <RandomPlaceCard userId={user?.id} variant="panel" />
+            </div>
             <RecentlyViewedStrip />
             <PlaceRail
               // Lista jest sortowana po sredniej ocenie, nie po wizytach -
@@ -328,13 +334,6 @@ function Index() {
             />
           </>
         )}
-
-        {/* Below lg only: on desktop the same widget already lives in the
-            sidebar, and two random picks on one screen would contradict
-            each other. */}
-        <div className="py-4 lg:hidden">
-          <RandomPlaceCard userId={user?.id} variant="panel" />
-        </div>
 
         <HomeSocialBand />
 
@@ -490,13 +489,6 @@ const DiscoverCard = memo(function DiscoverCard({
   trofeum?: Trofeum | null;
 }) {
   const meta = cuisineMeta(place.cuisine);
-  // Logo pokazujemy dopiero po wycieciu tla: wczesniej mignal oryginal z bialym
-  // prostokatem (po ciemku razi najbardziej).
-  const cutout = useCutoutLogoReady(place.avatar_url, place.avatar_cutout_enabled !== false);
-  const cutoutLogo = cutout.src;
-  // Logo o malej rozdzielczosci (np. 64 px) rozciagniete na cala karte wychodzi rozmazane: pokazujemy je
-  // w naturalnym rozmiarze na srodku, zamiast je powiekszac.
-  const [niskaRozdzielczosc, setNiskaRozdzielczosc] = useState(false);
   const { user } = useUser();
   const isFav = useIsFavorite(place.id);
   const toggle = useToggleFavorite();
@@ -536,55 +528,36 @@ const DiscoverCard = memo(function DiscoverCard({
       </button>
 
       <Link to="/k/$id" params={{ id: place.slug ?? place.id }} className="block">
-        <div
-          className={`relative aspect-[5/4] overflow-hidden ${place.avatar_url ? "bg-white dark:bg-card" : ""}`}
-          style={place.avatar_url ? undefined : { backgroundColor: meta.color }}
-        >
-          {place.avatar_url ? (
-            // Jasny motyw: logo na bialym, cala plaszczyzna. Ciemny motyw: zadnego jasnego tla (razi po
-            // ciemku) - ciemna plytka, a ciemne elementy loga dostaja jasna poswiate.
-            <div className="absolute inset-0 dark:inset-3 dark:rounded-2xl dark:bg-white/[0.06]">
-              {cutout.kafel ? (
-                // Prostokatne/kwadratowe logo w kole w kolorze wlasnego tla -
-                // spojnie z okraglymi (bez poswiaty: kolo ma wlasne tlo).
-                <div className="grid h-full place-items-center p-5 dark:p-4">
-                  <div
-                    className="aspect-square h-full overflow-hidden rounded-full transition duration-500 group-hover:scale-[1.04]"
-                    style={{ backgroundColor: cutout.kolor }}
-                  >
-                    <img
-                      src={cutoutLogo ?? place.avatar_url}
-                      alt={place.name}
-                      loading="lazy"
-                      className="h-full w-full object-contain p-[13%]"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <img
-                  src={cutoutLogo ?? place.avatar_url}
-                  alt={place.name}
-                  loading="lazy"
-                  onLoad={(e) => setNiskaRozdzielczosc(e.currentTarget.naturalWidth > 0 && e.currentTarget.naturalWidth < 160)}
-                  className={`${niskaRozdzielczosc ? "absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 object-contain" : "h-full w-full object-contain p-6 group-hover:scale-[1.04] dark:p-4"} transition duration-500 ${cutout.gotowe ? "opacity-100" : "opacity-0"} dark:drop-shadow-[0_0_1.5px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_0_4px_rgba(255,255,255,0.45)] dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.2)]`}
-                />
-              )}
-            </div>
-          ) : place.cover_image_url ? (
+        {/* Zdjecie (okladka albo tlo kuchni), a logo w kolku wsuniete w dolny rog - logo nigdy nie jest
+            powiekszane na cala karte (rozmazane male pliki). */}
+        <div className="relative">
+        <div className="relative aspect-[16/10] overflow-hidden" style={{ backgroundColor: meta.color }}>
+          {place.cover_image_url ? (
             <img
               src={place.cover_image_url}
-              alt={place.name}
+              alt=""
               loading="lazy"
               className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
             />
           ) : (
             <div className="absolute inset-0">
-              <CuisineFallbackCover cuisine={place.cuisine} emojiClassName="text-[6rem]" />
+              <CuisineFallbackCover cuisine={place.cuisine} emojiClassName="text-[5rem]" />
             </div>
           )}
-          {!place.avatar_url && (
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-navy/45 via-transparent to-transparent" />
-          )}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-navy/40 via-transparent to-navy/10" />
+          <div className="absolute left-3 top-3 flex items-center gap-1.5">
+            <span
+              className={`chip shadow-sm ${readableTextClass(readableFill(meta.color))}`}
+              style={{ backgroundColor: readableFill(meta.color) }}
+            >
+              {meta.emoji} {place.cuisine}
+            </span>
+            {isNewPlace(place.created_at) && (
+              <span className="rounded-full bg-tomato px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-cream shadow-sm">
+                Nowość
+              </span>
+            )}
+          </div>
           {trofeum && (
             <span
               title={podpisTrofeum(trofeum)}
@@ -594,19 +567,17 @@ const DiscoverCard = memo(function DiscoverCard({
               <span className="sr-only">{podpisTrofeum(trofeum)}</span>
             </span>
           )}
-          {isNewPlace(place.created_at) && (
-            <span className="absolute left-3 top-3 rounded-full bg-tomato px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-cream shadow-sm">
-              Nowość
-            </span>
-          )}
-          <span
-            className={`absolute bottom-3 left-3 chip shadow-sm ${readableTextClass(readableFill(meta.color))}`}
-            style={{ backgroundColor: readableFill(meta.color) }}
-          >
-            {meta.emoji} {place.cuisine}
-          </span>
         </div>
-        <div className="p-4">
+        <PlaceLogo
+          name={place.name}
+          avatarUrl={place.avatar_url}
+          cutoutEnabled={place.avatar_cutout_enabled !== false}
+          fallbackEmoji={meta.emoji}
+          fallbackColor={readableFill(meta.color)}
+          className="absolute -bottom-7 left-4 h-14 w-14 text-xl shadow-md ring-4 ring-card"
+        />
+        </div>
+        <div className="px-4 pb-4 pt-9">
           <SmartText as="h3" className="font-display text-lg leading-tight">
             {place.name}
           </SmartText>

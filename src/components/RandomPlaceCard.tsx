@@ -76,7 +76,7 @@ export function RandomPlaceCard({
         <div className="flex items-center gap-2 px-5 pt-4">
           <Dices size={14} />
           <h2 className="text-[11px] font-bold uppercase tracking-wider text-cream">
-            Losowa polecajka
+            Wylosuj mi obiad
           </h2>
         </div>
         <Link
