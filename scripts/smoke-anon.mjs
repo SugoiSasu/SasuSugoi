@@ -190,6 +190,37 @@ if (SUPABASE && KLUCZ && przykladowyLokal) {
   }
 }
 
+// 6. Wspolne wyjscie (migracja 20261108130000): gosc nie czyta tabel ani nie wola funkcji.
+// Przed wgraniem migracji tabel nie ma (404) - to nie wyciek, wiec tez zaliczamy.
+if (SUPABASE && KLUCZ) {
+  const SESJA = "00000000-0000-0000-0000-000000000000";
+  const rpc = (nazwa, body) =>
+    fetch(`${SUPABASE}/rest/v1/rpc/${nazwa}`, {
+      method: "POST",
+      headers: { apikey: KLUCZ, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  const tabela = (nazwa, kolumna) => fetch(`${SUPABASE}/rest/v1/${nazwa}?select=${kolumna}&limit=1`, { headers: { apikey: KLUCZ } });
+  const proby = [
+    ["tabela outing_sessions", () => tabela("outing_sessions", "id")],
+    ["tabela outing_votes", () => tabela("outing_votes", "user_id")],
+    ["create_outing", () => rpc("create_outing", { _friend_ids: [], _place_ids: [] })],
+    ["outing_get", () => rpc("outing_get", { _session: SESJA })],
+    ["outing_results", () => rpc("outing_results", { _session: SESJA })],
+    ["outing_friends", () => rpc("outing_friends", {})],
+  ];
+  for (const [nazwa, wywolaj] of proby) {
+    try {
+      const r = await wywolaj();
+      const tekst = (await r.text()).trim();
+      const wyciek = r.ok && tekst !== "[]" && tekst !== "";
+      zapisz(`anon NIE czyta wspolnego wyjscia: ${nazwa}`, !wyciek, wyciek ? "zwrocilo dane" : `HTTP ${r.status}`);
+    } catch (err) {
+      zapisz(`anon NIE czyta wspolnego wyjscia: ${nazwa}`, false, err.message);
+    }
+  }
+}
+
 const ok = wyniki.filter(Boolean).length;
 console.log(`\npodsumowanie: ${ok}/${wyniki.length}`);
 process.exit(ok === wyniki.length ? 0 : 1);

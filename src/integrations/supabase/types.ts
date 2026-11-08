@@ -2983,6 +2983,49 @@ export type Database = {
           srednia_ocena: number
         }[]
       }
+      create_outing: {
+        Args: { _friend_ids: string[]; _place_ids: string[] }
+        Returns: string
+      }
+      is_outing_member: {
+        Args: { _session: string }
+        Returns: boolean
+      }
+      outing_close: {
+        Args: { _session: string }
+        Returns: undefined
+      }
+      outing_friends: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          username: string | null
+          display_name: string | null
+          avatar_url: string | null
+          avatar_source: string
+          is_vip: boolean
+          vip_until: string | null
+          vip_nick_color: string | null
+        }[]
+      }
+      outing_get: {
+        Args: { _session: string }
+        Returns: Json
+      }
+      outing_results: {
+        Args: { _session: string }
+        Returns: {
+          place_id: string
+          yes_count: number
+          no_count: number
+          members_total: number
+          ideal: boolean
+        }[]
+      }
+      outing_vote: {
+        Args: { _session: string; _place: string; _vote: boolean }
+        Returns: undefined
+      }
       propose_outing: {
         Args: { _place_id: string }
         Returns: number
