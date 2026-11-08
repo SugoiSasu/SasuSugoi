@@ -1725,6 +1725,7 @@ export type Database = {
         Row: {
           address: string
           avatar_cutout_enabled: boolean
+          logo_has_name: boolean
           avatar_url: string | null
           cover_image_url: string | null
           created_at: string
@@ -1756,6 +1757,7 @@ export type Database = {
         Insert: {
           address?: string
           avatar_cutout_enabled?: boolean
+          logo_has_name?: boolean
           avatar_url?: string | null
           cover_image_url?: string | null
           created_at?: string
@@ -1787,6 +1789,7 @@ export type Database = {
         Update: {
           address?: string
           avatar_cutout_enabled?: boolean
+          logo_has_name?: boolean
           avatar_url?: string | null
           cover_image_url?: string | null
           created_at?: string

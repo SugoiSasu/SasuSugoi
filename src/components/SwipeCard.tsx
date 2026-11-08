@@ -221,11 +221,12 @@ export function SwipeCard({
                 className={`relative h-full w-full object-contain drop-shadow-[0_6px_16px_rgba(0,0,0,0.45)] transition-opacity duration-300 ${logoWidoczne ? "opacity-100" : "opacity-0"}`}
               />
             </div>
-            {!expanded && (
+            {!expanded && !(place.logo_has_name && place.avatar_url) && (
               <h2 className="line-clamp-2 shrink-0 font-display text-xl font-extrabold leading-tight text-cream drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)] sm:text-2xl">
                 {place.name}
               </h2>
             )}
+            {!expanded && place.logo_has_name && place.avatar_url && <h2 className="sr-only">{place.name}</h2>}
           </div>
 
           <div

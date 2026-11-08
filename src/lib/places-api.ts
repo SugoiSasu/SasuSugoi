@@ -73,6 +73,7 @@ export interface Place {
   cover_image_url: string | null;
   avatar_url: string | null;
   avatar_cutout_enabled: boolean;
+  logo_has_name: boolean;
   menu_url: string | null;
   menu_image_url: string | null;
   promo_label: string | null;
@@ -128,7 +129,7 @@ export function placesQueryOptions() {
 }
 
 const PLACES_LITE_COLUMNS =
-  "id,name,cuisine,description,rating,address,lat,lng,reel_url,cover_image_url,sort_order,created_at,updated_at,menu_url,menu_image_url,slug,promo_label,promo_active,phone,website,price_range,has_takeaway,wheelchair_accessible,district,opening_hours,is_published,avatar_url,avatar_cutout_enabled";
+  "id,name,cuisine,description,rating,address,lat,lng,reel_url,cover_image_url,sort_order,created_at,updated_at,menu_url,menu_image_url,slug,promo_label,promo_active,phone,website,price_range,has_takeaway,wheelchair_accessible,district,opening_hours,is_published,avatar_url,avatar_cutout_enabled,logo_has_name";
 
 export function usePlaces() {
   return useQuery(placesQueryOptions());
