@@ -2983,6 +2983,14 @@ export type Database = {
           srednia_ocena: number
         }[]
       }
+      taste_match: {
+        Args: { _friend: string }
+        Returns: Json
+      }
+      taste_profile: {
+        Args: { _user: string }
+        Returns: Json
+      }
       create_outing: {
         Args: { _friend_ids: string[]; _place_ids: string[] }
         Returns: string

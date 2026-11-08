@@ -58,6 +58,7 @@ import {
 import { useUserVisitedPlaces, useUserFavoritePlaces } from "@/lib/visits-api";
 import { useUser } from "@/lib/use-auth";
 import { usePlaces, usePlaceRatingsMap } from "@/lib/places-api";
+import { ProfilGustuSekcja } from "@/components/TasteComponents";
 import { UserAvatar } from "@/components/UserAvatar";
 import { PlaceListGrid } from "@/components/VisitStatus";
 import { CollapsiblePlaceList } from "@/components/CollapsiblePlaceList";
@@ -402,6 +403,8 @@ function PublicProfile() {
           referrals_count: isMe ? (inviteStats?.accepted ?? 0) : 0,
         }}
       />
+
+      <ProfilGustuSekcja profileId={profile.id} isMe={isMe} />
 
       {/* Place lists */}
       <PlaceLists userId={profile.id} isMe={isMe} cuisines={profile.favorite_cuisines ?? []} />
