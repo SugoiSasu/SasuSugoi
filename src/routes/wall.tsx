@@ -799,9 +799,12 @@ function PlacePickerField({
 
 function FeedCard({ item }: { item: WallItem }) {
   const author = item.author;
+  // Cichsza gamifikacja: pojedyncza odznaka i "chce odwiedzic" to jedna linia, bez wlasnej ramki tresci i bez
+  // powtarzania nazwy odznaki pod naglowkiem.
+  const kompakt = item.kind === "want" || (item.kind === "achievement_group" && (item.achievements?.length ?? 0) <= 1);
   return (
-    <li className="bg-card border border-border rounded-2xl p-4">
-      <div className="flex items-center gap-3 mb-2">
+    <li className={`bg-card border border-border rounded-2xl ${kompakt ? "p-3" : "p-4"}`}>
+      <div className={`flex items-center gap-3 ${kompakt ? "" : "mb-2"}`}>
         {item.kind === "place_post" ? (
           <div className="grid place-items-center w-9 h-9 rounded-full bg-tomato/10 text-tomato">
             <Megaphone size={16} />
@@ -856,7 +859,7 @@ function FeedCard({ item }: { item: WallItem }) {
           <SmartText>{item.text}</SmartText>
         </div>
       )}
-      {item.kind === "achievement_group" && item.achievements && item.achievements.length > 0 && (
+      {item.kind === "achievement_group" && item.achievements && item.achievements.length > 1 && (
         <div className="flex flex-wrap gap-2">
           {item.achievements.map((a) => (
             <span
