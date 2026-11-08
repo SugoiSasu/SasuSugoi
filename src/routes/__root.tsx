@@ -76,6 +76,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteNav } from "@/components/SiteNav";
 import { AppSidebar } from "@/components/AppSidebar";
 import { installAppLinkNavigation, isNativeApp } from "@/lib/native-auth";
+import { BOOT_SPLASH_SCRIPT, dismissBootSplash } from "@/lib/boot-splash";
 import { BottomTabBar } from "@/components/BottomTabBar";
 import { useNowaWersja } from "@/lib/nowa-wersja";
 
@@ -283,6 +284,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
     ],
     scripts: [
+      { children: BOOT_SPLASH_SCRIPT },
       {
         // Applies the saved theme before the first paint - without it the page
         // renders light and flips once React hydrates, which is worse than having
@@ -379,6 +381,7 @@ function RootComponent() {
     installPolishStripper();
   }, []);
   useEffect(() => (isNativeApp() ? installAppLinkNavigation() : undefined), []);
+  useEffect(() => dismissBootSplash(), []);
   // Aplikacja z ekranu glownego iPhone'a trzymala stara wersje do zamkniecia.
   useNowaWersja();
 
