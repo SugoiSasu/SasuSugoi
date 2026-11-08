@@ -577,8 +577,8 @@ const DiscoverCard = memo(function DiscoverCard({
           className="absolute -bottom-7 left-4 h-14 w-14 text-xl shadow-md ring-4 ring-card"
         />
         </div>
-        <div className="px-4 pb-4 pt-9">
-          <SmartText as="h3" className="font-display text-lg leading-tight">
+        <div className="px-4 pb-4 pt-2">
+          <SmartText as="h3" className="min-h-7 pl-[4.25rem] font-display text-lg leading-tight">
             {place.name}
           </SmartText>
           {/* This line used to repeat the cuisine, which the chip on the

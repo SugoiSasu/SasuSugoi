@@ -25,6 +25,8 @@ export type PlaceLogoProps = {
 
 const POSWIATA_CIEMNA =
   "dark:drop-shadow-[0_0_1.5px_rgba(255,255,255,0.95)] dark:drop-shadow-[0_0_4px_rgba(255,255,255,0.4)]";
+/** Tlo kolka bez kafla: jasne logo dostaje granatowe (na bialym byloby niewidoczne), reszta bialy/ciemna plytka. */
+const tloKolka = (jasne?: boolean) => (jasne ? "bg-navy" : "bg-white dark:bg-white/[0.08]");
 const KOLKO = "relative grid aspect-square place-items-center overflow-hidden rounded-full";
 
 /** Obraz w kółku: pełne wypełnienie z marginesem, a dla małych plików naturalny rozmiar na środku. */
@@ -69,10 +71,10 @@ function Lekkie({ name, avatarUrl, fallbackEmoji, fallbackColor, className = "" 
   if (!avatarUrl) return <Zastepcze emoji={fallbackEmoji} color={fallbackColor} className={className} />;
   return (
     <span
-      className={`${KOLKO} ${k.kafel ? "" : "bg-white dark:bg-white/[0.08]"} ${className}`}
+      className={`${KOLKO} ${k.kafel ? "" : tloKolka(k.jasne)} ${className}`}
       style={k.kafel ? { backgroundColor: k.kolor } : undefined}
     >
-      <Obraz src={avatarUrl} alt={name} poswiata={!k.kafel} />
+      <Obraz src={avatarUrl} alt={name} poswiata={!k.kafel && !k.jasne} />
     </span>
   );
 }
@@ -84,10 +86,10 @@ function Pelne({ name, avatarUrl, cutoutEnabled = true, fallbackEmoji, fallbackC
   const kafel = cutout.kafel;
   return (
     <span
-      className={`${KOLKO} ${kafel ? "" : "bg-white dark:bg-white/[0.08]"} ${className}`}
+      className={`${KOLKO} ${kafel ? "" : tloKolka(cutout.jasne)} ${className}`}
       style={kafel ? { backgroundColor: cutout.kolor } : undefined}
     >
-      <Obraz src={cutout.src ?? avatarUrl} alt={name} gotowe={cutout.gotowe} poswiata={!kafel} />
+      <Obraz src={cutout.src ?? avatarUrl} alt={name} gotowe={cutout.gotowe} poswiata={!kafel && !cutout.jasne} />
     </span>
   );
 }

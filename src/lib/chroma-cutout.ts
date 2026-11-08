@@ -175,7 +175,8 @@ function cutoutBackground(url: string): Promise<string> {
  * srodkow czterech krawedzi jest wspolny - inaczej (np. ikona z wzorem) nie
  * dobierzemy koloru koła i zostawiamy logo jak jest.
  */
-export type Kafel = { kafel: boolean; kolor: string };
+/** jasne: logo (poza tlem) jest w wiekszosci jasne - na bialym kolku byloby niewidoczne, wiec dostaje ciemne. */
+export type Kafel = { kafel: boolean; kolor: string; jasne?: boolean };
 const BRAK_KAFLA: Kafel = { kafel: false, kolor: "transparent" };
 const kaflaCache = new Map<string, Promise<Kafel>>();
 
@@ -197,6 +198,16 @@ function analizaKafla(src: string): Promise<Kafel> {
         if (!ctx) return resolve(BRAK_KAFLA);
         ctx.drawImage(img, 0, 0, w, h);
         const d = ctx.getImageData(0, 0, w, h).data;
+        let sumaL = 0;
+        let wagi = 0;
+        for (let i = 0; i < d.length; i += 4) {
+          const a = d[i + 3] / 255;
+          if (a < 0.2) continue;
+          sumaL += a * (0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]);
+          wagi += a;
+        }
+        const jasne = wagi > 0 && sumaL / wagi / 255 > 0.8;
+        const wynik = (k: Kafel) => resolve({ ...k, jasne });
         let x0 = w, y0 = h, x1 = -1, y1 = -1;
         for (let y = 0; y < h; y++) {
           for (let x = 0; x < w; x++) {
@@ -208,7 +219,7 @@ function analizaKafla(src: string): Promise<Kafel> {
             }
           }
         }
-        if (x1 < 0) return resolve(BRAK_KAFLA);
+        if (x1 < 0) return wynik(BRAK_KAFLA);
         const bw = x1 - x0 + 1;
         const bh = y1 - y0 + 1;
         let pelne = 0;
@@ -217,7 +228,7 @@ function analizaKafla(src: string): Promise<Kafel> {
         }
         const wypelnienie = pelne / (bw * bh);
         const zajecie = (bw * bh) / (w * h);
-        if (wypelnienie < 0.93 || zajecie < 0.2) return resolve(BRAK_KAFLA);
+        if (wypelnienie < 0.93 || zajecie < 0.2) return wynik(BRAK_KAFLA);
         const px = (x: number, y: number) => {
           const i = (y * w + x) * 4;
           return [d[i], d[i + 1], d[i + 2]];
@@ -227,8 +238,8 @@ function analizaKafla(src: string): Promise<Kafel> {
         const probki = [px(mx, y0 + 1), px(mx, y1 - 1), px(x0 + 1, my), px(x1 - 1, my)];
         const sr = [0, 1, 2].map((k) => probki.reduce((s, p) => s + p[k], 0) / 4);
         const spojny = probki.every((p) => Math.hypot(p[0] - sr[0], p[1] - sr[1], p[2] - sr[2]) < 40);
-        if (!spojny) return resolve(BRAK_KAFLA);
-        resolve({ kafel: true, kolor: `rgb(${sr.map(Math.round).join(",")})` });
+        if (!spojny) return wynik(BRAK_KAFLA);
+        wynik({ kafel: true, kolor: `rgb(${sr.map(Math.round).join(",")})` });
       } catch {
         resolve(BRAK_KAFLA);
       }
