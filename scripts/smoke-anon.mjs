@@ -208,6 +208,8 @@ if (SUPABASE && KLUCZ) {
     ["outing_get", () => rpc("outing_get", { _session: SESJA })],
     ["outing_results", () => rpc("outing_results", { _session: SESJA })],
     ["outing_friends", () => rpc("outing_friends", {})],
+    ["taste_profile", () => rpc("taste_profile", { _user: SESJA })],
+    ["taste_match", () => rpc("taste_match", { _friend: SESJA })],
   ];
   for (const [nazwa, wywolaj] of proby) {
     try {

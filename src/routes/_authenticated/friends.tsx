@@ -53,6 +53,7 @@ import {
   type FriendProfile,
 } from "@/lib/friends-api";
 import { useUserSearch } from "@/lib/wall-api";
+import { ZgodnoscPlakietka } from "@/components/TasteComponents";
 import { UserAvatar } from "@/components/UserAvatar";
 import { AsyncState, runWithToast } from "@/components/AsyncState";
 import { VipBadge, isVipActive, vipNameStyle } from "@/components/VipBadge";
@@ -504,6 +505,7 @@ function FriendRow({
           {profile.username && profile.display_name && (
             <div className="text-xs text-muted-foreground truncate">@{profile.username}</div>
           )}
+          <ZgodnoscPlakietka znajomy={profile} />
         </div>
 
         <button
