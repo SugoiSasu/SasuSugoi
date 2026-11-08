@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "pl.pozeramy.app",
+      "sha256_cert_fingerprints": [
+        "DA:9E:13:D3:FB:4C:CC:85:99:82:5F:5A:A8:ED:3F:44:BF:8E:38:7C:42:55:CF:B6:C7:A3:98:D8:31:64:E8:E9"
+      ]
+    }
+  }
+]

@@ -105,3 +105,36 @@ export function listenForNativeAuth(onDone: (error: Error | null) => void): () =
     handle?.remove();
   };
 }
+
+/** Linki https z maili i udostępnień, które otwierają aplikację zamiast przeglądarki (Android App Links). */
+const APP_LINK_PATHS = ["/auth/confirm", "/k/"];
+
+/**
+ * Otwarcie aplikacji linkiem https nie przenosi widoku na jego adres (WebView zostaje tam, gdzie był),
+ * więc nawigujemy sami - tylko w obrębie własnej domeny i tylko na dozwolone ścieżki.
+ */
+export function installAppLinkNavigation(): () => void {
+  const app = cap()?.Plugins?.App;
+  if (!app) return () => {};
+  let handle: { remove(): void } | undefined;
+  let removed = false;
+  void app
+    .addListener("appUrlOpen", ({ url }) => {
+      try {
+        const u = new URL(url);
+        if (u.origin !== window.location.origin) return;
+        if (!APP_LINK_PATHS.some((p) => u.pathname.startsWith(p))) return;
+        window.location.assign(u.pathname + u.search + u.hash);
+      } catch {
+        // nieczytelny adres - ignorujemy
+      }
+    })
+    .then((h) => {
+      if (removed) h.remove();
+      else handle = h;
+    });
+  return () => {
+    removed = true;
+    handle?.remove();
+  };
+}

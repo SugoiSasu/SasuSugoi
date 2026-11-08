@@ -75,6 +75,7 @@ import { AlphaGate } from "@/components/AlphaGate";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteNav } from "@/components/SiteNav";
 import { AppSidebar } from "@/components/AppSidebar";
+import { installAppLinkNavigation, isNativeApp } from "@/lib/native-auth";
 import { BottomTabBar } from "@/components/BottomTabBar";
 import { useNowaWersja } from "@/lib/nowa-wersja";
 
@@ -377,6 +378,7 @@ function RootComponent() {
   useEffect(() => {
     installPolishStripper();
   }, []);
+  useEffect(() => (isNativeApp() ? installAppLinkNavigation() : undefined), []);
   // Aplikacja z ekranu glownego iPhone'a trzymala stara wersje do zamkniecia.
   useNowaWersja();
 
