@@ -99,7 +99,7 @@ export function AchievementTile({ a, zdobyta, postep, rarity, wybrana, onSelect 
       </span>
 
       <span
-        className={`text-[9.5px] font-extrabold leading-none ${
+        className={`text-[10px] font-extrabold leading-none ${
           zdobyta ? "text-ok" : wToku ? "text-tomato" : "text-muted-foreground/70"
         }`}
       >

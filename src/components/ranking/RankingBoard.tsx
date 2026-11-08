@@ -51,9 +51,9 @@ function Av({ g, size, className = "" }: { g: Pick<Gracz, "avatar_url" | "avatar
 
 function Zmiana({ z, maly }: { z: number | null | undefined; maly?: boolean }) {
   if (z === undefined) return null;
-  const t = maly ? "text-[9.5px]" : "text-[10.5px]";
+  const t = maly ? "text-[10px]" : "text-[10.5px]";
   if (z === null)
-    return <span className={`rounded-md bg-blush px-1 font-extrabold text-navy ${maly ? "text-[7.5px]" : "text-[8.5px]"}`}>NOWY</span>;
+    return <span className={`rounded-md bg-blush px-1 font-extrabold text-navy ${"text-[10px]"}`}>NOWY</span>;
   if (z > 0) return <span className={`${t} font-extrabold text-ok`}>▲ {z}</span>;
   if (z < 0) return <span className={`${t} font-extrabold text-destructive`}>▼ {-z}</span>;
   return <span className={`${t} font-extrabold text-muted-foreground/50`}>—</span>;
@@ -211,7 +211,7 @@ export function RankingBoard({
       <li key={g.user_id} className="flex min-w-0 flex-col items-center">
         {lider ? (
           <span
-            className={`mb-1.5 flex items-center rounded-full px-2 font-extrabold tracking-[.1em] text-navy ${maly ? "h-[15px] text-[8.5px]" : "h-5 text-[10px]"}`}
+            className={`mb-1.5 flex items-center rounded-full px-2 font-extrabold tracking-[.1em] text-navy ${maly ? "h-[15px] text-[10px]" : "h-5 text-[10px]"}`}
             style={{ background: medal }}
           >
             LIDER
@@ -240,11 +240,11 @@ export function RankingBoard({
           <span className={`truncate font-extrabold ${maly ? "text-xs" : "text-[14.5px]"}`} style={vipNameStyle(g)}>
             {maly && g.is_me ? "Ty" : maly ? krotkaNazwa(g) : displayNameOf(g)}
           </span>
-          {!maly && g.is_me && <span className="shrink-0 rounded-lg bg-tomato px-1.5 py-0.5 text-[9.5px] font-extrabold text-cream">TY</span>}
+          {!maly && g.is_me && <span className="shrink-0 rounded-lg bg-tomato px-1.5 py-0.5 text-[10px] font-extrabold text-cream">TY</span>}
         </div>
         <div className={`flex items-baseline gap-1 ${maly ? "mb-2" : "mb-3"}`}>
           <span className={`font-display font-extrabold leading-tight text-blush ${maly ? "text-[17px]" : "text-[22px]"}`}>{g.wartosc}</span>
-          <span className={`font-bold text-cream/55 ${maly ? "text-[9.5px]" : "text-[11px]"}`}>{jednostka}</span>
+          <span className={`font-bold text-cream/55 ${maly ? "text-[10px]" : "text-[11px]"}`}>{jednostka}</span>
         </div>
         <div className={`w-full ${maly ? "" : "max-w-[190px]"}`}>
           <div className={`rounded-t-xl ${maly ? "h-[9px]" : "h-3"} ${g.is_me ? "bg-[oklch(0.68_0.16_40)]" : "bg-cream/20"}`} />
@@ -452,7 +452,7 @@ export function RankingBoard({
               <Link to="/u/$username" params={{ username: g.username ?? g.user_id }} className="truncate text-[13px] font-extrabold hover:text-tomato" style={vipNameStyle(g)}>
                 {displayNameOf(g)}
               </Link>
-              {g.is_me && <span className="shrink-0 rounded-md bg-tomato px-1 text-[8.5px] font-extrabold text-cream">TY</span>}
+              {g.is_me && <span className="shrink-0 rounded-md bg-tomato px-1 text-[10px] font-extrabold text-cream">TY</span>}
             </div>
             <div className="h-[5px] overflow-hidden rounded bg-foreground/[.06]">
               <div className={`h-full rounded ${pasek}`} style={{ width: `${g.procent}%` }} />
@@ -482,7 +482,7 @@ export function RankingBoard({
                   {displayNameOf(g)}
                 </Link>
                 {isVipActive(g) && <VipBadge />}
-                {g.is_me && <span className="shrink-0 rounded-lg bg-tomato px-1.5 py-0.5 text-[9.5px] font-extrabold text-cream">TY</span>}
+                {g.is_me && <span className="shrink-0 rounded-lg bg-tomato px-1.5 py-0.5 text-[10px] font-extrabold text-cream">TY</span>}
               </div>
               <div className="flex items-center gap-1.5 overflow-hidden whitespace-nowrap text-[11.5px] text-muted-foreground">
                 {g.username && <span className="truncate">@{g.username}</span>}
@@ -630,7 +630,7 @@ export function RankingBoard({
         <div className="relative flex flex-col gap-3 px-3.5 pt-5 lg:hidden">
           <div className="flex items-center justify-between gap-2.5">
             <div>
-              <div className="text-[9.5px] font-extrabold uppercase tracking-[.13em] text-blush">{naglowekOkresu(okres, teraz)}</div>
+              <div className="text-[10px] font-extrabold uppercase tracking-[.13em] text-blush">{naglowekOkresu(okres, teraz)}</div>
               <h1 className="font-display text-[23px] font-extrabold leading-tight">Ranking pożeraczy</h1>
             </div>
             <div className="flex gap-1.5">

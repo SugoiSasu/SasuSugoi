@@ -1115,7 +1115,7 @@ function AchievementTile({
             (a.icon_url ?? "🏅")
           )}
         </div>
-        <div className="text-[9px] font-semibold uppercase tracking-wider leading-tight">
+        <div className="text-[10px] font-semibold uppercase tracking-wider leading-tight">
           {a.name}
         </div>
       </li>

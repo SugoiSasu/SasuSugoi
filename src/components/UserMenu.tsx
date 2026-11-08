@@ -137,7 +137,7 @@ function HoverDropdown({
           />
           <span className="hidden sm:inline max-w-[140px] truncate text-sm font-semibold">{label}</span>
           {isSuperAdmin && (
-            <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-tomato text-cream px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+            <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-tomato text-cream px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
               <Crown size={9} /> Head Admin
             </span>
           )}
@@ -181,7 +181,7 @@ function HoverDropdown({
             <div className="flex-1 min-w-0">
               <div className="font-semibold truncate">{label}</div>
               {isSuperAdmin ? (
-                <div className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-tomato text-cream px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                <div className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-tomato text-cream px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">
                   <Crown size={9} /> Head Admin
                 </div>
               ) : topRank ? (

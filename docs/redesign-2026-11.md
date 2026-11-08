@@ -24,3 +24,7 @@ Decyzje Mateusza po badaniu rynku (Beli, Dither/Munch, Swarm, Google Maps, Wolt/
 - Nie wymagać kontaktów do rejestracji. Pokazywać wartość przed zapisem.
 - Ikony z podpisami tam, gdzie akcja nie jest oczywista.
 - Swipe ma kończyć się decyzją (wspólne wyjście), nie tylko lajkiem.
+
+## Etap 1 - system (wdrożone 2026-11-08)
+- `PlaceLogo` (src/components/PlaceLogo.tsx): jedno logo lokalu w kółku; małe pliki w naturalnym rozmiarze, ciemny motyw z poświatą, brak logo = emoji kuchni; `tryb="lekki"` do długich list. Wdrożone na liście mapy; kolejne miejsca (karta główna, Karty, Moje miejsca) w etapach 2-3.
+- Skala napisów: min 10 px (11 px dla tekstu czytanego), pilnuje tego `src/lib/min-font-size.test.ts` (wyjątki: cyfry w okrągłych plakietkach).
