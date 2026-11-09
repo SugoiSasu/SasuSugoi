@@ -88,6 +88,15 @@ export function ProfilGustuSekcja({ profileId, isMe }: { profileId: string; isMe
   return (
     <div className="mx-auto max-w-3xl px-4 pb-10 sm:px-6">
       <TasteProfileCard userId={profileId} wlasny={isMe} />
+      {isMe && (
+        <Link
+          to="/podsumowanie"
+          className="mt-3 flex min-h-12 items-center justify-between rounded-2xl border border-border bg-card px-4 text-sm font-semibold hover:border-tomato"
+        >
+          <span>Twoje podsumowanie roku 🍽️</span>
+          <span className="text-tomato" aria-hidden="true">→</span>
+        </Link>
+      )}
     </div>
   );
 }
