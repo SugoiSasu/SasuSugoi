@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Bookmark, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -9,6 +10,7 @@ import {
   type VisitedPlace,
 } from "@/lib/visits-api";
 import { cuisineMeta } from "@/data/places";
+import { JakByloSheet } from "@/components/JakByloSheet";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
 interface VisitStatusButtonProps {
@@ -57,12 +59,13 @@ const META: Record<
   },
 };
 
-export function VisitStatusButton({
+function VisitStatusButtonInner({
   placeId,
   status,
   variant = "pill",
   className = "",
-}: VisitStatusButtonProps) {
+  onVisited,
+}: VisitStatusButtonProps & { onVisited?: () => void }) {
   const { user } = useUser();
   const active = useMyVisitStatus(placeId, status);
   const toggle = useToggleVisit();
@@ -82,8 +85,11 @@ export function VisitStatusButton({
       {
         // Stable id: rapid re-toggling replaces the toast in place instead
         // of stacking a contradicting one on top of it.
-        onSuccess: () =>
-          toast.success(next ? m.toastOn : m.toastOff, { id: `visit-${status}-${placeId}` }),
+        onSuccess: () => {
+          toast.success(next ? m.toastOn : m.toastOff, { id: `visit-${status}-${placeId}` });
+          // Szybki check-in: po "Byłem tutaj" proponujemy ocenę jednym dotknięciem.
+          if (status === "visited" && next) onVisited?.();
+        },
         onError: (err) => toast.error((err as Error).message),
       },
     );
@@ -222,5 +228,16 @@ export function PlaceListGrid({
         );
       })}
     </ul>
+  );
+}
+
+/** Przycisk statusu wizyty; po oznaczeniu "Byłem tutaj" otwiera arkusz szybkiej oceny "Jak było?". */
+export function VisitStatusButton(props: VisitStatusButtonProps) {
+  const [jak, setJak] = useState(false);
+  return (
+    <>
+      <VisitStatusButtonInner {...props} onVisited={() => setJak(true)} />
+      {props.status === "visited" && <JakByloSheet placeId={props.placeId} open={jak} onOpenChange={setJak} />}
+    </>
   );
 }
