@@ -39,3 +39,9 @@ Nowa karta (hero z kolorem kuchni/okładką + logo w kółku wsunięte w róg, n
 ## Etap 4 - społeczność (wdrożone 2026-11-08)
 - Pożeralnia: kompaktowe karty pojedynczej odznaki i "chce odwiedzić" (cichsza gamifikacja).
 - **Taste Profile + Match Score:** migracja `20261108140000` (taste_profile, taste_match; funkcje pomocnicze wewnętrzne). Wagi kuchni: ulubione z profilu +3, wizyta "byłem" +2 / "chcę" +1, ulubione +2, ocena >=4 +2 / <=2 -1. Zgodność = 60% kosinus kuchni + 30% Jaccard miejsc + 10% zgodność ocen; < 3 sygnały po którejkolwiek stronie = "za_malo_danych". Widoczne tylko dla właściciela i zaakceptowanych znajomych. UI: karta "Gust" na profilu, plakietka i arkusz zgodności przy znajomych (`TasteComponents.tsx`, `taste-api.ts`).
+
+## Etap 5 - nawigacja, check-in, Wrapped (wdrożone 2026-11-09)
+- **Nawigacja mobilna:** 5 zakładek z podpisami (Odkrywaj, Mapa, Karty, Znajomi, Profil), bez środkowego "+" i arkusza "Co robimy?". Dodawanie jest w kontekście. "Moje miejsca" w menu (hamburger) i liczniku panelu bocznego. Pasek mierzy własną wysokość (`--pz-tabbar-h`), z której korzysta pasek akcji na karcie lokalu.
+- **Szybki check-in:** po "Byłem tutaj" arkusz "Jak było?" (`JakByloSheet`): Super / Ok / Nie = 5 / 3 / 2 gwiazdki w zwykłych opiniach, bez treści (działają punkty, feed, średnie). Nie pokazuje się, gdy użytkownik już ocenił lokal.
+- **Podsumowanie roku:** `/podsumowanie` (z linku na własnym profilu): liczby z bieżącego roku (strefa użytkownika), top kuchnie z Taste Profile, obraz 1080x1920 na canvasie, udostępnianie (wtyczka Capacitor Share w aplikacji, Web Share z plikiem, fallback schowek) i pobranie PNG.
+- Nie zrobione z planu: porządki w profilu/Osiągnięciach/Moich miejscach poza zwijanymi sekcjami profilu (etap 1-2), pas "Znajomi byli tu", filtry intencji (wymagają danych/tagów lokali).
