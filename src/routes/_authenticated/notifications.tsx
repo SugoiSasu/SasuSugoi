@@ -1,7 +1,8 @@
 import { BackButton } from "@/components/BackButton";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
-import { ArrowLeft, Bell, CheckCheck, Loader2, UserPlus, UserCheck, Newspaper, Trophy, Utensils } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { podpisSerii, zwinSerie } from "@/lib/notification-stacks";
+import { ArrowLeft, Bell, ChevronDown, CheckCheck, Loader2, UserPlus, UserCheck, Newspaper, Trophy, Utensils } from "lucide-react";
 import {
   useNotificationsInfinite,
   useMarkRead,
@@ -152,11 +153,21 @@ function NotificationsPage() {
                   {label}
                 </h2>
                 <ul className="bg-card border border-border rounded-2xl divide-y divide-border overflow-hidden">
-                  {rows.map((n) => (
-                    <li key={n.id}>
-                      <Row n={n} onMarkRead={() => !n.read_at && markRead.mutate([n.id])} />
-                    </li>
-                  ))}
+                  {zwinSerie(rows).map((w) =>
+                    w.kind === "jeden" ? (
+                      <li key={w.n.id}>
+                        <Row n={w.n} onMarkRead={() => !w.n.read_at && markRead.mutate([w.n.id])} />
+                      </li>
+                    ) : (
+                      <li key={w.items[0].id}>
+                        <Seria
+                          type={w.type}
+                          items={w.items}
+                          onMarkRead={(n) => !n.read_at && markRead.mutate([n.id])}
+                        />
+                      </li>
+                    ),
+                  )}
                 </ul>
               </section>
             ))}
@@ -223,6 +234,46 @@ function FilterPill({
     >
       {children}
     </button>
+  );
+}
+
+function Seria({
+  type, items, onMarkRead,
+}: { type: string; items: Notification[]; onMarkRead: (n: Notification) => void }) {
+  const [otwarta, setOtwarta] = useState(false);
+  const nieprzeczytane = items.filter((n) => !n.read_at).length;
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOtwarta((o) => !o)}
+        aria-expanded={otwarta}
+        className={`flex w-full items-center gap-3 px-4 py-4 text-left hover:bg-background/60 transition ${
+          nieprzeczytane ? "bg-tomato/5" : ""
+        }`}
+      >
+        <span className="shrink-0 w-9 h-9 rounded-full bg-tomato/10 grid place-items-center">{iconFor(type)}</span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold">{podpisSerii(type, items.length)}</span>
+          <span className="block text-[11px] uppercase tracking-wider text-muted-foreground mt-1">
+            {fmtDate(items[0].created_at)}
+          </span>
+        </span>
+        {nieprzeczytane > 0 && (
+          <span className="w-2 h-2 rounded-full bg-tomato shrink-0" aria-label="Nieprzeczytane" />
+        )}
+        <ChevronDown size={16} className={`shrink-0 transition ${otwarta ? "rotate-180" : ""}`} aria-hidden="true" />
+      </button>
+      {otwarta && (
+        <ul className="divide-y divide-border border-t border-border">
+          {items.map((n) => (
+            <li key={n.id}>
+              <Row n={n} onMarkRead={() => onMarkRead(n)} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
