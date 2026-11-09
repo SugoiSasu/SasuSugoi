@@ -735,7 +735,7 @@ function PlaceProfile() {
       </div>
 
       {/* Sticky mobile action bar */}
-      <div className="lg:hidden fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom,0px))] z-30 px-3 pb-2">
+      <div className="lg:hidden fixed inset-x-0 bottom-[var(--pz-tabbar-h,calc(3.6rem+env(safe-area-inset-bottom,0px)))] z-30 px-3 pb-2">
         <div className="flex items-center gap-2 rounded-full border border-border bg-card/95 backdrop-blur-md shadow-xl px-2 py-2">
           <a
             href={mapsHref}
