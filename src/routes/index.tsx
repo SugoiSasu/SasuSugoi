@@ -28,6 +28,7 @@ import { TrophyIcon } from "@/components/TrophyIcon";
 import { formatCena } from "@/lib/price";
 import { PriceLevel } from "@/components/PriceLevel";
 import { PlaceLogo } from "@/components/PlaceLogo";
+import { maOkazje } from "@/lib/occasions";
 import { useWszystkieTrofea } from "@/lib/trophies-api";
 import { podpisTrofeum, type Trofeum } from "@/lib/trophies";
 import { CuisineFallbackCover } from "@/components/CuisineFallbackCover";
@@ -132,13 +133,16 @@ function Index() {
       top: (p: PlaceWithDate) => (ratings?.get(p.id)?.avg ?? 0) >= 4.5,
       new: (p: PlaceWithDate) => isNewPlace(p.created_at),
       fav: (p: PlaceWithDate) => favSet.has(p.id),
+      randka: (p: PlaceWithDate) => maOkazje(p, "randka"),
+      szybko: (p: PlaceWithDate) => maOkazje(p, "szybko"),
+      ekipa: (p: PlaceWithDate) => maOkazje(p, "ekipa"),
     } satisfies Record<QuickFilter, (p: PlaceWithDate) => boolean>;
   }, [favIds, ratings]);
 
   const quickCounts = useMemo(() => {
     const out: Partial<Record<QuickFilter, number>> = {};
     if (!mounted) return out;
-    for (const k of ["open", "top", "new", "fav"] as const) {
+    for (const k of ["open", "top", "new", "fav", "randka", "szybko", "ekipa"] as const) {
       out[k] = published.filter(quickTests[k]).length;
     }
     return out;
@@ -149,7 +153,7 @@ function Index() {
    *  no reviews in the database yet, "Ocena 4,5+" is exactly that. */
   const quickAvailable = useMemo(() => {
     const s = new Set<QuickFilter>();
-    for (const k of ["open", "top", "new", "fav"] as const) {
+    for (const k of ["open", "top", "new", "fav", "randka", "szybko", "ekipa"] as const) {
       if ((quickCounts[k] ?? 0) > 0) s.add(k);
     }
     return s;

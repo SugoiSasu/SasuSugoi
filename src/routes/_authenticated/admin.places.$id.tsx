@@ -1,3 +1,4 @@
+import { OKAZJE } from "@/lib/occasions";
 import { BackButton } from "@/components/BackButton";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -64,6 +65,7 @@ function emptyPlace(defaultCuisine: string): PlaceInput {
     avatar_url: "",
     avatar_cutout_enabled: true,
     logo_has_name: false,
+    occasions: [],
     menu_url: "",
     menu_image_url: "",
     promo_label: "",
@@ -204,6 +206,7 @@ function EditPlace() {
         avatar_url: place.avatar_url ?? "",
         avatar_cutout_enabled: place.avatar_cutout_enabled ?? true,
         logo_has_name: place.logo_has_name ?? false,
+        occasions: place.occasions ?? [],
         menu_url: place.menu_url ?? "",
         menu_image_url: place.menu_image_url ?? "",
         promo_label: place.promo_label ?? "",
@@ -547,6 +550,25 @@ function EditPlace() {
                 />
                 ♿ Bez schodów
               </label>
+            </div>
+            <div className="flex gap-4 flex-wrap text-sm" role="group" aria-label="Dobre na okazje">
+              {OKAZJE.map((o) => (
+                <label key={o.key} className="inline-flex items-center gap-2 cursor-pointer" title={o.opis}>
+                  <input
+                    type="checkbox"
+                    checked={(form.occasions ?? []).includes(o.key)}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        occasions: e.target.checked
+                          ? [...(form.occasions ?? []), o.key]
+                          : (form.occasions ?? []).filter((k) => k !== o.key),
+                      })
+                    }
+                  />
+                  {o.emoji} {o.etykieta}
+                </label>
+              ))}
             </div>
           </div>
         </SekcjaEdytora>

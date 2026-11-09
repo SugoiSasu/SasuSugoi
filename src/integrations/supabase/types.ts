@@ -1726,6 +1726,7 @@ export type Database = {
           address: string
           avatar_cutout_enabled: boolean
           logo_has_name: boolean
+          occasions: string[]
           avatar_url: string | null
           cover_image_url: string | null
           created_at: string
@@ -1758,6 +1759,7 @@ export type Database = {
           address?: string
           avatar_cutout_enabled?: boolean
           logo_has_name?: boolean
+          occasions?: string[]
           avatar_url?: string | null
           cover_image_url?: string | null
           created_at?: string
@@ -1790,6 +1792,7 @@ export type Database = {
           address?: string
           avatar_cutout_enabled?: boolean
           logo_has_name?: boolean
+          occasions?: string[]
           avatar_url?: string | null
           cover_image_url?: string | null
           created_at?: string

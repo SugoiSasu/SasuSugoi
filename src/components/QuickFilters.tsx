@@ -1,4 +1,5 @@
 import { Clock, Star, Sparkles, Heart } from "lucide-react";
+import { OKAZJE } from "@/lib/occasions";
 import type { ReactNode } from "react";
 
 /**
@@ -10,7 +11,7 @@ import type { ReactNode } from "react";
  * `available` in the homepage): a filter that can only ever produce an empty
  * state is worse than no filter at all.
  */
-export type QuickFilter = "all" | "open" | "top" | "new" | "fav";
+export type QuickFilter = "all" | "open" | "top" | "new" | "fav" | "randka" | "szybko" | "ekipa";
 
 export const QUICK_FILTERS: {
   key: QuickFilter;
@@ -22,6 +23,8 @@ export const QUICK_FILTERS: {
   { key: "top", label: "Ocena 4,5+", icon: <Star size={13} /> },
   { key: "new", label: "Nowe", icon: <Sparkles size={13} /> },
   { key: "fav", label: "Ulubione", icon: <Heart size={13} /> },
+  // Okazje: oznacza je admin w edytorze lokalu; chip pojawia sie dopiero, gdy jakis lokal ma dane oznaczenie.
+  ...OKAZJE.map((o) => ({ key: o.key as QuickFilter, label: o.etykieta, icon: <span aria-hidden="true">{o.emoji}</span> })),
 ];
 
 export function QuickFilters({
